@@ -46,8 +46,8 @@ new RuleTester().run("no-derived-state", noDerivedStateRule, {
         }`,
       errors: [
         {
-          message:
-            'Avoid storing derived state. Compute "fullName" directly from other props or state during render.',
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
         },
       ],
     },
@@ -71,8 +71,8 @@ new RuleTester().run("no-derived-state", noDerivedStateRule, {
         }`,
       errors: [
         {
-          message:
-            'Avoid storing derived state. Compute "fullName" directly from other props or state during render.',
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
         },
       ],
     },
@@ -99,8 +99,8 @@ new RuleTester().run("no-derived-state", noDerivedStateRule, {
         }`,
       errors: [
         {
-          message:
-            'Avoid storing derived state. Compute "visibleTodos" directly from other props or state during render.',
+          messageId: "avoidDerivedState",
+          data: { state: "visibleTodos" },
         },
       ],
     },

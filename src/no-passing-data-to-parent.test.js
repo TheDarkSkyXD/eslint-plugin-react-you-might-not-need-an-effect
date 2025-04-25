@@ -23,8 +23,8 @@ new RuleTester().run("no-passing-data-to-parent", noPassingDataToParent, {
         }`,
       errors: [
         {
-          message:
-            'React state should flow from parents to their children; never from children to parents. Consider lifting "data" into the parent.',
+          messageId: "avoidPassingDataToParent",
+          data: { data: "data" },
         },
       ],
     },
@@ -40,8 +40,8 @@ new RuleTester().run("no-passing-data-to-parent", noPassingDataToParent, {
         }`,
       errors: [
         {
-          message:
-            'React state should flow from parents to their children; never from children to parents. Consider lifting "data" into the parent.',
+          messageId: "avoidPassingDataToParent",
+          data: { data: "data" },
         },
       ],
     },
@@ -57,8 +57,8 @@ new RuleTester().run("no-passing-data-to-parent", noPassingDataToParent, {
         }`,
       errors: [
         {
-          message:
-            'React state should flow from parents to their children; never from children to parents. Consider lifting "data" into the parent.',
+          messageId: "avoidPassingDataToParent",
+          data: { data: "data" },
         },
       ],
     },
@@ -72,8 +72,8 @@ new RuleTester().run("no-passing-data-to-parent", noPassingDataToParent, {
         }`,
       errors: [
         {
-          message:
-            'React state should flow from parents to their children; never from children to parents. Consider lifting "data" into the parent.',
+          messageId: "avoidPassingDataToParent",
+          data: { data: "data" },
         },
       ],
     },
