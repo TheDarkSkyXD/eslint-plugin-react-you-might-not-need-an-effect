@@ -3,7 +3,7 @@
   "packageManager": "yarn@4.6.0",
   "type": "module",
   "scripts": {
-    "test": "node src/*.test.js"
+    "test": "node --test src/*.test.js"
   },
   "devDependencies": {
     "eslint": "^9.20.1"
