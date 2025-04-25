@@ -31,8 +31,12 @@ export const getUseEffectFn = (node) => {
 };
 
 export const isReactComponent = (node) => {
+  const isFunctionComponent = node.type === "FunctionDeclaration";
+  const isArrowFunctionComponent =
+    node.type === "VariableDeclarator" &&
+    node.init.type === "ArrowFunctionExpression";
   return (
-    node.type === "FunctionDeclaration" &&
+    (isFunctionComponent || isArrowFunctionComponent) &&
     node.id.type === "Identifier" &&
     node.id.name[0].toUpperCase() === node.id.name[0]
   );

@@ -20,22 +20,36 @@ export default {
     // TODO: I think this would overlap on multiple components in one file?
     const propsNames = new Set();
 
+    function collectPropsNames(fnParam) {
+      if (fnParam.type === "ObjectPattern") {
+        fnParam.properties
+          .map(
+            // Important to use `value`, not `name`, in case it was renamed in the destructuring
+            (property) => property.value.name,
+          )
+          .forEach((destructuredName) => propsNames.add(destructuredName));
+      } else if (fnParam.type === "Identifier") {
+        propsNames.add(fnParam.name);
+      }
+    }
+
     return {
-      // Collect props names
       FunctionDeclaration(node) {
         if (!isReactComponent(node)) return;
 
-        node.params.forEach((fnParam) => {
-          if (fnParam.type === "ObjectPattern") {
-            const destructuredNames = fnParam.properties.map(
-              (prop) => prop.key.name,
-            );
-            propsNames.add(...destructuredNames);
-          } else if (fnParam.type === "Identifier") {
-            const paramNames = fnParam.map((param) => param.name);
-            propsNames.add(...paramNames);
-          }
-        });
+        const fnParamNode = node.params[0];
+        if (!fnParamNode) return;
+
+        collectPropsNames(fnParamNode);
+      },
+
+      VariableDeclarator(node) {
+        if (!isReactComponent(node)) return;
+
+        const fnParamNode = node.init.params[0];
+        if (!fnParamNode) return;
+
+        collectPropsNames(fnParamNode);
       },
 
       // Look for `useEffect`s that call props with arguments from their dependencies (the latter implying it's data and not a normal callback)
