@@ -11,8 +11,8 @@ new RuleTester().run("no-passing-data-to-parent", noPassingDataToParent, {
     },
   ],
   invalid: [
-    // Function component
     {
+      name: "Function component",
       code: js`
         function Child({ onFetched }) {
           const data = useSomeAPI();
@@ -28,8 +28,8 @@ new RuleTester().run("no-passing-data-to-parent", noPassingDataToParent, {
         },
       ],
     },
-    // Arrow function component
     {
+      name: "Arrow function component",
       code: js`
         const Child = ({ onFetched }) => {
           const data = useSomeAPI();
@@ -45,8 +45,8 @@ new RuleTester().run("no-passing-data-to-parent", noPassingDataToParent, {
         },
       ],
     },
-    // Non-destructured props
     {
+      name: "Non-destructured props",
       code: js`
         const Child = (props) => {
           const data = useSomeAPI();
@@ -62,8 +62,8 @@ new RuleTester().run("no-passing-data-to-parent", noPassingDataToParent, {
         },
       ],
     },
-    // One-liner `useEffect` body
     {
+      name: "One-liner `useEffect` body",
       code: js`
         const Child = ({ onFetched }) => {
           const data = useSomeAPI();
@@ -77,8 +77,8 @@ new RuleTester().run("no-passing-data-to-parent", noPassingDataToParent, {
         },
       ],
     },
-    // Wrapped in if statement
     // {
+    //   name: "Nested in if block",
     //   code: js`
     //     function Child({ onFetched }) {
     //       const data = useSomeAPI();

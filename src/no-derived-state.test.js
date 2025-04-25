@@ -22,8 +22,8 @@ new RuleTester().run("no-derived-state", noDerivedStateRule, {
     },
   ],
   invalid: [
-    // https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state
     {
+      name: "Derived state from other state",
       code: js`
         function Form() {
           const [firstName, setFirstName] = useState('Taylor');
@@ -51,8 +51,8 @@ new RuleTester().run("no-derived-state", noDerivedStateRule, {
         },
       ],
     },
-    // `useEffect` body without braces
     {
+      name: "useEffect body without braces",
       code: js`
         function Form() {
           const [firstName, setFirstName] = useState('Taylor');
@@ -76,9 +76,9 @@ new RuleTester().run("no-derived-state", noDerivedStateRule, {
         },
       ],
     },
-    // https://react.dev/learn/you-might-not-need-an-effect#caching-expensive-calculations
     // TODO: could suggest `useMemo`
     {
+      name: "Derived state from props",
       code: js`
         function TodoList({ todos, filter }) {
           const [newTodo, setNewTodo] = useState("");
