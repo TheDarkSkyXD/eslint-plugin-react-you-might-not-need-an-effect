@@ -1,5 +1,9 @@
 import { getUseEffectFn, isReactComponent, isUseEffect } from "./util.js";
 
+// NOTE: Only supports:
+// - Functional components
+// - Block bodies in `useEffect`
+// - Destructured props
 export default {
   meta: {
     type: "suggestion",
@@ -12,10 +16,6 @@ export default {
         'React state should flow from parents to their children; never from children to parents. Consider lifting "{{data}}" into the parent.',
     },
   },
-  // NOTE: Only supports:
-  // - Functional components
-  // - Block bodies in `useEffect`
-  // - Destructured props
   create: (context) => {
     // TODO: I think this would overlap on multiple components in one file?
     const propsNames = new Set();
