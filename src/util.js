@@ -14,4 +14,12 @@ export const isUseEffect = (node) => {
     node.callee.type === "Identifier" &&
     node.callee.name === "useEffect"
   );
-}
+};
+
+export const isReactComponent = (node) => {
+  return (
+    node.type === "FunctionDeclaration" &&
+    node.id.type === "Identifier" &&
+    node.id.name[0].toUpperCase() === node.id.name[0]
+  );
+};
