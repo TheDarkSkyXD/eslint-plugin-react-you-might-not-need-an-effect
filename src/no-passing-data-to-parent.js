@@ -70,10 +70,17 @@ export default {
               stmt.expression.type === "CallExpression"
             ) {
               const callee = stmt.expression.callee;
-              const isPropCallback = propsNames.has(callee.name);
-              if (callee.type !== "Identifier" || !isPropCallback) continue;
+              const isPropCallback =
+                // Destructured prop
+                (callee.type === "Identifier" && propsNames.has(callee.name)) ||
+                // Field access on non-destructured prop
+                (callee.type === "MemberExpression" &&
+                  callee.object.type === "Identifier" &&
+                  propsNames.has(callee.object.name));
+              if (!isPropCallback) continue;
 
               const propCallbackArgs = stmt.expression.arguments;
+              // TODO: support object property access
               const propCallbackArgFromDeps = propCallbackArgs.find((arg) => {
                 if (arg.type === "Identifier") {
                   return depsNodes.find((dep) => dep.name === arg.name);
