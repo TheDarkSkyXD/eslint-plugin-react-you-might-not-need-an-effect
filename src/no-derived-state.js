@@ -72,8 +72,12 @@ export default {
                   callExpression.parent.type === "ArrowFunctionExpression"
                     ? // It's a one-liner; remove the entire `useEffect`
                       fixer.remove(node.parent)
-                    : // It's a block; remove the `setState` call
-                      fixer.remove(callExpression.parent),
+                    : callExpression.parent.parent.type === "BlockStatement" &&
+                        callExpression.parent.parent.body.length > 1
+                      ? // It's a multi-statement body; remove the setter call
+                        fixer.remove(callExpression.parent)
+                      : // It's the only statement in the body; remove the entire `useEffect`
+                        fixer.remove(node.parent),
                 ];
               },
             });

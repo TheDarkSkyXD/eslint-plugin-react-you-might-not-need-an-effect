@@ -23,7 +23,7 @@ new RuleTester().run("no-derived-state", noDerivedStateRule, {
   ],
   invalid: [
     {
-      name: "Derived state from other state",
+      name: "Derived state from other state (single-statement body; removed entirely)",
       code: js`
         function Form() {
           const [firstName, setFirstName] = useState('Taylor');
@@ -40,8 +40,37 @@ new RuleTester().run("no-derived-state", noDerivedStateRule, {
           const [lastName, setLastName] = useState('Swift');
 
           const fullName = firstName + ' ' + lastName;
+          
+        }`,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
+        },
+      ],
+    },
+    {
+      name: "Derived state from other state (multi-statement body, only the setter is removed)",
+      code: js`
+        function Form() {
+          const [firstName, setFirstName] = useState('Taylor');
+          const [lastName, setLastName] = useState('Swift');
+
+          const [fullName, setFullName] = useState('');
+          useEffect(() => {
+            setFullName(firstName + ' ' + lastName);
+            console.log('meow');
+          }, [firstName, lastName]);
+        }`,
+      output: js`
+        function Form() {
+          const [firstName, setFirstName] = useState('Taylor');
+          const [lastName, setLastName] = useState('Swift');
+
+          const fullName = firstName + ' ' + lastName;
           useEffect(() => {
             
+            console.log('meow');
           }, [firstName, lastName]);
         }`,
       errors: [
@@ -52,7 +81,7 @@ new RuleTester().run("no-derived-state", noDerivedStateRule, {
       ],
     },
     {
-      name: "useEffect body without braces",
+      name: "Derived state from other state (one-liner body; removed entirely)",
       code: js`
         function Form() {
           const [firstName, setFirstName] = useState('Taylor');
@@ -93,9 +122,7 @@ new RuleTester().run("no-derived-state", noDerivedStateRule, {
           const [newTodo, setNewTodo] = useState("");
 
           const visibleTodos = getFilteredTodos(todos, filter);
-          useEffect(() => {
-            
-          }, [todos, filter]);
+          
         }`,
       errors: [
         {
