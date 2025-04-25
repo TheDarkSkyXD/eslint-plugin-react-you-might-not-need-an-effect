@@ -36,7 +36,7 @@ export default {
         }
       },
 
-      // Check `useEffect` for uses of `useState` setters
+      // Check `useEffect` for `useState` setters
       CallExpression(node) {
         // Match `useEffect(...)`
         if (!isUseEffect(node) || node.arguments.length < 1) return;
@@ -70,8 +70,10 @@ export default {
                     `const ${stateVar} = ${argSource};`,
                   ),
                   callExpression.parent.type === "ArrowFunctionExpression"
-                    ? fixer.remove(node.parent) // It's a one-liner; remove the entire `useEffect`
-                    : fixer.remove(callExpression.parent), // It's a block; remove the `setState` call,
+                    ? // It's a one-liner; remove the entire `useEffect`
+                      fixer.remove(node.parent)
+                    : // It's a block; remove the `setState` call
+                      fixer.remove(callExpression.parent),
                 ];
               },
             });

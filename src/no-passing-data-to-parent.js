@@ -3,7 +3,6 @@ import { getUseEffectFn, isReactComponent, isUseEffect } from "./util.js";
 // NOTE: Only supports:
 // - Functional components
 // - Block bodies in `useEffect`
-// - Destructured props
 export default {
   meta: {
     type: "suggestion",
