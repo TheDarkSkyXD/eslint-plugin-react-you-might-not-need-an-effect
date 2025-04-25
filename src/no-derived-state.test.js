@@ -1,9 +1,10 @@
 import { RuleTester } from "eslint";
 import noDerivedStateRule from "./no-derived-state.js";
+import { normalizeWhitespaceInTests } from "./util.js";
 const js = String.raw;
 
 new RuleTester().run("no-derived-state", noDerivedStateRule, {
-  valid: [
+  valid: normalizeWhitespaceInTests([
     {
       code: js`
         function Form() {
@@ -20,8 +21,8 @@ new RuleTester().run("no-derived-state", noDerivedStateRule, {
           const visibleTodos = getFilteredTodos(todos, filter);
         }`,
     },
-  ],
-  invalid: [
+  ]),
+  invalid: normalizeWhitespaceInTests([
     {
       name: "Derived state from other state (single-statement body; replaced entirely)",
       code: js`
@@ -39,8 +40,8 @@ new RuleTester().run("no-derived-state", noDerivedStateRule, {
           const [firstName, setFirstName] = useState('Taylor');
           const [lastName, setLastName] = useState('Swift');
 
-          const fullName = firstName + ' ' + lastName;
           
+          const fullName = firstName + ' ' + lastName;
         }`,
       errors: [
         {
@@ -131,5 +132,5 @@ new RuleTester().run("no-derived-state", noDerivedStateRule, {
         },
       ],
     },
-  ],
+  ]),
 });

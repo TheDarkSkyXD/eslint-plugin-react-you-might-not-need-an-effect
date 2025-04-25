@@ -60,24 +60,46 @@ export default {
                   .getSourceCode()
                   .getText(setStateArgs[0]);
 
-                return [
-                  // Compute state during render,
-                  // replacing `const [foo, setFoo] = useState(...)`
-                  // TODO: presumably breaks when `setStateArgs` is a function
-                  fixer.replaceText(
-                    stateDeclNode.parent,
-                    `const ${stateVar} = ${argSource};`,
-                  ),
-                  callExpression.parent.type === "ArrowFunctionExpression"
-                    ? // It's a one-liner; remove the entire `useEffect`
-                      fixer.remove(node.parent)
-                    : callExpression.parent.parent.type === "BlockStatement" &&
-                        callExpression.parent.parent.body.length > 1
-                      ? // It's a multi-statement body; remove the setter call
-                        fixer.remove(callExpression.parent)
-                      : // It's the only statement in the body; remove the entire `useEffect`
-                        fixer.remove(node.parent),
-                ];
+                // TODO: presumably breaks when `setStateArgs` is a function
+                // TODO: the line still remains with preceding whitespace
+                const removeStateFix = fixer.remove(stateDeclNode.parent);
+
+                const computeDuringRenderText = `const ${stateVar} = ${argSource};`;
+                let computeStateFix = [];
+                if (callExpression.parent.type === "ArrowFunctionExpression") {
+                  // It's a one-liner; replace the entire `useEffect` with computed state
+                  computeStateFix = [
+                    fixer.replaceText(node.parent, computeDuringRenderText),
+                  ];
+                } else if (
+                  callExpression.parent.parent.type === "BlockStatement"
+                ) {
+                  if (
+                    callExpression.parent.parent.body.length === 1 &&
+                    callExpression.parent.parent.body[0] ===
+                      callExpression.parent
+                  ) {
+                    // It's the only statement in the body; replace the entire `useEffect` with computed state
+                    computeStateFix = [
+                      fixer.replaceText(node.parent, computeDuringRenderText),
+                    ];
+                  } else {
+                    computeStateFix = [
+                      // Add the computed state right above the `useEffect`
+                      // We place it at the `useEffect` location because we know
+                      // its dependencies have been declared by that point.
+                      // If we replaced the `useState` location, they may not be.
+                      fixer.insertTextBefore(
+                        node.parent,
+                        `${computeDuringRenderText}\n`,
+                      ),
+                      // It's a multi-statement body; remove the setter call
+                      fixer.remove(callExpression.parent),
+                    ];
+                  }
+                }
+
+                return [...computeStateFix, removeStateFix];
               },
             });
           }
