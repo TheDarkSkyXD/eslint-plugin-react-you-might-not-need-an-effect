@@ -41,3 +41,21 @@ export const isReactComponent = (node) => {
     node.id.name[0].toUpperCase() === node.id.name[0]
   );
 };
+
+export const getEffectFnCallExpressions = (effectFn) => {
+  if (effectFn.body.type === "BlockStatement") {
+    // This is the case for `useEffect(() => { setState(...); })`
+    return effectFn.body.body
+      .filter(
+        (stmt) =>
+          stmt.type === "ExpressionStatement" &&
+          stmt.expression.type === "CallExpression",
+      )
+      .map((stmt) => stmt.expression);
+  } else if (effectFn.body.type === "CallExpression") {
+    // This is the case for `useEffect(() => setState(...))`
+    return [effectFn.body];
+  } else {
+    return null;
+  }
+};

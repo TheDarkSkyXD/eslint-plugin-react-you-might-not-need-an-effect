@@ -51,6 +51,31 @@ new RuleTester().run("no-derived-state", noDerivedStateRule, {
         },
       ],
     },
+    // `useEffect` body without braces
+    {
+      code: js`
+        function Form() {
+          const [firstName, setFirstName] = useState('Taylor');
+          const [lastName, setLastName] = useState('Swift');
+
+          const [fullName, setFullName] = useState('');
+          useEffect(() => setFullName(firstName + ' ' + lastName), [firstName, lastName]);
+        }`,
+      output: js`
+        function Form() {
+          const [firstName, setFirstName] = useState('Taylor');
+          const [lastName, setLastName] = useState('Swift');
+
+          const fullName = firstName + ' ' + lastName;
+          
+        }`,
+      errors: [
+        {
+          message:
+            'Avoid storing derived state. Compute "fullName" directly from other props or state during render.',
+        },
+      ],
+    },
     // https://react.dev/learn/you-might-not-need-an-effect#caching-expensive-calculations
     // TODO: could suggest `useMemo`
     {

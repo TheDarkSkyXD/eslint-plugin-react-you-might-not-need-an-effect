@@ -1,4 +1,9 @@
-import { isUseState, isUseEffect, getUseEffectFn } from "./util.js";
+import {
+  isUseState,
+  isUseEffect,
+  getUseEffectFn,
+  getEffectFnCallExpressions,
+} from "./util.js";
 
 export default {
   meta: {
@@ -14,7 +19,6 @@ export default {
         'Avoid storing derived state. Compute "{{state}}" directly from other props or state during render.',
     },
   },
-  // NOTE: Only supports block bodies in `useEffect`s
   create: (context) => {
     const stateSetters = new Map(); // state variable -> setter name
     const stateNodes = new Map(); // state name -> node of the useState variable declarator
@@ -41,49 +45,38 @@ export default {
         if (!effectFn) return;
 
         // Traverse the `useEffect` body to find calls to setters
-        if (effectFn.body.type === "BlockStatement") {
-          for (const stmt of effectFn.body.body) {
-            if (
-              stmt.type === "ExpressionStatement" &&
-              stmt.expression.type === "CallExpression"
-            ) {
-              const callee = stmt.expression.callee;
-              if (
-                callee.type === "Identifier" &&
-                stateSetters.has(callee.name)
-              ) {
-                const stateVar = stateSetters.get(callee.name);
-                const stateDeclNode = stateNodes.get(stateVar);
+        getEffectFnCallExpressions(effectFn)?.forEach((callExpression) => {
+          const callee = callExpression.callee;
+          if (callee.type === "Identifier" && stateSetters.has(callee.name)) {
+            const stateVar = stateSetters.get(callee.name);
+            const stateDeclNode = stateNodes.get(stateVar);
 
-                context.report({
-                  node: callee,
-                  messageId: "avoidDerivedState",
-                  data: { state: stateSetters.get(callee.name) },
-                  fix: (fixer) => {
-                    const setStateArgs = stmt.expression.arguments;
-                    const argSource = context
-                      .getSourceCode()
-                      .getText(setStateArgs[0]);
+            context.report({
+              node: callee,
+              messageId: "avoidDerivedState",
+              data: { state: stateSetters.get(callee.name) },
+              fix: (fixer) => {
+                const setStateArgs = callExpression.arguments;
+                const argSource = context
+                  .getSourceCode()
+                  .getText(setStateArgs[0]);
 
-                    return [
-                      // Compute state during render,
-                      // replacing `const [foo, setFoo] = useState(...)`
-                      // TODO: presumably breaks when `setStateArgs` is a function
-                      fixer.replaceText(
-                        stateDeclNode.parent,
-                        `const ${stateVar} = ${argSource};`,
-                      ),
-                      // Remove the setState call in `useEffect`
-                      fixer.remove(stmt),
-                    ];
-                  },
-                });
-              }
-            }
+                return [
+                  // Compute state during render,
+                  // replacing `const [foo, setFoo] = useState(...)`
+                  // TODO: presumably breaks when `setStateArgs` is a function
+                  fixer.replaceText(
+                    stateDeclNode.parent,
+                    `const ${stateVar} = ${argSource};`,
+                  ),
+                  callExpression.parent.type === "ArrowFunctionExpression"
+                    ? fixer.remove(node.parent) // It's a one-liner; remove the entire `useEffect`
+                    : fixer.remove(callExpression.parent), // It's a block; remove the `setState` call,
+                ];
+              },
+            });
           }
-        } else if (effectFn.body.type === "CallExpression") {
-          // TODO: effectFn.body is a CallExpression when it has no braces; not a BlockStatement
-        }
+        });
       },
     };
   },
