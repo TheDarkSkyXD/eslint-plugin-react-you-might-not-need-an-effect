@@ -4,7 +4,7 @@ export default {
     docs: {
       description:
         "Disallow setting derived state from props or other state in a useEffect.",
-      url: "https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state",
+      url: "https://react.dev/learn/you-might-not-need-an-effect",
     },
     fixable: "code",
     messages: {
