@@ -1,3 +1,6 @@
+import { isUseState, isUseEffect } from "./util.js";
+
+// NOTE: Only supports `useEffect`s with block bodies
 export default {
   meta: {
     type: "suggestion",
@@ -20,28 +23,23 @@ export default {
       // Collect `useState`s
       VariableDeclarator(node) {
         // Match: `const [foo, setFoo] = useState(...)`
-        if (
-          node.init &&
-          node.init.type === "CallExpression" &&
-          node.init.callee.name === "useState" &&
-          node.id.type === "ArrayPattern" &&
-          node.id.elements.length === 2
-        ) {
-          const [state, setter] = node.id.elements;
-          if (state?.type === "Identifier" && setter?.type === "Identifier") {
-            stateSetters.set(setter.name, state.name);
-            stateNodes.set(state.name, node);
-          }
+        if (!isUseState(node)) return;
+
+        const [state, setter] = node.id.elements;
+        if (state?.type === "Identifier" && setter?.type === "Identifier") {
+          stateSetters.set(setter.name, state.name);
+          stateNodes.set(state.name, node);
         }
       },
 
       // Check `useEffect` for uses of `useState` setters
       CallExpression(node) {
         // Match `useEffect(...)`
-        if (node.callee.name !== "useEffect" || node.arguments.length < 1)
-          return;
+        if (!isUseEffect(node) || node.arguments.length < 1) return;
 
         const effectFn = node.arguments[0];
+        // Will these ever not be the case? What else could be passed?
+        // I guess a reference to a function?
         if (
           !effectFn ||
           (effectFn.type !== "ArrowFunctionExpression" &&
