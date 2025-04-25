@@ -16,6 +16,7 @@ new RuleTester().run("no-derived-state", noDerivedStateRule, {
     },
   ],
   invalid: [
+    // Block statement `useEffect`
     {
       code: js`
         function Form() {
@@ -46,5 +47,32 @@ new RuleTester().run("no-derived-state", noDerivedStateRule, {
         },
       ],
     },
+    // TODO: Arrow function `useEffect`
+    // {
+    //   code: js`
+    //     function Form() {
+    //       const [firstName, setFirstName] = useState('Taylor');
+    //       const [lastName, setLastName] = useState('Swift');
+    //
+    //       const [fullName, setFullName] = useState('');
+    //       useEffect(() => setFullName(firstName + ' ' + lastName), [firstName, lastName]);
+    //     }
+    //   `,
+    //   output: js`
+    //     function Form() {
+    //       const [firstName, setFirstName] = useState('Taylor');
+    //       const [lastName, setLastName] = useState('Swift');
+    //
+    //       const fullName = firstName + ' ' + lastName;
+    //       useEffect(() => , [firstName, lastName]);
+    //     }
+    //   `,
+    //   errors: [
+    //     {
+    //       message:
+    //         'Avoid storing derived state. Compute "fullName" directly from other props or state during render.',
+    //     },
+    //   ],
+    // },
   ],
 });
