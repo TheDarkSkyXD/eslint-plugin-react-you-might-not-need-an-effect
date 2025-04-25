@@ -16,6 +16,20 @@ export const isUseEffect = (node) => {
   );
 };
 
+export const getUseEffectFn = (node) => {
+  if (!isUseEffect(node) || node.arguments.length < 1) return null;
+
+  const effectFn = node.arguments[0];
+  if (
+    !effectFn ||
+    (effectFn.type !== "ArrowFunctionExpression" &&
+      effectFn.type !== "FunctionExpression")
+  )
+    return null;
+
+  return effectFn;
+};
+
 export const isReactComponent = (node) => {
   return (
     node.type === "FunctionDeclaration" &&

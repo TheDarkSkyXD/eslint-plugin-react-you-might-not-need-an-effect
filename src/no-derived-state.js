@@ -1,4 +1,4 @@
-import { isUseState, isUseEffect } from "./util.js";
+import { isUseState, isUseEffect, getUseEffectFn } from "./util.js";
 
 export default {
   meta: {
@@ -37,13 +37,8 @@ export default {
         // Match `useEffect(...)`
         if (!isUseEffect(node) || node.arguments.length < 1) return;
 
-        const effectFn = node.arguments[0];
-        if (
-          !effectFn ||
-          (effectFn.type !== "ArrowFunctionExpression" &&
-            effectFn.type !== "FunctionExpression")
-        )
-          return;
+        const effectFn = getUseEffectFn(node);
+        if (!effectFn) return;
 
         // Traverse the `useEffect` body to find calls to setters
         if (effectFn.body.type === "BlockStatement") {

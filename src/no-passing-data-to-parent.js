@@ -1,4 +1,4 @@
-import { isReactComponent, isUseEffect } from "./util.js";
+import { getUseEffectFn, isReactComponent, isUseEffect } from "./util.js";
 
 export default {
   meta: {
@@ -45,13 +45,8 @@ export default {
         const depsNodes = node.arguments[1]?.elements;
         if (!depsNodes) return;
 
-        const effectFn = node.arguments[0];
-        if (
-          !effectFn ||
-          (effectFn.type !== "ArrowFunctionExpression" &&
-            effectFn.type !== "FunctionExpression")
-        )
-          return;
+        const effectFn = getUseEffectFn(node);
+        if (!effectFn) return;
 
         // Traverse the `useEffect` body to find calls to props
         if (effectFn.body.type === "BlockStatement") {
