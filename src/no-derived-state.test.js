@@ -23,7 +23,7 @@ new RuleTester().run("no-derived-state", noDerivedStateRule, {
   ],
   invalid: [
     {
-      name: "Derived state from other state (single-statement body; removed entirely)",
+      name: "Derived state from other state (single-statement body; replaced entirely)",
       code: js`
         function Form() {
           const [firstName, setFirstName] = useState('Taylor');
@@ -50,7 +50,7 @@ new RuleTester().run("no-derived-state", noDerivedStateRule, {
       ],
     },
     {
-      name: "Derived state from other state (multi-statement body, only the setter is removed)",
+      name: "Derived state from other state (multi-statement body; only the setter is removed, computed state is placed above `useEffect`)",
       code: js`
         function Form() {
           const [firstName, setFirstName] = useState('Taylor');
@@ -81,7 +81,7 @@ new RuleTester().run("no-derived-state", noDerivedStateRule, {
       ],
     },
     {
-      name: "Derived state from other state (one-liner body; removed entirely)",
+      name: "Derived state from other state (one-liner body; replaced entirely)",
       code: js`
         function Form() {
           const [firstName, setFirstName] = useState('Taylor');
