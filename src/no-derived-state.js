@@ -1,6 +1,5 @@
 import { isUseState, isUseEffect } from "./util.js";
 
-// NOTE: Only supports `useEffect`s with block bodies
 export default {
   meta: {
     type: "suggestion",
@@ -15,6 +14,7 @@ export default {
         'Avoid storing derived state. Compute "{{state}}" directly from other props or state during render.',
     },
   },
+  // NOTE: Only supports block bodies in `useEffect`s
   create: (context) => {
     const stateSetters = new Map(); // state variable -> setter name
     const stateNodes = new Map(); // state name -> node of the useState variable declarator
@@ -38,8 +38,6 @@ export default {
         if (!isUseEffect(node) || node.arguments.length < 1) return;
 
         const effectFn = node.arguments[0];
-        // Will these ever not be the case? What else could be passed?
-        // I guess a reference to a function?
         if (
           !effectFn ||
           (effectFn.type !== "ArrowFunctionExpression" &&

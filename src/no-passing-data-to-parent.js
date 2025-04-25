@@ -17,7 +17,6 @@ export default {
   // - Block bodies in `useEffect`
   // - Destructured props
   create: (context) => {
-    // Functional component name -> props names
     // TODO: I think this would overlap on multiple components in one file?
     const propsNames = new Set();
 
@@ -47,8 +46,6 @@ export default {
         if (!depsNodes) return;
 
         const effectFn = node.arguments[0];
-        // Will these ever not be the case? What else could be passed?
-        // I guess a reference to a function?
         if (
           !effectFn ||
           (effectFn.type !== "ArrowFunctionExpression" &&
