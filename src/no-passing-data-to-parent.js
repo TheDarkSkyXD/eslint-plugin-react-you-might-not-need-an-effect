@@ -15,7 +15,7 @@ export default {
     },
     messages: {
       avoidPassingDataToParent:
-        'React state should flow from parents to their children; never from children to parents. Consider lifting "{{data}}" into the parent.',
+        'React state should not flow from from children to parents. Consider lifting "{{data}}" into the parent.',
     },
   },
   create: (context) => {

@@ -16,7 +16,7 @@ export default {
     fixable: "code",
     messages: {
       avoidDerivedState:
-        'Avoid storing derived state. Compute "{{state}}" directly from other props or state during render.',
+        'Avoid storing derived state. Compute "{{state}}" directly from other props or state during render, optionally with `useMemo` if the computation is expensive.',
     },
   },
   create: (context) => {
@@ -26,7 +26,6 @@ export default {
     return {
       // Collect `useState`s
       VariableDeclarator(node) {
-        // Match: `const [foo, setFoo] = useState(...)`
         if (!isUseState(node)) return;
 
         const [state, setter] = node.id.elements;
@@ -38,13 +37,11 @@ export default {
 
       // Check `useEffect` for `useState` setters
       CallExpression(node) {
-        // Match `useEffect(...)`
         if (!isUseEffect(node) || node.arguments.length < 1) return;
 
         const effectFn = getUseEffectFn(node);
         if (!effectFn) return;
 
-        // Traverse the `useEffect` body to find calls to setters
         getEffectFnCallExpressions(effectFn)?.forEach((callExpression) => {
           const callee = callExpression.callee;
           if (callee.type === "Identifier" && stateSetters.has(callee.name)) {
