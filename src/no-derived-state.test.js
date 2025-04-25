@@ -9,9 +9,8 @@ new RuleTester().run("no-derived-state", noDerivedStateRule, {
         function Form() {
           const [firstName, setFirstName] = useState('Taylor');
           const [lastName, setLastName] = useState('Swift');
-          // ✅ Good: calculated during rendering
+
           const fullName = firstName + ' ' + lastName;
-          // ...
         }
       `,
     },
@@ -23,12 +22,21 @@ new RuleTester().run("no-derived-state", noDerivedStateRule, {
           const [firstName, setFirstName] = useState('Taylor');
           const [lastName, setLastName] = useState('Swift');
 
-          // 🔴 Avoid: redundant state and unnecessary Effect
           const [fullName, setFullName] = useState('');
           useEffect(() => {
             setFullName(firstName + ' ' + lastName);
           }, [firstName, lastName]);
-          // ...
+        }
+      `,
+      output: js`
+        function Form() {
+          const [firstName, setFirstName] = useState('Taylor');
+          const [lastName, setLastName] = useState('Swift');
+
+          const fullName = firstName + ' ' + lastName;
+          useEffect(() => {
+            
+          }, [firstName, lastName]);
         }
       `,
       errors: [
