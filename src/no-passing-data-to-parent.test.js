@@ -62,6 +62,21 @@ new RuleTester().run("no-passing-data-to-parent", noPassingDataToParent, {
         },
       ],
     },
+    // One-liner `useEffect` body
+    {
+      code: js`
+        const Child = ({ onFetched }) => {
+          const data = useSomeAPI();
+
+          useEffect(() => onFetched(data), [props.onFetched, data]);
+        }`,
+      errors: [
+        {
+          message:
+            'React state should flow from parents to their children; never from children to parents. Consider lifting "data" into the parent.',
+        },
+      ],
+    },
     // Wrapped in if statement
     // {
     //   code: js`

@@ -1,8 +1,11 @@
-import { getUseEffectFn, isReactComponent, isUseEffect } from "./util.js";
+import {
+  getEffectFnCallExpressions,
+  getUseEffectFn,
+  isReactComponent,
+  isUseEffect,
+} from "./util.js";
 
-// NOTE: Only supports:
-// - Functional components
-// - Block bodies in `useEffect`
+// NOTE: Only supports functional components
 export default {
   meta: {
     type: "suggestion",
@@ -19,16 +22,14 @@ export default {
     // TODO: I think this would overlap on multiple components in one file?
     const propsNames = new Set();
 
-    function collectPropsNames(fnParam) {
+    function getPropsNames(fnParam) {
       if (fnParam.type === "ObjectPattern") {
-        fnParam.properties
-          .map(
-            // Important to use `value`, not `name`, in case it was renamed in the destructuring
-            (property) => property.value.name,
-          )
-          .forEach((destructuredName) => propsNames.add(destructuredName));
+        return fnParam.properties.map(
+          // Important to use `value`, not `name`, in case it was renamed in the destructuring
+          (property) => property.value.name,
+        );
       } else if (fnParam.type === "Identifier") {
-        propsNames.add(fnParam.name);
+        return [fnParam.name];
       }
     }
 
@@ -39,7 +40,9 @@ export default {
         const fnParamNode = node.params[0];
         if (!fnParamNode) return;
 
-        collectPropsNames(fnParamNode);
+        getPropsNames(fnParamNode).forEach((name) => {
+          propsNames.add(name);
+        });
       },
 
       VariableDeclarator(node) {
@@ -48,7 +51,9 @@ export default {
         const fnParamNode = node.init.params[0];
         if (!fnParamNode) return;
 
-        collectPropsNames(fnParamNode);
+        getPropsNames(fnParamNode).forEach((name) => {
+          propsNames.add(name);
+        });
       },
 
       // Look for `useEffect`s that call props with arguments from their dependencies (the latter implying it's data and not a normal callback)
@@ -62,48 +67,42 @@ export default {
         if (!effectFn) return;
 
         // Traverse the `useEffect` body to find calls to props
-        if (effectFn.body.type === "BlockStatement") {
-          for (const stmt of effectFn.body.body) {
-            if (
-              stmt.type === "ExpressionStatement" &&
-              stmt.expression.type === "CallExpression"
-            ) {
-              const callee = stmt.expression.callee;
-              const isPropCallback =
-                // Destructured prop
-                (callee.type === "Identifier" && propsNames.has(callee.name)) ||
-                // Field access on non-destructured prop
-                (callee.type === "MemberExpression" &&
-                  callee.object.type === "Identifier" &&
-                  propsNames.has(callee.object.name));
-              if (!isPropCallback) continue;
+        getEffectFnCallExpressions(effectFn)?.forEach((callExpression) => {
+          const callee = callExpression.callee;
+          const isPropCallback =
+            // Destructured prop
+            (callee.type === "Identifier" && propsNames.has(callee.name)) ||
+            // Field access on non-destructured prop
+            (callee.type === "MemberExpression" &&
+              callee.object.type === "Identifier" &&
+              propsNames.has(callee.object.name));
 
-              const propCallbackArgs = stmt.expression.arguments;
-              // TODO: support object property access
-              const propCallbackArgFromDeps = propCallbackArgs.find((arg) => {
-                if (arg.type === "Identifier") {
-                  return depsNodes.find((dep) => dep.name === arg.name);
-                }
-                // if (arg.type === "MemberExpression") {
-                //   return depsNodes.find(
-                //     (dep) =>
-                //       dep.type === "Identifier" && dep.name === arg.object.name,
-                //   );
-                // }
-              });
+          if (!isPropCallback) return;
 
-              if (propCallbackArgFromDeps) {
-                context.report({
-                  node: callee,
-                  messageId: "avoidPassingDataToParent",
-                  data: {
-                    data: propCallbackArgFromDeps.name,
-                  },
-                });
-              }
+          const propCallbackArgs = callExpression.arguments;
+          // TODO: support object property access
+          const propCallbackArgFromDeps = propCallbackArgs.find((arg) => {
+            if (arg.type === "Identifier") {
+              return depsNodes.find((dep) => dep.name === arg.name);
             }
+            // if (arg.type === "MemberExpression") {
+            //   return depsNodes.find(
+            //     (dep) =>
+            //       dep.type === "Identifier" && dep.name === arg.object.name,
+            //   );
+            // }
+          });
+
+          if (propCallbackArgFromDeps) {
+            context.report({
+              node: callee,
+              messageId: "avoidPassingDataToParent",
+              data: {
+                data: propCallbackArgFromDeps.name,
+              },
+            });
           }
-        }
+        });
       },
     };
   },
