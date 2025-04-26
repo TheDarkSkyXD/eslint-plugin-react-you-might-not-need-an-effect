@@ -4,7 +4,8 @@ export const isUseState = (node) => {
     node.init.type === "CallExpression" &&
     node.init.callee.name === "useState" &&
     node.id.type === "ArrayPattern" &&
-    node.id.elements.length === 2
+    node.id.elements.length === 2 &&
+    node.id.elements.every((el) => el.type === "Identifier")
   );
 };
 
@@ -39,7 +40,7 @@ export const getUseEffectDeps = (node) => {
   return deps.elements;
 };
 
-export const isReactComponent = (node) => {
+export const isReactFunctionalComponent = (node) => {
   const isFunctionComponent = node.type === "FunctionDeclaration";
   const isArrowFunctionComponent =
     node.type === "VariableDeclarator" &&

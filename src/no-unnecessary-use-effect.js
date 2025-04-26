@@ -3,7 +3,7 @@ import {
   isUseEffect,
   getUseEffectFn,
   getEffectFnCallExpressions,
-  isReactComponent,
+  isReactFunctionalComponent,
   getUseEffectDeps,
   findDepUsedInArgs,
   getPropsNames,
@@ -34,7 +34,7 @@ export default {
 
     return {
       FunctionDeclaration(node) {
-        if (isReactComponent(node)) {
+        if (isReactFunctionalComponent(node)) {
           useStates = new Map();
           propsNames = new Set();
 
@@ -46,7 +46,7 @@ export default {
         }
       },
       VariableDeclarator(node) {
-        if (isReactComponent(node)) {
+        if (isReactFunctionalComponent(node)) {
           useStates = new Map();
           propsNames = new Set();
 
@@ -57,9 +57,7 @@ export default {
           });
         } else if (isUseState(node)) {
           const [state, setter] = node.id.elements;
-          if (state?.type === "Identifier" && setter?.type === "Identifier") {
-            useStates.set(setter.name, { stateName: state.name, node });
-          }
+          useStates.set(setter.name, { stateName: state.name, node });
         }
       },
 
