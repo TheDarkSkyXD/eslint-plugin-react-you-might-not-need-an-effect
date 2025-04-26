@@ -19,8 +19,7 @@ export default {
     },
   },
   create: (context) => {
-    // TODO: I think this would overlap on multiple components in one file?
-    const propsNames = new Set();
+    let propsNames;
 
     function getPropsNames(fnParam) {
       if (fnParam.type === "ObjectPattern") {
@@ -36,6 +35,7 @@ export default {
     return {
       FunctionDeclaration(node) {
         if (!isReactComponent(node)) return;
+        propsNames = new Set();
 
         const fnParamNode = node.params[0];
         if (!fnParamNode) return;
@@ -47,6 +47,7 @@ export default {
 
       VariableDeclarator(node) {
         if (!isReactComponent(node)) return;
+        propsNames = new Set();
 
         const fnParamNode = node.init.params[0];
         if (!fnParamNode) return;

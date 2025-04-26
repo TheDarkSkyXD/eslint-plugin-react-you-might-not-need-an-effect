@@ -3,6 +3,7 @@ import {
   isUseEffect,
   getUseEffectFn,
   getEffectFnCallExpressions,
+  isReactComponent,
 } from "./util.js";
 
 export default {
@@ -20,10 +21,22 @@ export default {
     },
   },
   create: (context) => {
-    const stateSetters = new Map(); // state variable -> setter name
-    const stateNodes = new Map(); // state name -> node of the useState variable declarator
+    let stateSetters; // state variable -> setter name
+    let stateNodes; // state name -> node of the useState variable declarator
 
     return {
+      // Scope state per component
+      FunctionDeclaration(node) {
+        if (!isReactComponent(node)) return;
+        stateSetters = new Map();
+        stateNodes = new Map();
+      },
+      VariableDeclarator(node) {
+        if (!isReactComponent(node)) return;
+        stateSetters = new Map();
+        stateNodes = new Map();
+      },
+
       // Collect `useState`s
       VariableDeclarator(node) {
         if (!isUseState(node)) return;

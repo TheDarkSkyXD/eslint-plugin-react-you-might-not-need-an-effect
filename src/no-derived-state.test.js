@@ -23,6 +23,25 @@ new NormalizedWhitespaceRuleTester().run(
           const visibleTodos = getFilteredTodos(todos, filter);
         }`,
       },
+      {
+        name: "Two components with overlapping names should not affect each other",
+        // Not a super realistic example
+        code: js`
+          function One() {
+            const [data, setData] = useState();
+          }
+
+          function Two() {
+            const setData = (data) => {
+              console.log(data);
+            }
+
+            useEffect(() => {
+              setData('hello');
+            }, []);
+          }
+        `,
+      },
     ],
     invalid: [
       {
