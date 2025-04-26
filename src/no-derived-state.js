@@ -55,29 +55,31 @@ export default {
         const effectFn = getUseEffectFn(node);
         if (!effectFn) return;
 
-        getEffectFnCallExpressions(effectFn)?.forEach((callExpression) => {
-          const callee = callExpression.callee;
-          if (callee.type === "Identifier" && stateSetters.has(callee.name)) {
-            const stateVar = stateSetters.get(callee.name);
+        getEffectFnCallExpressions(effectFn)
+          ?.filter(
+            ({ callee }) =>
+              callee.type === "Identifier" && stateSetters.has(callee.name),
+          )
+          .forEach((callExpr) => {
+            const stateVar = stateSetters.get(callExpr.callee.name);
             const stateDeclNode = stateNodes.get(stateVar);
 
             context.report({
-              node: callee,
+              node: callExpr.callee,
               messageId: "avoidDerivedState",
-              data: { state: stateSetters.get(callee.name) },
+              data: { state: stateSetters.get(callExpr.callee.name) },
               fix: (fixer) => {
-                const setStateArgs = callExpression.arguments;
+                const setStateArgs = callExpr.arguments;
                 const argSource = context
                   .getSourceCode()
                   .getText(setStateArgs[0]);
                 const computeDuringRenderText = `const ${stateVar} = ${argSource};`;
 
                 const isSingleStatementEffectFn =
-                  callExpression.parent.type === "ArrowFunctionExpression" ||
-                  (callExpression.parent.parent.type === "BlockStatement" &&
-                    callExpression.parent.parent.body.length === 1 &&
-                    callExpression.parent.parent.body[0] ===
-                      callExpression.parent);
+                  callExpr.parent.type === "ArrowFunctionExpression" ||
+                  (callExpr.parent.parent.type === "BlockStatement" &&
+                    callExpr.parent.parent.body.length === 1 &&
+                    callExpr.parent.parent.body[0] === callExpr.parent);
 
                 const computeStateFix = isSingleStatementEffectFn
                   ? // The setState call is the only statement in the effect, so we can entirely replace it
@@ -92,14 +94,13 @@ export default {
                         `${computeDuringRenderText}\n`,
                       ),
                       // Remove the setState call from the `useEffect`, but keep the rest
-                      fixer.remove(callExpression.parent),
+                      fixer.remove(callExpr.parent),
                     ];
 
                 return [...computeStateFix, fixer.remove(stateDeclNode.parent)];
               },
             });
-          }
-        });
+          });
       },
     };
   },

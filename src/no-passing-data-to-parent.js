@@ -70,33 +70,33 @@ export default {
         if (!effectFn) return;
 
         // Traverse the `useEffect` body to find calls to props
-        getEffectFnCallExpressions(effectFn)?.forEach((callExpression) => {
-          const callee = callExpression.callee;
-          const isPropCallback =
-            // Destructured prop
-            (callee.type === "Identifier" && propsNames.has(callee.name)) ||
-            // Field access on non-destructured prop
-            (callee.type === "MemberExpression" &&
-              callee.object.type === "Identifier" &&
-              propsNames.has(callee.object.name));
+        getEffectFnCallExpressions(effectFn)
+          // Only check calls to props
+          ?.filter(
+            ({ callee }) =>
+              // Destructured prop
+              (callee.type === "Identifier" && propsNames.has(callee.name)) ||
+              // Field access on non-destructured prop
+              (callee.type === "MemberExpression" &&
+                callee.object.type === "Identifier" &&
+                propsNames.has(callee.object.name)),
+          )
+          .forEach((callExpr) => {
+            const propCallbackArgs = callExpr.arguments;
+            const propCallbackArgFromDeps = propCallbackArgs.find((arg) =>
+              depsNodes.find((dep) => isEqualFields(arg, dep)),
+            );
 
-          if (!isPropCallback) return;
-
-          const propCallbackArgs = callExpression.arguments;
-          const propCallbackArgFromDeps = propCallbackArgs.find((arg) =>
-            depsNodes.find((dep) => isEqualFields(arg, dep)),
-          );
-
-          if (propCallbackArgFromDeps) {
-            context.report({
-              node: callee,
-              messageId: "avoidPassingDataToParent",
-              data: {
-                data: getBaseName(propCallbackArgFromDeps),
-              },
-            });
-          }
-        });
+            if (propCallbackArgFromDeps) {
+              context.report({
+                node: callExpr.callee,
+                messageId: "avoidPassingDataToParent",
+                data: {
+                  data: getBaseName(propCallbackArgFromDeps),
+                },
+              });
+            }
+          });
       },
     };
   },
