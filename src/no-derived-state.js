@@ -52,9 +52,6 @@ export default {
               node: callee,
               messageId: "avoidDerivedState",
               data: { state: stateSetters.get(callee.name) },
-              // TODO: Replaces `useState` with the computed state, at which point the dependencies
-              // may not have been declared. It should replace the `useEffect` instead (whitespace is annoying).
-              // TODO: Maybe just remove/disable fixes for now? More valuable to get a wide spread of rules.
               fix: (fixer) => {
                 const setStateArgs = callExpression.arguments;
                 const argSource = context
@@ -62,7 +59,6 @@ export default {
                   .getText(setStateArgs[0]);
 
                 // TODO: presumably breaks when `setStateArgs` is a function
-                // TODO: the line still remains with preceding whitespace
                 const removeStateFix = fixer.remove(stateDeclNode.parent);
 
                 const computeDuringRenderText = `const ${stateVar} = ${argSource};`;

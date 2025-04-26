@@ -1,31 +1,33 @@
-import { RuleTester } from "eslint";
+import { NormalizedWhitespaceRuleTester } from "./normalized-whitespace-rule-tester.js";
 import noDerivedStateRule from "./no-derived-state.js";
-import { normalizeWhitespaceInTests } from "./util.js";
 const js = String.raw;
 
-new RuleTester().run("no-derived-state", noDerivedStateRule, {
-  valid: normalizeWhitespaceInTests([
-    {
-      code: js`
+new NormalizedWhitespaceRuleTester().run(
+  "no-derived-state",
+  noDerivedStateRule,
+  {
+    valid: [
+      {
+        code: js`
         function Form() {
           const [firstName, setFirstName] = useState('Taylor');
           const [lastName, setLastName] = useState('Swift');
 
           const fullName = firstName + ' ' + lastName;
         }`,
-    },
-    {
-      code: js`
+      },
+      {
+        code: js`
         function TodoList({ todos, filter }) {
           const [newTodo, setNewTodo] = useState('');
           const visibleTodos = getFilteredTodos(todos, filter);
         }`,
-    },
-  ]),
-  invalid: normalizeWhitespaceInTests([
-    {
-      name: "Derived state from other state (single-statement body; replaced entirely)",
-      code: js`
+      },
+    ],
+    invalid: [
+      {
+        name: "Derived state from other state (single-statement body; replaced entirely)",
+        code: js`
         function Form() {
           const [firstName, setFirstName] = useState('Taylor');
           const [lastName, setLastName] = useState('Swift');
@@ -35,24 +37,23 @@ new RuleTester().run("no-derived-state", noDerivedStateRule, {
             setFullName(firstName + ' ' + lastName);
           }, [firstName, lastName]);
         }`,
-      output: js`
+        output: js`
         function Form() {
           const [firstName, setFirstName] = useState('Taylor');
           const [lastName, setLastName] = useState('Swift');
 
-          
           const fullName = firstName + ' ' + lastName;
         }`,
-      errors: [
-        {
-          messageId: "avoidDerivedState",
-          data: { state: "fullName" },
-        },
-      ],
-    },
-    {
-      name: "Derived state from other state (multi-statement body; only the setter is removed, computed state is placed above `useEffect`)",
-      code: js`
+        errors: [
+          {
+            messageId: "avoidDerivedState",
+            data: { state: "fullName" },
+          },
+        ],
+      },
+      {
+        name: "Derived state from other state (multi-statement body; only the setter is removed, computed state is placed above `useEffect`)",
+        code: js`
         function Form() {
           const [firstName, setFirstName] = useState('Taylor');
           const [lastName, setLastName] = useState('Swift');
@@ -63,27 +64,26 @@ new RuleTester().run("no-derived-state", noDerivedStateRule, {
             console.log('meow');
           }, [firstName, lastName]);
         }`,
-      output: js`
+        output: js`
         function Form() {
           const [firstName, setFirstName] = useState('Taylor');
           const [lastName, setLastName] = useState('Swift');
 
           const fullName = firstName + ' ' + lastName;
           useEffect(() => {
-            
             console.log('meow');
           }, [firstName, lastName]);
         }`,
-      errors: [
-        {
-          messageId: "avoidDerivedState",
-          data: { state: "fullName" },
-        },
-      ],
-    },
-    {
-      name: "Derived state from other state (one-liner body; replaced entirely)",
-      code: js`
+        errors: [
+          {
+            messageId: "avoidDerivedState",
+            data: { state: "fullName" },
+          },
+        ],
+      },
+      {
+        name: "Derived state from other state (one-liner body; replaced entirely)",
+        code: js`
         function Form() {
           const [firstName, setFirstName] = useState('Taylor');
           const [lastName, setLastName] = useState('Swift');
@@ -91,25 +91,24 @@ new RuleTester().run("no-derived-state", noDerivedStateRule, {
           const [fullName, setFullName] = useState('');
           useEffect(() => setFullName(firstName + ' ' + lastName), [firstName, lastName]);
         }`,
-      output: js`
+        output: js`
         function Form() {
           const [firstName, setFirstName] = useState('Taylor');
           const [lastName, setLastName] = useState('Swift');
 
           const fullName = firstName + ' ' + lastName;
-          
         }`,
-      errors: [
-        {
-          messageId: "avoidDerivedState",
-          data: { state: "fullName" },
-        },
-      ],
-    },
-    // TODO: could suggest `useMemo`
-    {
-      name: "Derived state from props",
-      code: js`
+        errors: [
+          {
+            messageId: "avoidDerivedState",
+            data: { state: "fullName" },
+          },
+        ],
+      },
+      // TODO: could suggest `useMemo`
+      {
+        name: "Derived state from props",
+        code: js`
         function TodoList({ todos, filter }) {
           const [newTodo, setNewTodo] = useState("");
 
@@ -118,19 +117,19 @@ new RuleTester().run("no-derived-state", noDerivedStateRule, {
             setVisibleTodos(getFilteredTodos(todos, filter));
           }, [todos, filter]);
         }`,
-      output: js`
+        output: js`
         function TodoList({ todos, filter }) {
           const [newTodo, setNewTodo] = useState("");
 
           const visibleTodos = getFilteredTodos(todos, filter);
-          
         }`,
-      errors: [
-        {
-          messageId: "avoidDerivedState",
-          data: { state: "visibleTodos" },
-        },
-      ],
-    },
-  ]),
-});
+        errors: [
+          {
+            messageId: "avoidDerivedState",
+            data: { state: "visibleTodos" },
+          },
+        ],
+      },
+    ],
+  },
+);

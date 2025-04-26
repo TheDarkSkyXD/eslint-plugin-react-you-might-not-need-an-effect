@@ -1,11 +1,3 @@
-export const normalizeWhitespaceInTests = (tests) =>
-  tests.map((test) => ({
-    ...test,
-    code: normalizeWhitespace(test.code),
-    output: test.output ? normalizeWhitespace(test.output) : undefined,
-  }));
-const normalizeWhitespace = (str) => str.replace(/(\s|\n)+/g, " ").trim();
-
 export const isUseState = (node) => {
   return (
     node.init &&
