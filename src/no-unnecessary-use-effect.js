@@ -15,7 +15,7 @@ export default {
   meta: {
     type: "suggestion",
     docs: {
-      description: "Disallow unnecessary useEffect.",
+      description: "Warn against unnecessary useEffect.",
       url: "https://react.dev/learn/you-might-not-need-an-effect",
     },
     fixable: "code",
