@@ -19,6 +19,7 @@ export default {
       url: "https://react.dev/learn/you-might-not-need-an-effect",
     },
     fixable: "code",
+    schema: [],
     messages: {
       avoidDerivedState:
         'Avoid storing derived state. Compute "{{state}}" directly from other props or state during render, optionally with `useMemo` if the computation is expensive.',
