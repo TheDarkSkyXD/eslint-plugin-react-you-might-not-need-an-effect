@@ -57,46 +57,32 @@ export default {
                 const argSource = context
                   .getSourceCode()
                   .getText(setStateArgs[0]);
-
-                // TODO: presumably breaks when `setStateArgs` is a function
-                const removeStateFix = fixer.remove(stateDeclNode.parent);
-
                 const computeDuringRenderText = `const ${stateVar} = ${argSource};`;
-                let computeStateFix = [];
-                if (callExpression.parent.type === "ArrowFunctionExpression") {
-                  // It's a one-liner; replace the entire `useEffect` with computed state
-                  computeStateFix = [
-                    fixer.replaceText(node.parent, computeDuringRenderText),
-                  ];
-                } else if (
-                  callExpression.parent.parent.type === "BlockStatement"
-                ) {
-                  if (
+
+                const isSingleStatementEffectFn =
+                  callExpression.parent.type === "ArrowFunctionExpression" ||
+                  (callExpression.parent.parent.type === "BlockStatement" &&
                     callExpression.parent.parent.body.length === 1 &&
                     callExpression.parent.parent.body[0] ===
-                      callExpression.parent
-                  ) {
-                    // It's the only statement in the body; replace the entire `useEffect` with computed state
-                    computeStateFix = [
-                      fixer.replaceText(node.parent, computeDuringRenderText),
-                    ];
-                  } else {
-                    computeStateFix = [
-                      // Add the computed state right above the `useEffect`
-                      // We place it at the `useEffect` location because we know
-                      // its dependencies have been declared by that point.
-                      // If we replaced the `useState` location, they may not be.
+                      callExpression.parent);
+
+                const computeStateFix = isSingleStatementEffectFn
+                  ? // The setState call is the only statement in the effect, so we can entirely replace it
+                    [fixer.replaceText(node.parent, computeDuringRenderText)]
+                  : [
+                      // Insert the computed state just before the `useEffect`.
+                      // Location is important - we know its dependencies have been declared by this point
+                      // because they were used in the `useEffect`.
+                      // That may not be the case if we replaced the higher-up `useState` variable.
                       fixer.insertTextBefore(
                         node.parent,
                         `${computeDuringRenderText}\n`,
                       ),
-                      // It's a multi-statement body; remove the setter call
+                      // Remove the setState call from the `useEffect`, but keep the rest
                       fixer.remove(callExpression.parent),
                     ];
-                  }
-                }
 
-                return [...computeStateFix, removeStateFix];
+                return [...computeStateFix, fixer.remove(stateDeclNode.parent)];
               },
             });
           }
