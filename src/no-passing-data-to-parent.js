@@ -6,6 +6,7 @@ import {
   isEqualFields,
   getBaseName,
   getUseEffectDeps,
+  findDepUsedInArgs,
 } from "./util.js";
 
 // NOTE: Only supports functional components
@@ -82,9 +83,10 @@ export default {
           )
           .forEach((callExpr) => {
             const propCallbackArgs = callExpr.arguments;
-            // TODO: misses complex expressions
-            const propCallbackArgFromDeps = propCallbackArgs.find((arg) =>
-              depsNodes.find((dep) => isEqualFields(arg, dep)),
+            const propCallbackArgFromDeps = findDepUsedInArgs(
+              context,
+              depsNodes,
+              propCallbackArgs,
             );
 
             if (propCallbackArgFromDeps) {

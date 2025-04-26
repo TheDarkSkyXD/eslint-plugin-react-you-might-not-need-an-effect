@@ -96,10 +96,16 @@ export const getBaseName = (node) => {
   return null;
 };
 
-// NOTE: Probably can't handle edge cases like shadowed variables
-// TODO: Probably doesn't work for MemberExpressions?
+// NOTE: Comparing source text is the easiest way to handle various structures
+// (Identifier vs MemberExpression, complex nested expressions, etc.),
+// but it probably can't handle edge cases like shadowed variables
 export const findDepUsedInArgs = (context, deps, args) => {
   return args.find((arg) =>
-    deps.find((dep) => context.getSourceCode().getText(arg).includes(dep.name)),
+    deps.find((dep) =>
+      context
+        .getSourceCode()
+        .getText(arg)
+        .includes(context.getSourceCode().getText(dep)),
+    ),
   );
 };
