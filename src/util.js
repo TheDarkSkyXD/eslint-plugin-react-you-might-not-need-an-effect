@@ -59,3 +59,30 @@ export const getEffectFnCallExpressions = (effectFn) => {
     return null;
   }
 };
+
+export const isEqualFields = (node1, node2) => {
+  // Base case
+  if (node1.type === "Identifier" && node2.type === "Identifier") {
+    return node1.name === node2.name;
+  }
+
+  // Recursively check nested members
+  if (node1.type === "MemberExpression" && node2.type === "MemberExpression") {
+    return (
+      node1.property.name === node2.property.name &&
+      isEqualFields(node1.object, node2.object)
+    );
+  }
+
+  // We've recursed far enough and one node is shallower than the other (i.e. different types)
+  return false;
+};
+
+export const getBaseName = (node) => {
+  if (node.type === "MemberExpression") {
+    return getBaseName(node.object);
+  } else if (node.type === "Identifier") {
+    return node.name;
+  }
+  return null;
+};

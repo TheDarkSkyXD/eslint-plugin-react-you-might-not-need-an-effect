@@ -3,6 +3,8 @@ import {
   getUseEffectFn,
   isReactComponent,
   isUseEffect,
+  isEqualFields,
+  getBaseName,
 } from "./util.js";
 
 // NOTE: Only supports functional components
@@ -81,30 +83,16 @@ export default {
           if (!isPropCallback) return;
 
           const propCallbackArgs = callExpression.arguments;
-          const propCallbackArgFromDeps = propCallbackArgs.find((arg) => {
-            return depsNodes
-              .filter((dep) => dep.type === arg.type)
-              .find((dep) => {
-                if (dep.type === "Identifier") {
-                  return dep.name === arg.name;
-                } else if (dep.type === "MemberExpression") {
-                  return (
-                    dep.object.type === "Identifier" &&
-                    dep.object.name === arg.object.name &&
-                    dep.property.name === arg.property.name
-                  );
-                }
-              });
-          });
+          const propCallbackArgFromDeps = propCallbackArgs.find((arg) =>
+            depsNodes.find((dep) => isEqualFields(arg, dep)),
+          );
 
           if (propCallbackArgFromDeps) {
             context.report({
               node: callee,
               messageId: "avoidPassingDataToParent",
               data: {
-                data:
-                  propCallbackArgFromDeps.name ??
-                  propCallbackArgFromDeps.object.name,
+                data: getBaseName(propCallbackArgFromDeps),
               },
             });
           }

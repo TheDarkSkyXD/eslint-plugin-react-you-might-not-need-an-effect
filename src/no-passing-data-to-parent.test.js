@@ -92,6 +92,21 @@ new RuleTester().run("no-passing-data-to-parent", noPassingDataToParent, {
         },
       ],
     },
+    {
+      name: "Nested member access in dependencies",
+      code: js`
+        const Child = ({ onFetched }) => {
+          const data = useSomeAPI();
+
+          useEffect(() => onFetched(data.result.value), [onFetched, data.result.value]);
+        }`,
+      errors: [
+        {
+          messageId: "avoidPassingDataToParent",
+          data: { data: "data" },
+        },
+      ],
+    },
     // TODO:
     // {
     //   name: "Nested in if block",
@@ -112,6 +127,7 @@ new RuleTester().run("no-passing-data-to-parent", noPassingDataToParent, {
     //     },
     //   ],
     // },
+    ,
     ,
     ,
   ],
