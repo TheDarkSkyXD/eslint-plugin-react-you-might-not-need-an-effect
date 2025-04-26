@@ -34,7 +34,7 @@ export default {
     let propsNames; // Set of prop names
 
     return {
-      FunctionDeclaration(node) {
+      FunctionDeclaration: (node) => {
         if (isReactFunctionalComponent(node)) {
           useStates = new Map();
           propsNames = new Set();
@@ -46,7 +46,7 @@ export default {
           });
         }
       },
-      VariableDeclarator(node) {
+      VariableDeclarator: (node) => {
         if (isReactFunctionalComponent(node)) {
           useStates = new Map();
           propsNames = new Set();
@@ -62,7 +62,7 @@ export default {
         }
       },
 
-      CallExpression(node) {
+      CallExpression: (node) => {
         if (!isUseEffect(node)) return;
         const effectFn = getUseEffectFn(node);
         const depsNodes = getUseEffectDeps(node);
