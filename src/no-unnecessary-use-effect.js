@@ -2,13 +2,13 @@ import {
   isUseState,
   isUseEffect,
   getUseEffectFn,
-  getEffectFnCallExpressions,
+  getCallExpressions,
   isReactFunctionalComponent,
   getUseEffectDeps,
   findDepUsedInArgs,
   getPropsNames,
   getBaseName,
-  isSingleStatementEffectFn,
+  isSingleStatementFn,
 } from "./util.js";
 
 export default {
@@ -68,7 +68,7 @@ export default {
         const depsNodes = getUseEffectDeps(node);
         if (!effectFn || !depsNodes) return;
 
-        getEffectFnCallExpressions(effectFn)
+        getCallExpressions(effectFn.body)
           ?.filter(
             (callExpr) =>
               // It calls a state setter
@@ -93,7 +93,7 @@ export default {
                   .getText(setStateArgs[0]);
                 const computeDuringRenderText = `const ${stateName} = ${argSource};`;
 
-                const computeStateFix = isSingleStatementEffectFn(effectFn)
+                const computeStateFix = isSingleStatementFn(effectFn)
                   ? // The setState call is the only statement in the effect, so we can entirely replace it
                     [fixer.replaceText(node.parent, computeDuringRenderText)]
                   : [
@@ -114,7 +114,7 @@ export default {
             });
           });
 
-        getEffectFnCallExpressions(effectFn)
+        getCallExpressions(effectFn.body)
           // Only check calls to props
           ?.filter(
             ({ callee }) =>

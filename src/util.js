@@ -52,27 +52,24 @@ export const isReactFunctionalComponent = (node) => {
   );
 };
 
-export const getEffectFnCallExpressions = (effectFn) => {
-  if (effectFn.body.type === "BlockStatement") {
-    // This is the case for `useEffect(() => { setState(...); })`
-    return effectFn.body.body
-      .filter(
-        (stmt) =>
-          stmt.type === "ExpressionStatement" &&
-          stmt.expression.type === "CallExpression",
-      )
-      .map((stmt) => stmt.expression);
-  } else if (effectFn.body.type === "CallExpression") {
-    // This is the case for `useEffect(() => setState(...))`
-    return [effectFn.body];
+export const getCallExpressions = (node) => {
+  if (node.type === "CallExpression") return [node];
+
+  if (node.type === "ExpressionStatement") {
+    return getCallExpressions(node.expression);
+  } else if (node.type === "IfStatement") {
+    return getCallExpressions(node.consequent);
+  } else if (node.type === "BlockStatement") {
+    return node.body.map((stmt) => getCallExpressions(stmt)).flat();
   } else {
+    // TODO: what other node types?
     return null;
   }
 };
 
-export const isSingleStatementEffectFn = (effectFn) =>
-  effectFn.body.type === "CallExpression" ||
-  (effectFn.body.type === "BlockStatement" && effectFn.body.body.length === 1);
+export const isSingleStatementFn = (fn) =>
+  fn.body.type === "CallExpression" ||
+  (fn.body.type === "BlockStatement" && fn.body.body.length === 1);
 
 export const isEqualFields = (node1, node2) => {
   // Base case

@@ -256,26 +256,25 @@ new NormalizedWhitespaceRuleTester().run(
           },
         ],
       },
-      // TODO:
-      // {
-      //   name: "Nested in if block",
-      //   code: js`
-      //     function Child({ onFetched }) {
-      //       const data = useSomeAPI();
-      //
-      //       useEffect(() => {
-      //         if (data) {
-      //           onFetched(data);
-      //         }
-      //       }, [onFetched, data]);
-      //     }`,
-      //   errors: [
-      //     {
-      //       message:
-      //         'React state should flow from parents to their children; never from children to parents. Consider lifting "data" into the parent.',
-      //     },
-      //   ],
-      // },
+      {
+        name: "Nested in if block",
+        code: js`
+          function Child({ onFetched }) {
+            const data = useSomeAPI();
+
+            useEffect(() => {
+              if (data) {
+                onFetched(data);
+              }
+            }, [onFetched, data]);
+          }`,
+        errors: [
+          {
+            messageId: "avoidPassingDataToParent",
+            data: { data: "data" },
+          },
+        ],
+      },
     ],
   },
 );
