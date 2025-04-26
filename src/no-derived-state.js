@@ -4,9 +4,15 @@ import {
   getUseEffectFn,
   getEffectFnCallExpressions,
   isReactComponent,
+  getUseEffectDeps,
+  findDepUsedInArgs,
 } from "./util.js";
 
-// TODO: Could provide separate suggestion/fix with `useMemo`
+// Covers:
+// - https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state
+// - meow
+// - https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state
+//   - TODO: Could provide separate suggestion/fix with `useMemo`
 export default {
   meta: {
     type: "suggestion",
@@ -49,17 +55,23 @@ export default {
         }
       },
 
-      // Check `useEffect` for `useState` setters
+      // Check `useEffect` for `useState` setters that are derived from dependencies
       CallExpression(node) {
         if (!isUseEffect(node) || node.arguments.length < 1) return;
 
         const effectFn = getUseEffectFn(node);
-        if (!effectFn) return;
+        const depsNodes = getUseEffectDeps(node);
+        if (!effectFn || !depsNodes) return;
 
         getEffectFnCallExpressions(effectFn)
           ?.filter(
-            ({ callee }) =>
-              callee.type === "Identifier" && stateSetters.has(callee.name),
+            (callExpr) =>
+              // It calls a state setter
+              callExpr.callee.type === "Identifier" &&
+              stateSetters.has(callExpr.callee.name) &&
+              // The set value is derived from the dependencies
+              findDepUsedInArgs(context, depsNodes, callExpr.arguments) !==
+                undefined,
           )
           .forEach((callExpr) => {
             const stateVar = stateSetters.get(callExpr.callee.name);

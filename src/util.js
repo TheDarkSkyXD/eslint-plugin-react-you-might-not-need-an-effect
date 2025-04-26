@@ -30,6 +30,15 @@ export const getUseEffectFn = (node) => {
   return effectFn;
 };
 
+export const getUseEffectDeps = (node) => {
+  if (!isUseEffect(node) || node.arguments.length < 2) return null;
+
+  const deps = node.arguments[1];
+  if (deps.type !== "ArrayExpression") return null;
+
+  return deps.elements;
+};
+
 export const isReactComponent = (node) => {
   const isFunctionComponent = node.type === "FunctionDeclaration";
   const isArrowFunctionComponent =
@@ -74,7 +83,7 @@ export const isEqualFields = (node1, node2) => {
     );
   }
 
-  // We've recursed far enough and one node is shallower than the other (i.e. different types)
+  // They're not the same type
   return false;
 };
 
@@ -85,4 +94,12 @@ export const getBaseName = (node) => {
     return node.name;
   }
   return null;
+};
+
+// NOTE: Probably can't handle edge cases like shadowed variables
+// TODO: Probably doesn't work for MemberExpressions?
+export const findDepUsedInArgs = (context, deps, args) => {
+  return args.find((arg) =>
+    deps.find((dep) => context.getSourceCode().getText(arg).includes(dep.name)),
+  );
 };

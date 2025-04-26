@@ -5,6 +5,7 @@ import {
   isUseEffect,
   isEqualFields,
   getBaseName,
+  getUseEffectDeps,
 } from "./util.js";
 
 // NOTE: Only supports functional components
@@ -63,11 +64,9 @@ export default {
       CallExpression(node) {
         if (!isUseEffect(node) || node.arguments.length < 1) return;
 
-        const depsNodes = node.arguments[1]?.elements;
-        if (!depsNodes) return;
-
         const effectFn = getUseEffectFn(node);
-        if (!effectFn) return;
+        const depsNodes = getUseEffectDeps(node);
+        if (!effectFn || !depsNodes) return;
 
         // Traverse the `useEffect` body to find calls to props
         getEffectFnCallExpressions(effectFn)
@@ -83,6 +82,7 @@ export default {
           )
           .forEach((callExpr) => {
             const propCallbackArgs = callExpr.arguments;
+            // TODO: misses complex expressions
             const propCallbackArgFromDeps = propCallbackArgs.find((arg) =>
               depsNodes.find((dep) => isEqualFields(arg, dep)),
             );

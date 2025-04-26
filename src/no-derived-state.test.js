@@ -42,6 +42,18 @@ new NormalizedWhitespaceRuleTester().run(
           }
         `,
       },
+      {
+        name: "Resetting state when a prop changes",
+        // The `useEffect` triggers a state change, but it's not derived state.
+        code: js`
+          function ProfilePage({ userId }) {
+            const [comment, setComment] = useState('');
+
+            useEffect(() => {
+              setComment('');
+            }, [userId]);
+          }`,
+      },
     ],
     invalid: [
       {
