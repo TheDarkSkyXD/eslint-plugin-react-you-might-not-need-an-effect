@@ -8,6 +8,7 @@ import {
   findDepUsedInArgs,
   getPropsNames,
   getBaseName,
+  isSingleStatementEffectFn,
 } from "./util.js";
 
 export default {
@@ -93,26 +94,20 @@ export default {
                   .getText(setStateArgs[0]);
                 const computeDuringRenderText = `const ${stateName} = ${argSource};`;
 
-                const isSingleStatementEffectFn =
-                  callExpr.parent.type === "ArrowFunctionExpression" ||
-                  (callExpr.parent.parent.type === "BlockStatement" &&
-                    callExpr.parent.parent.body.length === 1 &&
-                    callExpr.parent.parent.body[0] === callExpr.parent);
-
-                const computeStateFix = isSingleStatementEffectFn
+                const computeStateFix = isSingleStatementEffectFn(effectFn)
                   ? // The setState call is the only statement in the effect, so we can entirely replace it
                     [fixer.replaceText(node.parent, computeDuringRenderText)]
                   : [
+                      // Remove the setState call from the `useEffect`, but keep the rest
+                      fixer.remove(callExpr.parent),
                       // Insert the computed state just before the `useEffect`.
                       // Location is important - we know its dependencies have been declared by this point
                       // because they were used in the `useEffect`.
-                      // That may not be the case if we replaced the higher-up `useState` variable.
+                      // That may not be the case if we replaced the higher-up `useState` node.
                       fixer.insertTextBefore(
                         node.parent,
                         `${computeDuringRenderText}\n`,
                       ),
-                      // Remove the setState call from the `useEffect`, but keep the rest
-                      fixer.remove(callExpr.parent),
                     ];
 
                 return [...computeStateFix, fixer.remove(stateDeclNode.parent)];

@@ -69,6 +69,10 @@ export const getEffectFnCallExpressions = (effectFn) => {
   }
 };
 
+export const isSingleStatementEffectFn = (effectFn) =>
+  effectFn.body.type === "CallExpression" ||
+  (effectFn.body.type === "BlockStatement" && effectFn.body.body.length === 1);
+
 export const isEqualFields = (node1, node2) => {
   // Base case
   if (node1.type === "Identifier" && node2.type === "Identifier") {
