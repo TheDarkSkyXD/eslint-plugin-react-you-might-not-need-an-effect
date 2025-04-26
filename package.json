@@ -1,11 +1,23 @@
 {
   "name": "eslint-no-unnecessary-use-effect",
-  "packageManager": "yarn@4.6.0",
+  "version": "0.0.1",
+  "description": "ESLint rule to warn against unnecessary React useEffect hooks",
+  "author": "Nick van Dyke",
   "type": "module",
+  "main": "./src/index.js",
   "scripts": {
     "test": "node --test src/*.test.js"
   },
+  "keywords": [
+    "eslint",
+    "eslintplugin",
+    "eslint-plugin"
+  ],
   "devDependencies": {
     "eslint": "^9.20.1"
-  }
+  },
+  "peerDependencies": {
+    "eslint": ">=9.0.0"
+  },
+  "packageManager": "yarn@4.6.0"
 }
