@@ -1,10 +1,10 @@
 import { NormalizedWhitespaceRuleTester } from "./normalized-whitespace-rule-tester.js";
-import noUnnecessaryUseEffectRule from "./no-unnecessary-use-effect.js";
+import youMightNotNeedAnEffectRule from "./you-might-not-need-an-effect.js";
 const js = String.raw;
 
 new NormalizedWhitespaceRuleTester().run(
-  "no-unnecessary-use-effect",
-  noUnnecessaryUseEffectRule,
+  "you-might-not-need-an-effect",
+  youMightNotNeedAnEffectRule,
   {
     valid: [
       {

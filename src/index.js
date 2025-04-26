@@ -1,1 +1,1 @@
-export { default } from "./no-unnecessary-use-effect.js";
+export { default } from "./you-might-not-need-an-effect.js";

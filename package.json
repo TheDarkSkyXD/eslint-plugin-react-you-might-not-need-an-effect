@@ -1,5 +1,5 @@
 {
-  "name": "eslint-no-unnecessary-use-effect",
+  "name": "eslint-plugin-react-you-might-not-need-an-effect",
   "version": "0.0.1",
   "description": "ESLint rule to warn against unnecessary React useEffect hooks",
   "author": "Nick van Dyke",

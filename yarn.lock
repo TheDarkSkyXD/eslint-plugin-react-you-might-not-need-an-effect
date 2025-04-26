@@ -296,17 +296,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-no-unnecessary-use-effect@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "eslint-no-unnecessary-use-effect@workspace:."
-  dependencies:
-    eslint: "npm:^9.20.1"
-    eslint-plugin-eslint-plugin: "npm:^6.4.0"
-  peerDependencies:
-    eslint: ">=9.0.0"
-  languageName: unknown
-  linkType: soft
-
 "eslint-plugin-eslint-plugin@npm:^6.4.0":
   version: 6.4.0
   resolution: "eslint-plugin-eslint-plugin@npm:6.4.0"
@@ -318,6 +307,17 @@ __metadata:
   checksum: 10c0/c34a976d70e3d8ef91f6adb7ff6a89d149531c8624da07b2ef2696c44d4a0184c4c5baf8a63e18f53fd13468b2b491c72bcbb1832178e96a18bce54ad385dca5
   languageName: node
   linkType: hard
+
+"eslint-plugin-react-you-might-not-need-an-effect@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "eslint-plugin-react-you-might-not-need-an-effect@workspace:."
+  dependencies:
+    eslint: "npm:^9.20.1"
+    eslint-plugin-eslint-plugin: "npm:^6.4.0"
+  peerDependencies:
+    eslint: ">=9.0.0"
+  languageName: unknown
+  linkType: soft
 
 "eslint-scope@npm:^8.2.0":
   version: 8.2.0
