@@ -81,17 +81,20 @@ export default {
           if (!isPropCallback) return;
 
           const propCallbackArgs = callExpression.arguments;
-          // TODO: support object property access
           const propCallbackArgFromDeps = propCallbackArgs.find((arg) => {
-            if (arg.type === "Identifier") {
-              return depsNodes.find((dep) => dep.name === arg.name);
-            }
-            // if (arg.type === "MemberExpression") {
-            //   return depsNodes.find(
-            //     (dep) =>
-            //       dep.type === "Identifier" && dep.name === arg.object.name,
-            //   );
-            // }
+            return depsNodes
+              .filter((dep) => dep.type === arg.type)
+              .find((dep) => {
+                if (dep.type === "Identifier") {
+                  return dep.name === arg.name;
+                } else if (dep.type === "MemberExpression") {
+                  return (
+                    dep.object.type === "Identifier" &&
+                    dep.object.name === arg.object.name &&
+                    dep.property.name === arg.property.name
+                  );
+                }
+              });
           });
 
           if (propCallbackArgFromDeps) {
@@ -99,7 +102,9 @@ export default {
               node: callee,
               messageId: "avoidPassingDataToParent",
               data: {
-                data: propCallbackArgFromDeps.name,
+                data:
+                  propCallbackArgFromDeps.name ??
+                  propCallbackArgFromDeps.object.name,
               },
             });
           }
