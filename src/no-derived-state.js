@@ -54,6 +54,7 @@ export default {
               data: { state: stateSetters.get(callee.name) },
               // TODO: Replaces `useState` with the computed state, at which point the dependencies
               // may not have been declared. It should replace the `useEffect` instead (whitespace is annoying).
+              // TODO: Maybe just remove/disable fixes for now? More valuable to get a wide spread of rules.
               fix: (fixer) => {
                 const setStateArgs = callExpression.arguments;
                 const argSource = context
