@@ -52,6 +52,8 @@ export const isReactFunctionalComponent = (node) => {
   );
 };
 
+// TODO: Might be able to simplify this with `getScope().references`?
+// Then I don't have to traverse the AST myself.
 export const getCallExpressions = (node) => {
   if (node.type === "CallExpression") return [node];
 
