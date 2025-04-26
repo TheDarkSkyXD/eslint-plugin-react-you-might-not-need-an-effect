@@ -6,6 +6,7 @@ import {
   isReactComponent,
 } from "./util.js";
 
+// TODO: Could provide separate suggestion/fix with `useMemo`
 export default {
   meta: {
     type: "suggestion",

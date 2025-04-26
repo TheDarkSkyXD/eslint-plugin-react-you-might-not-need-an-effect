@@ -124,7 +124,6 @@ new NormalizedWhitespaceRuleTester().run(
           },
         ],
       },
-      // TODO: could suggest `useMemo`
       {
         name: "Derived state from props",
         code: js`
