@@ -28,20 +28,17 @@ export default {
     },
   },
   create: (context) => {
-    let stateSetters; // state variable -> setter name
-    let stateNodes; // state name -> node of the useState variable declarator
-    let propsNames;
+    let useStates; // Map of setter name -> { stateName, node }
+    let propsNames; // Set of prop names
 
     return {
       FunctionDeclaration(node) {
         if (isReactComponent(node)) {
-          stateSetters = new Map();
-          stateNodes = new Map();
+          useStates = new Map();
           propsNames = new Set();
 
           const fnParamNode = node.params[0];
           if (!fnParamNode) return;
-
           getPropsNames(fnParamNode).forEach((name) => {
             propsNames.add(name);
           });
@@ -49,8 +46,7 @@ export default {
       },
       VariableDeclarator(node) {
         if (isReactComponent(node)) {
-          stateSetters = new Map();
-          stateNodes = new Map();
+          useStates = new Map();
           propsNames = new Set();
 
           const fnParamNode = node.init.params[0];
@@ -61,8 +57,7 @@ export default {
         } else if (isUseState(node)) {
           const [state, setter] = node.id.elements;
           if (state?.type === "Identifier" && setter?.type === "Identifier") {
-            stateSetters.set(setter.name, state.name);
-            stateNodes.set(state.name, node);
+            useStates.set(setter.name, { stateName: state.name, node });
           }
         }
       },
@@ -78,25 +73,25 @@ export default {
             (callExpr) =>
               // It calls a state setter
               callExpr.callee.type === "Identifier" &&
-              stateSetters.has(callExpr.callee.name) &&
+              useStates.has(callExpr.callee.name) &&
               // The set value is derived from the dependencies
               findDepUsedInArgs(context, depsNodes, callExpr.arguments) !==
                 undefined,
           )
           .forEach((callExpr) => {
-            const stateVar = stateSetters.get(callExpr.callee.name);
-            const stateDeclNode = stateNodes.get(stateVar);
-
+            const { stateName, node: stateDeclNode } = useStates.get(
+              callExpr.callee.name,
+            );
             context.report({
               node: callExpr.callee,
               messageId: "avoidDerivedState",
-              data: { state: stateSetters.get(callExpr.callee.name) },
+              data: { state: stateName },
               fix: (fixer) => {
                 const setStateArgs = callExpr.arguments;
                 const argSource = context
                   .getSourceCode()
                   .getText(setStateArgs[0]);
-                const computeDuringRenderText = `const ${stateVar} = ${argSource};`;
+                const computeDuringRenderText = `const ${stateName} = ${argSource};`;
 
                 const isSingleStatementEffectFn =
                   callExpr.parent.type === "ArrowFunctionExpression" ||
