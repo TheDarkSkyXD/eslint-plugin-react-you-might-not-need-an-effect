@@ -6,59 +6,69 @@ import {
   isReactComponent,
   getUseEffectDeps,
   findDepUsedInArgs,
+  getPropsNames,
+  getBaseName,
 } from "./util.js";
 
-// Covers:
-// - https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state
-// - meow
-// - https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state
-//   - TODO: Could provide separate suggestion/fix with `useMemo`
 export default {
   meta: {
     type: "suggestion",
     docs: {
-      description:
-        "Disallow setting derived state from props or other state in a useEffect.",
+      description: "Disallow unnecessary useEffect.",
       url: "https://react.dev/learn/you-might-not-need-an-effect",
     },
     fixable: "code",
     messages: {
       avoidDerivedState:
         'Avoid storing derived state. Compute "{{state}}" directly from other props or state during render, optionally with `useMemo` if the computation is expensive.',
+      avoidPassingDataToParent:
+        'React state should not flow from from children to parents. Consider lifting "{{data}}" into the parent.',
+      avoidEventHandler:
+        'Avoid calling an event handler in a useEffect. Instead, call "{{handlerFn}}" directly.',
     },
   },
   create: (context) => {
     let stateSetters; // state variable -> setter name
     let stateNodes; // state name -> node of the useState variable declarator
+    let propsNames;
 
     return {
-      // Scope state per component
       FunctionDeclaration(node) {
-        if (!isReactComponent(node)) return;
-        stateSetters = new Map();
-        stateNodes = new Map();
+        if (isReactComponent(node)) {
+          stateSetters = new Map();
+          stateNodes = new Map();
+          propsNames = new Set();
+
+          const fnParamNode = node.params[0];
+          if (!fnParamNode) return;
+
+          getPropsNames(fnParamNode).forEach((name) => {
+            propsNames.add(name);
+          });
+        }
       },
       VariableDeclarator(node) {
-        if (!isReactComponent(node)) return;
-        stateSetters = new Map();
-        stateNodes = new Map();
-      },
+        if (isReactComponent(node)) {
+          stateSetters = new Map();
+          stateNodes = new Map();
+          propsNames = new Set();
 
-      // Collect `useState`s
-      VariableDeclarator(node) {
-        if (!isUseState(node)) return;
-
-        const [state, setter] = node.id.elements;
-        if (state?.type === "Identifier" && setter?.type === "Identifier") {
-          stateSetters.set(setter.name, state.name);
-          stateNodes.set(state.name, node);
+          const fnParamNode = node.init.params[0];
+          if (!fnParamNode) return;
+          getPropsNames(fnParamNode).forEach((name) => {
+            propsNames.add(name);
+          });
+        } else if (isUseState(node)) {
+          const [state, setter] = node.id.elements;
+          if (state?.type === "Identifier" && setter?.type === "Identifier") {
+            stateSetters.set(setter.name, state.name);
+            stateNodes.set(state.name, node);
+          }
         }
       },
 
-      // Check `useEffect` for `useState` setters that are derived from dependencies
       CallExpression(node) {
-        if (!isUseEffect(node) || node.arguments.length < 1) return;
-
+        if (!isUseEffect(node)) return;
         const effectFn = getUseEffectFn(node);
         const depsNodes = getUseEffectDeps(node);
         if (!effectFn || !depsNodes) return;
@@ -113,6 +123,36 @@ export default {
                 return [...computeStateFix, fixer.remove(stateDeclNode.parent)];
               },
             });
+          });
+
+        getEffectFnCallExpressions(effectFn)
+          // Only check calls to props
+          ?.filter(
+            ({ callee }) =>
+              // Destructured prop
+              (callee.type === "Identifier" && propsNames.has(callee.name)) ||
+              // Field access on non-destructured prop
+              (callee.type === "MemberExpression" &&
+                callee.object.type === "Identifier" &&
+                propsNames.has(callee.object.name)),
+          )
+          .forEach((callExpr) => {
+            const propCallbackArgs = callExpr.arguments;
+            const propCallbackArgFromDeps = findDepUsedInArgs(
+              context,
+              depsNodes,
+              propCallbackArgs,
+            );
+
+            if (propCallbackArgFromDeps) {
+              context.report({
+                node: callExpr.callee,
+                messageId: "avoidPassingDataToParent",
+                data: {
+                  data: getBaseName(propCallbackArgFromDeps),
+                },
+              });
+            }
           });
       },
     };

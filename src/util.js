@@ -109,3 +109,14 @@ export const findDepUsedInArgs = (context, deps, args) => {
     ),
   );
 };
+
+export const getPropsNames = (fnParam) => {
+  if (fnParam.type === "ObjectPattern") {
+    return fnParam.properties.map(
+      // Important to use `value`, not `name`, in case it was renamed in the destructuring
+      (property) => property.value.name,
+    );
+  } else if (fnParam.type === "Identifier") {
+    return [fnParam.name];
+  }
+};
