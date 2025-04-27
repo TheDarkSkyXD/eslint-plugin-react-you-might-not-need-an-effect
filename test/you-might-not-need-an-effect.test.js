@@ -54,7 +54,7 @@ new RuleTester({
   ],
   invalid: [
     {
-      name: "Derived state from other state in single-statement body (replaced entirely)",
+      name: "Derived state from other state in single-statement body",
       code: js`
           function Form() {
             const [firstName, setFirstName] = useState('Taylor');
@@ -73,7 +73,7 @@ new RuleTester({
       ],
     },
     {
-      name: "Derived state from other state in multi-statement body (only the setter is removed, computed state is placed above `useEffect`)",
+      name: "Derived state from other state in multi-statement body",
       code: js`
           function Form() {
             const [firstName, setFirstName] = useState('Taylor');
@@ -93,7 +93,7 @@ new RuleTester({
       ],
     },
     {
-      name: "Derived state from other state in one-liner body (replaced entirely)",
+      name: "Derived state from other state in one-liner body",
       code: js`
           function Form() {
             const [firstName, setFirstName] = useState('Taylor');
