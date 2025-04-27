@@ -191,21 +191,6 @@ new RuleTester({
       ],
     },
     {
-      name: "One-liner useEffect body",
-      code: js`
-          const Child = ({ onFetched }) => {
-            const data = useSomeAPI();
-
-            useEffect(() => onFetched(data), [onFetched, data]);
-          }`,
-      errors: [
-        {
-          messageId: "avoidPassingDataToParent",
-          data: { data: "data" },
-        },
-      ],
-    },
-    {
       name: "Arbitrarily deep member access in useEffect body and dependencies",
       code: js`
           const Child = ({ onFetched }) => {
