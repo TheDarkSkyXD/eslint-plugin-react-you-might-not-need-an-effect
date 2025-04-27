@@ -88,7 +88,7 @@ export default {
           );
           const isStateSetterCall =
             callee.type === "Identifier" && useStates.has(callee.name);
-          const isPropCallbackCall = propsNames.has(getBaseName(callee));
+          const isPropCallback = propsNames.has(getBaseName(callee));
 
           if (depInArgs && isStateSetterCall) {
             const { stateName } = useStates.get(callExpr.callee.name);
@@ -98,8 +98,8 @@ export default {
               data: { state: stateName },
             });
           } else if (
+            isPropCallback &&
             depInArgs &&
-            isPropCallbackCall &&
             // The rule is only meant to prevent passing *intermediate* state.
             // Passing *final* state, like when the user completes a form, is a valid use case.
             // So we check the callback name as a heuristic.
@@ -107,14 +107,16 @@ export default {
             // in the form example, that's the correct warning to give.
             !allowedPropsCallbacks.includes(getBaseName(callee))
           ) {
-            if (allowedPropsCallbacks.includes(getBaseName(depInArgs))) return;
-
             context.report({
               node: callExpr.callee,
               messageId: "avoidPassingIntermediateDataToParent",
             });
-          } else if (depInArgs) {
-            // We're calling a side effect, like making an API call
+          } else if (depsNodes.length > 0) {
+            // We're calling a side effect in response to a state change.
+            // WARNING: This case can't always be fixed.
+            // It requires that the state we're reacting to has an equivalent callback.
+            // e.g. `onCompleted` instead of reacting to `data` changing.
+            // But some libraries only expose state, without callbacks.
             context.report({
               node: callExpr.callee,
               messageId: "avoidDelayedSideEffect",

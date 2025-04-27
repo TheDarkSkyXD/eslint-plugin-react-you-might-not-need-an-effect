@@ -51,18 +51,6 @@ new RuleTester({
           }
         `,
     },
-    {
-      name: "Resetting state when a prop changes",
-      // The `useEffect` triggers a state change, but it's not derived state.
-      code: js`
-          function ProfilePage({ userId }) {
-            const [comment, setComment] = useState('');
-
-            useEffect(() => {
-              setComment('');
-            }, [userId]);
-          }`,
-    },
   ],
   invalid: [
     {
@@ -265,6 +253,24 @@ new RuleTester({
               <button onClick={() => setIsOpen(false)}>Submit</button>
             )
           }`,
+      errors: [
+        {
+          messageId: "avoidDelayedSideEffect",
+        },
+      ],
+    },
+    {
+      name: "Resetting state when a prop changes",
+      // The `useEffect` triggers a state change, but it's not derived state.
+      code: js`
+          function ProfilePage({ userId }) {
+            const [comment, setComment] = useState('');
+
+            useEffect(() => {
+              setComment('');
+            }, [userId]);
+          }`,
+      // TODO: More accurately, should be a separate message to set `key` on the component instead
       errors: [
         {
           messageId: "avoidDelayedSideEffect",
