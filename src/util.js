@@ -1,3 +1,15 @@
+export const isReactFunctionalComponent = (node) => {
+  const isFunctionComponent = node.type === "FunctionDeclaration";
+  const isArrowFunctionComponent =
+    node.type === "VariableDeclarator" &&
+    node.init.type === "ArrowFunctionExpression";
+  return (
+    (isFunctionComponent || isArrowFunctionComponent) &&
+    node.id.type === "Identifier" &&
+    node.id.name[0].toUpperCase() === node.id.name[0]
+  );
+};
+
 export const isUseState = (node) => {
   return (
     node.init &&
@@ -38,18 +50,6 @@ export const getUseEffectDeps = (node) => {
   if (deps.type !== "ArrayExpression") return null;
 
   return deps.elements;
-};
-
-export const isReactFunctionalComponent = (node) => {
-  const isFunctionComponent = node.type === "FunctionDeclaration";
-  const isArrowFunctionComponent =
-    node.type === "VariableDeclarator" &&
-    node.init.type === "ArrowFunctionExpression";
-  return (
-    (isFunctionComponent || isArrowFunctionComponent) &&
-    node.id.type === "Identifier" &&
-    node.id.name[0].toUpperCase() === node.id.name[0]
-  );
 };
 
 export const getCallExpressions = (context, scope) =>
