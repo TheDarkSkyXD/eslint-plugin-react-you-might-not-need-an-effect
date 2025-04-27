@@ -4,33 +4,38 @@ const js = String.raw;
 
 import "./normalize-test-whitespace.js";
 
-new RuleTester().run(
-  "you-might-not-need-an-effect",
-  youMightNotNeedAnEffectRule,
-  {
-    valid: [
-      {
-        name: "Computed state from other state",
-        code: js`
+new RuleTester({
+  languageOptions: {
+    parserOptions: {
+      ecmaFeatures: {
+        jsx: true,
+      },
+    },
+  },
+}).run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
+  valid: [
+    {
+      name: "Computed state from other state",
+      code: js`
           function Form() {
             const [firstName, setFirstName] = useState('Taylor');
             const [lastName, setLastName] = useState('Swift');
 
             const fullName = firstName + ' ' + lastName;
           }`,
-      },
-      {
-        name: "Computed state from props",
-        code: js`
+    },
+    {
+      name: "Computed state from props",
+      code: js`
           function TodoList({ todos, filter }) {
             const [newTodo, setNewTodo] = useState('');
             const visibleTodos = getFilteredTodos(todos, filter);
           }`,
-      },
-      {
-        name: "Two components with overlapping names should not affect each other",
-        // Not a super realistic example
-        code: js`
+    },
+    {
+      name: "Two components with overlapping names should not affect each other",
+      // Not a super realistic example
+      code: js`
           function One() {
             const [data, setData] = useState();
           }
@@ -45,11 +50,11 @@ new RuleTester().run(
             }, []);
           }
         `,
-      },
-      {
-        name: "Resetting state when a prop changes",
-        // The `useEffect` triggers a state change, but it's not derived state.
-        code: js`
+    },
+    {
+      name: "Resetting state when a prop changes",
+      // The `useEffect` triggers a state change, but it's not derived state.
+      code: js`
           function ProfilePage({ userId }) {
             const [comment, setComment] = useState('');
 
@@ -57,12 +62,12 @@ new RuleTester().run(
               setComment('');
             }, [userId]);
           }`,
-      },
-    ],
-    invalid: [
-      {
-        name: "Derived state from other state in single-statement body (replaced entirely)",
-        code: js`
+    },
+  ],
+  invalid: [
+    {
+      name: "Derived state from other state in single-statement body (replaced entirely)",
+      code: js`
           function Form() {
             const [firstName, setFirstName] = useState('Taylor');
             const [lastName, setLastName] = useState('Swift');
@@ -72,23 +77,23 @@ new RuleTester().run(
               setFullName(firstName + ' ' + lastName);
             }, [firstName, lastName]);
           }`,
-        output: js`
+      output: js`
           function Form() {
             const [firstName, setFirstName] = useState('Taylor');
             const [lastName, setLastName] = useState('Swift');
 
             const fullName = firstName + ' ' + lastName;
           }`,
-        errors: [
-          {
-            messageId: "avoidDerivedState",
-            data: { state: "fullName" },
-          },
-        ],
-      },
-      {
-        name: "Derived state from other state in multi-statement body (only the setter is removed, computed state is placed above `useEffect`)",
-        code: js`
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
+        },
+      ],
+    },
+    {
+      name: "Derived state from other state in multi-statement body (only the setter is removed, computed state is placed above `useEffect`)",
+      code: js`
           function Form() {
             const [firstName, setFirstName] = useState('Taylor');
             const [lastName, setLastName] = useState('Swift');
@@ -99,7 +104,7 @@ new RuleTester().run(
               console.log('meow');
             }, [firstName, lastName]);
           }`,
-        output: js`
+      output: js`
           function Form() {
             const [firstName, setFirstName] = useState('Taylor');
             const [lastName, setLastName] = useState('Swift');
@@ -109,16 +114,16 @@ new RuleTester().run(
               console.log('meow');
             }, [firstName, lastName]);
           }`,
-        errors: [
-          {
-            messageId: "avoidDerivedState",
-            data: { state: "fullName" },
-          },
-        ],
-      },
-      {
-        name: "Derived state from other state in one-liner body (replaced entirely)",
-        code: js`
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
+        },
+      ],
+    },
+    {
+      name: "Derived state from other state in one-liner body (replaced entirely)",
+      code: js`
           function Form() {
             const [firstName, setFirstName] = useState('Taylor');
             const [lastName, setLastName] = useState('Swift');
@@ -126,23 +131,23 @@ new RuleTester().run(
             const [fullName, setFullName] = useState('');
             useEffect(() => setFullName(firstName + ' ' + lastName), [firstName, lastName]);
           }`,
-        output: js`
+      output: js`
           function Form() {
             const [firstName, setFirstName] = useState('Taylor');
             const [lastName, setLastName] = useState('Swift');
 
             const fullName = firstName + ' ' + lastName;
           }`,
-        errors: [
-          {
-            messageId: "avoidDerivedState",
-            data: { state: "fullName" },
-          },
-        ],
-      },
-      {
-        name: "Derived state from props",
-        code: js`
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
+        },
+      ],
+    },
+    {
+      name: "Derived state from props",
+      code: js`
           function TodoList({ todos, filter }) {
             const [newTodo, setNewTodo] = useState("");
 
@@ -151,22 +156,26 @@ new RuleTester().run(
               setVisibleTodos(getFilteredTodos(todos, filter));
             }, [todos, filter]);
           }`,
-        output: js`
+      output: js`
           function TodoList({ todos, filter }) {
             const [newTodo, setNewTodo] = useState("");
 
             const visibleTodos = getFilteredTodos(todos, filter);
           }`,
-        errors: [
-          {
-            messageId: "avoidDerivedState",
-            data: { state: "visibleTodos" },
-          },
-        ],
-      },
-      {
-        name: "State passed to parent via non-destructured props",
-        code: js`
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "visibleTodos" },
+        },
+        // Triggered by `getFilteredTodos`...
+        // TODO: Is that good?
+        // I guess so? But maybe not for all cases...
+        { messageId: "avoidDelayedSideEffect" },
+      ],
+    },
+    {
+      name: "State passed to parent via non-destructured props",
+      code: js`
           const Child = (props) => {
             const data = useSomeAPI();
 
@@ -174,46 +183,46 @@ new RuleTester().run(
               props.onFetched(data);
             }, [props.onFetched, data]);
           }`,
-        errors: [
-          {
-            messageId: "avoidPassingDataToParent",
-            data: { data: "data" },
-          },
-        ],
-      },
-      {
-        name: "One-liner useEffect body",
-        code: js`
+      errors: [
+        {
+          messageId: "avoidPassingDataToParent",
+          data: { data: "data" },
+        },
+      ],
+    },
+    {
+      name: "One-liner useEffect body",
+      code: js`
           const Child = ({ onFetched }) => {
             const data = useSomeAPI();
 
             useEffect(() => onFetched(data), [onFetched, data]);
           }`,
-        errors: [
-          {
-            messageId: "avoidPassingDataToParent",
-            data: { data: "data" },
-          },
-        ],
-      },
-      {
-        name: "Arbitrarily deep member access in useEffect body and dependencies",
-        code: js`
+      errors: [
+        {
+          messageId: "avoidPassingDataToParent",
+          data: { data: "data" },
+        },
+      ],
+    },
+    {
+      name: "Arbitrarily deep member access in useEffect body and dependencies",
+      code: js`
           const Child = ({ onFetched }) => {
             const data = useSomeAPI();
 
             useEffect(() => onFetched(data.result.value), [onFetched, data.result.value]);
           }`,
-        errors: [
-          {
-            messageId: "avoidPassingDataToParent",
-            data: { data: "data" },
-          },
-        ],
-      },
-      {
-        name: "Arbitrarily deep nesting in useEffect body",
-        code: js`
+      errors: [
+        {
+          messageId: "avoidPassingDataToParent",
+          data: { data: "data" },
+        },
+      ],
+    },
+    {
+      name: "Arbitrarily deep nesting in useEffect body",
+      code: js`
           function Child({ onFetched }) {
             const data = useSomeAPI();
 
@@ -225,13 +234,52 @@ new RuleTester().run(
               }
             }, [onFetched, data]);
           }`,
-        errors: [
-          {
-            messageId: "avoidPassingDataToParent",
-            data: { data: "data" },
-          },
-        ],
-      },
-    ],
-  },
-);
+      errors: [
+        {
+          messageId: "avoidPassingDataToParent",
+          data: { data: "data" },
+        },
+      ],
+    },
+    {
+      name: "Using state to trigger a delayed side effect",
+      code: js`
+          const submitPostRequest = (data) => {
+          }
+
+          function Form() {
+            const [name, setName] = useState();
+            const [dataToSubmit, setDataToSubmit] = useState();
+
+            useEffect(() => {
+              submitPostRequest(dataToSubmit);
+            }, [dataToSubmit]);
+
+            return (
+              <div>
+                <input
+                  name="name"
+                  type="text"
+                  onChange={(e) => setName(e.target.value)}
+                />
+                <button onClick={() => setDataToSubmit({ name })}>Submit</button>
+              </div>
+            )
+          }`,
+      errors: [{ messageId: "avoidDelayedSideEffect" }],
+    },
+    // TODO:
+    // {
+    //   name: "Redeclared dependency used in args",
+    //   code: js`
+    //     function Child({ onFetched }) {
+    //       const data = useSomeAPI();
+    //
+    //       useEffect(() => {
+    //         const value = data.value;
+    //         onFetched(value);
+    //       }, [onFetched, data]);
+    //     }`,
+    // },
+  ],
+});
