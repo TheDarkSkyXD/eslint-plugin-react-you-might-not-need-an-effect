@@ -45,29 +45,25 @@ export default {
     let useStates; // Map of setter name -> { stateName, node }
     let propsNames; // Set of prop names
 
+    const setupComponentScope = (param) => {
+      useStates = new Map();
+      propsNames = new Set();
+
+      if (!param) return;
+      getPropsNames(param).forEach((name) => {
+        propsNames.add(name);
+      });
+    };
+
     return {
       FunctionDeclaration: (node) => {
         if (isReactFunctionalComponent(node)) {
-          useStates = new Map();
-          propsNames = new Set();
-
-          const fnParamNode = node.params[0];
-          if (!fnParamNode) return;
-          getPropsNames(fnParamNode).forEach((name) => {
-            propsNames.add(name);
-          });
+          setupComponentScope(node.params[0]);
         }
       },
       VariableDeclarator: (node) => {
         if (isReactFunctionalComponent(node)) {
-          useStates = new Map();
-          propsNames = new Set();
-
-          const fnParamNode = node.init.params[0];
-          if (!fnParamNode) return;
-          getPropsNames(fnParamNode).forEach((name) => {
-            propsNames.add(name);
-          });
+          setupComponentScope(node.init.params[0]);
         } else if (isUseState(node)) {
           const [state, setter] = node.id.elements;
           useStates.set(setter.name, { stateName: state.name, node });
