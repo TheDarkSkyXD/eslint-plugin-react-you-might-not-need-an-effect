@@ -12,20 +12,20 @@ new RuleTester().run(
       {
         name: "Computed state from other state",
         code: js`
-        function Form() {
-          const [firstName, setFirstName] = useState('Taylor');
-          const [lastName, setLastName] = useState('Swift');
+          function Form() {
+            const [firstName, setFirstName] = useState('Taylor');
+            const [lastName, setLastName] = useState('Swift');
 
-          const fullName = firstName + ' ' + lastName;
-        }`,
+            const fullName = firstName + ' ' + lastName;
+          }`,
       },
       {
         name: "Computed state from props",
         code: js`
-        function TodoList({ todos, filter }) {
-          const [newTodo, setNewTodo] = useState('');
-          const visibleTodos = getFilteredTodos(todos, filter);
-        }`,
+          function TodoList({ todos, filter }) {
+            const [newTodo, setNewTodo] = useState('');
+            const visibleTodos = getFilteredTodos(todos, filter);
+          }`,
       },
       {
         name: "Two components with overlapping names should not affect each other",
@@ -63,22 +63,22 @@ new RuleTester().run(
       {
         name: "Derived state from other state (single-statement body; replaced entirely)",
         code: js`
-        function Form() {
-          const [firstName, setFirstName] = useState('Taylor');
-          const [lastName, setLastName] = useState('Swift');
+          function Form() {
+            const [firstName, setFirstName] = useState('Taylor');
+            const [lastName, setLastName] = useState('Swift');
 
-          const [fullName, setFullName] = useState('');
-          useEffect(() => {
-            setFullName(firstName + ' ' + lastName);
-          }, [firstName, lastName]);
-        }`,
+            const [fullName, setFullName] = useState('');
+            useEffect(() => {
+              setFullName(firstName + ' ' + lastName);
+            }, [firstName, lastName]);
+          }`,
         output: js`
-        function Form() {
-          const [firstName, setFirstName] = useState('Taylor');
-          const [lastName, setLastName] = useState('Swift');
+          function Form() {
+            const [firstName, setFirstName] = useState('Taylor');
+            const [lastName, setLastName] = useState('Swift');
 
-          const fullName = firstName + ' ' + lastName;
-        }`,
+            const fullName = firstName + ' ' + lastName;
+          }`,
         errors: [
           {
             messageId: "avoidDerivedState",
@@ -89,26 +89,26 @@ new RuleTester().run(
       {
         name: "Derived state from other state (multi-statement body; only the setter is removed, computed state is placed above `useEffect`)",
         code: js`
-        function Form() {
-          const [firstName, setFirstName] = useState('Taylor');
-          const [lastName, setLastName] = useState('Swift');
+          function Form() {
+            const [firstName, setFirstName] = useState('Taylor');
+            const [lastName, setLastName] = useState('Swift');
 
-          const [fullName, setFullName] = useState('');
-          useEffect(() => {
-            setFullName(firstName + ' ' + lastName);
-            console.log('meow');
-          }, [firstName, lastName]);
-        }`,
+            const [fullName, setFullName] = useState('');
+            useEffect(() => {
+              setFullName(firstName + ' ' + lastName);
+              console.log('meow');
+            }, [firstName, lastName]);
+          }`,
         output: js`
-        function Form() {
-          const [firstName, setFirstName] = useState('Taylor');
-          const [lastName, setLastName] = useState('Swift');
+          function Form() {
+            const [firstName, setFirstName] = useState('Taylor');
+            const [lastName, setLastName] = useState('Swift');
 
-          const fullName = firstName + ' ' + lastName;
-          useEffect(() => {
-            console.log('meow');
-          }, [firstName, lastName]);
-        }`,
+            const fullName = firstName + ' ' + lastName;
+            useEffect(() => {
+              console.log('meow');
+            }, [firstName, lastName]);
+          }`,
         errors: [
           {
             messageId: "avoidDerivedState",
@@ -119,20 +119,20 @@ new RuleTester().run(
       {
         name: "Derived state from other state (one-liner body; replaced entirely)",
         code: js`
-        function Form() {
-          const [firstName, setFirstName] = useState('Taylor');
-          const [lastName, setLastName] = useState('Swift');
+          function Form() {
+            const [firstName, setFirstName] = useState('Taylor');
+            const [lastName, setLastName] = useState('Swift');
 
-          const [fullName, setFullName] = useState('');
-          useEffect(() => setFullName(firstName + ' ' + lastName), [firstName, lastName]);
-        }`,
+            const [fullName, setFullName] = useState('');
+            useEffect(() => setFullName(firstName + ' ' + lastName), [firstName, lastName]);
+          }`,
         output: js`
-        function Form() {
-          const [firstName, setFirstName] = useState('Taylor');
-          const [lastName, setLastName] = useState('Swift');
+          function Form() {
+            const [firstName, setFirstName] = useState('Taylor');
+            const [lastName, setLastName] = useState('Swift');
 
-          const fullName = firstName + ' ' + lastName;
-        }`,
+            const fullName = firstName + ' ' + lastName;
+          }`,
         errors: [
           {
             messageId: "avoidDerivedState",
@@ -143,20 +143,20 @@ new RuleTester().run(
       {
         name: "Derived state from props",
         code: js`
-        function TodoList({ todos, filter }) {
-          const [newTodo, setNewTodo] = useState("");
+          function TodoList({ todos, filter }) {
+            const [newTodo, setNewTodo] = useState("");
 
-          const [visibleTodos, setVisibleTodos] = useState([]);
-          useEffect(() => {
-            setVisibleTodos(getFilteredTodos(todos, filter));
-          }, [todos, filter]);
-        }`,
+            const [visibleTodos, setVisibleTodos] = useState([]);
+            useEffect(() => {
+              setVisibleTodos(getFilteredTodos(todos, filter));
+            }, [todos, filter]);
+          }`,
         output: js`
-        function TodoList({ todos, filter }) {
-          const [newTodo, setNewTodo] = useState("");
+          function TodoList({ todos, filter }) {
+            const [newTodo, setNewTodo] = useState("");
 
-          const visibleTodos = getFilteredTodos(todos, filter);
-        }`,
+            const visibleTodos = getFilteredTodos(todos, filter);
+          }`,
         errors: [
           {
             messageId: "avoidDerivedState",
@@ -167,13 +167,13 @@ new RuleTester().run(
       {
         name: "Function component",
         code: js`
-        function Child({ onFetched }) {
-          const data = useSomeAPI();
+          function Child({ onFetched }) {
+            const data = useSomeAPI();
 
-          useEffect(() => {
-            onFetched(data);
-          }, [onFetched, data]);
-        }`,
+            useEffect(() => {
+              onFetched(data);
+            }, [onFetched, data]);
+          }`,
         errors: [
           {
             messageId: "avoidPassingDataToParent",
@@ -184,13 +184,13 @@ new RuleTester().run(
       {
         name: "Arrow function component",
         code: js`
-        const Child = ({ onFetched }) => {
-          const data = useSomeAPI();
+          const Child = ({ onFetched }) => {
+            const data = useSomeAPI();
 
-          useEffect(() => {
-            onFetched(data);
-          }, [onFetched, data]);
-        }`,
+            useEffect(() => {
+              onFetched(data);
+            }, [onFetched, data]);
+          }`,
         errors: [
           {
             messageId: "avoidPassingDataToParent",
@@ -201,13 +201,13 @@ new RuleTester().run(
       {
         name: "Non-destructured props",
         code: js`
-        const Child = (props) => {
-          const data = useSomeAPI();
+          const Child = (props) => {
+            const data = useSomeAPI();
 
-          useEffect(() => {
-            props.onFetched(data);
-          }, [props.onFetched, data]);
-        }`,
+            useEffect(() => {
+              props.onFetched(data);
+            }, [props.onFetched, data]);
+          }`,
         errors: [
           {
             messageId: "avoidPassingDataToParent",
@@ -218,11 +218,11 @@ new RuleTester().run(
       {
         name: "One-liner `useEffect` body",
         code: js`
-        const Child = ({ onFetched }) => {
-          const data = useSomeAPI();
+          const Child = ({ onFetched }) => {
+            const data = useSomeAPI();
 
-          useEffect(() => onFetched(data), [onFetched, data]);
-        }`,
+            useEffect(() => onFetched(data), [onFetched, data]);
+          }`,
         errors: [
           {
             messageId: "avoidPassingDataToParent",
@@ -233,11 +233,11 @@ new RuleTester().run(
       {
         name: "Member access in dependencies",
         code: js`
-        const Child = ({ onFetched }) => {
-          const data = useSomeAPI();
+          const Child = ({ onFetched }) => {
+            const data = useSomeAPI();
 
-          useEffect(() => onFetched(data.result), [onFetched, data.result]);
-        }`,
+            useEffect(() => onFetched(data.result), [onFetched, data.result]);
+          }`,
         errors: [
           {
             messageId: "avoidPassingDataToParent",
@@ -246,13 +246,13 @@ new RuleTester().run(
         ],
       },
       {
-        name: "Nested member access in dependencies",
+        name: "Double member access in dependencies",
         code: js`
-        const Child = ({ onFetched }) => {
-          const data = useSomeAPI();
+          const Child = ({ onFetched }) => {
+            const data = useSomeAPI();
 
-          useEffect(() => onFetched(data.result.value), [onFetched, data.result.value]);
-        }`,
+            useEffect(() => onFetched(data.result.value), [onFetched, data.result.value]);
+          }`,
         errors: [
           {
             messageId: "avoidPassingDataToParent",
