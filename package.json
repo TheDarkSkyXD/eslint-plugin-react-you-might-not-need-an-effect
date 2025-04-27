@@ -6,7 +6,7 @@
   "type": "module",
   "main": "./src/index.js",
   "scripts": {
-    "test": "node --test src/*.test.js"
+    "test": "mocha"
   },
   "keywords": [
     "eslint",
@@ -15,7 +15,8 @@
   ],
   "devDependencies": {
     "eslint": "^9.20.1",
-    "eslint-plugin-eslint-plugin": "^6.4.0"
+    "eslint-plugin-eslint-plugin": "^6.4.0",
+    "mocha": "11.1.0"
   },
   "peerDependencies": {
     "eslint": ">=9.0.0"

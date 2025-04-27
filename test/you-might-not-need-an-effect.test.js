@@ -1,13 +1,16 @@
-import { NormalizedWhitespaceRuleTester } from "./normalized-whitespace-rule-tester.js";
-import youMightNotNeedAnEffectRule from "./you-might-not-need-an-effect.js";
+import { RuleTester } from "eslint";
+import youMightNotNeedAnEffectRule from "../src/you-might-not-need-an-effect.js";
 const js = String.raw;
 
-new NormalizedWhitespaceRuleTester().run(
+import "./normalize-test-whitespace.js";
+
+new RuleTester().run(
   "you-might-not-need-an-effect",
   youMightNotNeedAnEffectRule,
   {
     valid: [
       {
+        name: "Computed state from other state",
         code: js`
         function Form() {
           const [firstName, setFirstName] = useState('Taylor');
@@ -17,6 +20,7 @@ new NormalizedWhitespaceRuleTester().run(
         }`,
       },
       {
+        name: "Computed state from props",
         code: js`
         function TodoList({ todos, filter }) {
           const [newTodo, setNewTodo] = useState('');
