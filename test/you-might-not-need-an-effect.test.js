@@ -156,7 +156,6 @@ new RuleTester({
       errors: [
         {
           messageId: "avoidPassingIntermediateDataToParent",
-          data: { data: "data" },
         },
       ],
     },
@@ -171,7 +170,6 @@ new RuleTester({
       errors: [
         {
           messageId: "avoidPassingIntermediateDataToParent",
-          data: { data: "data" },
         },
       ],
     },
@@ -192,7 +190,6 @@ new RuleTester({
       errors: [
         {
           messageId: "avoidPassingIntermediateDataToParent",
-          data: { data: "data" },
         },
       ],
     },
@@ -222,6 +219,57 @@ new RuleTester({
             )
           }`,
       errors: [{ messageId: "avoidDelayedSideEffect" }],
+    },
+    {
+      name: "Using state to trigger a prop callback with final state",
+      code: js`
+        function Form({ onSubmit }) {
+          const [name, setName] = useState();
+          const [dataToSubmit, setDataToSubmit] = useState();
+
+          useEffect(() => {
+            onSubmit(dataToSubmit);
+          }, [dataToSubmit]);
+
+          return (
+            <div>
+              <input
+                name="name"
+                type="text"
+                onChange={(e) => setName(e.target.value)}
+              />
+              <button onClick={() => setDataToSubmit({ name })}>Submit</button>
+            </div>
+          )
+        }`,
+      // Note we don't expect this to trigger the "intermediate state" error,
+      // because passing final state is a valid use case.
+      errors: [
+        {
+          messageId: "avoidDelayedSideEffect",
+        },
+      ],
+    },
+    {
+      name: "Using state to trigger no-arg prop callback",
+      code: js`
+          function Form({ onClose }) {
+            const [name, setName] = useState();
+            const [isOpen, setIsOpen] = useState(true);
+
+            useEffect(() => {
+              onClose();
+            }, [isOpen]);
+
+            return (
+              <button onClick={() => setIsOpen(false)}>Submit</button>
+            )
+          }`,
+      errors: [
+        {
+          messageId: "avoidDelayedSideEffect",
+        },
+      ],
     },
     // TODO:
     // {

@@ -97,11 +97,21 @@ export default {
               messageId: "avoidDerivedState",
               data: { state: stateName },
             });
-          } else if (depInArgs && isPropCallbackCall) {
+          } else if (
+            depInArgs &&
+            isPropCallbackCall &&
+            // The rule is only meant to prevent passing *intermediate* state.
+            // Passing *final* state, like when the user completes a form, is a valid use case.
+            // So we check the callback name as a heuristic.
+            // It's also intentional that we then proceed to the check for delayed side effects;
+            // in the form example, that's the correct warning to give.
+            !allowedPropsCallbacks.includes(getBaseName(callee))
+          ) {
+            if (allowedPropsCallbacks.includes(getBaseName(depInArgs))) return;
+
             context.report({
               node: callExpr.callee,
               messageId: "avoidPassingIntermediateDataToParent",
-              data: { data: getBaseName(depInArgs) },
             });
           } else if (depInArgs) {
             // We're calling a side effect, like making an API call
@@ -115,3 +125,5 @@ export default {
     };
   },
 };
+
+const allowedPropsCallbacks = ["onSave", "onSubmit"];
