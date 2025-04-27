@@ -8,7 +8,6 @@ import {
   findDepInArgs,
   getPropsNames,
   getBaseName,
-  isSingleStatementFn,
 } from "./util.js";
 
 export default {
@@ -92,6 +91,7 @@ export default {
             // So we check the callback name as a heuristic.
             // It's also intentional that we then proceed to the check for delayed side effects;
             // in the form example, that's the correct warning to give.
+            // I don't think there's a valid use case for passing final state via a useEffect?
             !allowedPropsCallbacks.includes(getBaseName(callee))
           ) {
             context.report({
@@ -99,7 +99,7 @@ export default {
               messageId: "avoidPassingIntermediateDataToParent",
             });
           } else if (depsNodes.length > 0) {
-            // We're calling a side effect in response to a state change.
+            // We're reacting to a state change.
             // WARNING: This case can't always be fixed.
             // It requires that the state we're reacting to has an equivalent callback.
             // e.g. `onCompleted` instead of reacting to `data` changing.
