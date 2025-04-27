@@ -106,10 +106,7 @@ export const getBaseName = (node) => {
 export const findDepUsedInArgs = (context, deps, args) => {
   return args.find((arg) =>
     deps.find((dep) =>
-      context
-        .getSourceCode()
-        .getText(arg)
-        .includes(context.getSourceCode().getText(dep)),
+      context.sourceCode.getText(arg).includes(context.sourceCode.getText(dep)),
     ),
   );
 };

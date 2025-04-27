@@ -88,9 +88,7 @@ export default {
               data: { state: stateName },
               fix: (fixer) => {
                 const setStateArgs = callExpr.arguments;
-                const argSource = context
-                  .getSourceCode()
-                  .getText(setStateArgs[0]);
+                const argSource = context.sourceCode.getText(setStateArgs[0]);
                 const computeDuringRenderText = `const ${stateName} = ${argSource};`;
 
                 const computeStateFix = isSingleStatementFn(effectFn)
