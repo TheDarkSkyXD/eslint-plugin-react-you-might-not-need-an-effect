@@ -155,7 +155,7 @@ new RuleTester({
           }`,
       errors: [
         {
-          messageId: "avoidPassingDataToParent",
+          messageId: "avoidPassingIntermediateDataToParent",
           data: { data: "data" },
         },
       ],
@@ -170,7 +170,7 @@ new RuleTester({
           }`,
       errors: [
         {
-          messageId: "avoidPassingDataToParent",
+          messageId: "avoidPassingIntermediateDataToParent",
           data: { data: "data" },
         },
       ],
@@ -191,7 +191,7 @@ new RuleTester({
           }`,
       errors: [
         {
-          messageId: "avoidPassingDataToParent",
+          messageId: "avoidPassingIntermediateDataToParent",
           data: { data: "data" },
         },
       ],

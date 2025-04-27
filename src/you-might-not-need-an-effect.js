@@ -35,8 +35,8 @@ export default {
         'Avoid storing derived state. Compute "{{state}}" directly during render, optionally with `useMemo` if it\'s expensive.',
       // TODO: I think this gives false positives sometimes. Like if the child exposes some form UI and
       // then notifies the parent with the results upon completion. Which I think is a valid use case?
-      avoidPassingDataToParent:
-        'React state should not flow from from children to parents. Consider lifting "{{data}}" into the parent.',
+      avoidPassingIntermediateDataToParent:
+        "Avoid making parent components depend on a child component's intermediate state. Consider lifting state if needed.",
       avoidDelayedSideEffect:
         "Avoid waiting for state changes to trigger side effects in useEffect. When possible, handle the action directly.",
     },
@@ -100,7 +100,7 @@ export default {
           } else if (depInArgs && isPropCallbackCall) {
             context.report({
               node: callExpr.callee,
-              messageId: "avoidPassingDataToParent",
+              messageId: "avoidPassingIntermediateDataToParent",
               data: { data: getBaseName(depInArgs) },
             });
           } else if (depInArgs) {
