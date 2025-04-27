@@ -77,6 +77,7 @@ export default {
           const isPropCallback = propsNames.has(getBaseName(callee));
 
           if (depInArgs && isStateSetterCall) {
+            // TODO: Should also trigger if the dep is used in an if statement?
             const { stateName } = useStates.get(callExpr.callee.name);
             context.report({
               node: callExpr.callee,
@@ -92,6 +93,7 @@ export default {
             // It's also intentional that we then proceed to the check for delayed side effects;
             // in the form example, that's the correct warning to give.
             // I don't think there's a valid use case for passing final state via a useEffect?
+            // TODO: or maybe we should give both warnings?
             !allowedPropsCallbacks.includes(getBaseName(callee))
           ) {
             context.report({
@@ -100,15 +102,32 @@ export default {
             });
           } else if (depsNodes.length > 0) {
             // We're reacting to a state change.
-            // WARNING: This case can't always be fixed.
-            // It requires that the state we're reacting to has an equivalent callback.
+            // WARNING: Sometimes this case can't be avoided or is preferrable.
+            // It requires that the state we're reacting to has an equivalent callback,
             // e.g. `onCompleted` instead of reacting to `data` changing.
-            // But some libraries only expose state, without callbacks.
+            // Additionally, it is often more readable to use an effect to synchronize React state with external state.
+            // TODO: Flags https://react.dev/learn/you-might-not-need-an-effect#fetching-data
+            // which apparently is valid. Possible to detect?
+            // Maybe just mention in the message that it's also okay if there are multiple reasons to trigger the effect?
+            // TODO: As the most unreliable check, it should have an option to disable it.
+            //
+            // Maybe the key here is "side effect"?
+            // We could flag it only if the effect is not truly a side effect.
+            // i.e. it exists within React and thus doesn't need an escape hatch - setting state, calling a prop, etc.
+            // That is more reliable. And a frequent misuse.
+            // "avoidUnnecessaryEscapeHatch"?
+            // Do the prior two rules already cover that?
+            // I don't think so? Or at least, not as specifically?
+            // They both check that a dep is used in the arg - that's not always the case, but can still be inadvisable.
+            //
+            // Separately we can still flag true side effects that react to state,
+            // that could possibly be avoided via callbacks. But that is less reliable.
             context.report({
               node: callExpr.callee,
               messageId: "avoidDelayedSideEffect",
             });
           }
+          // NOTE: We don't examine effects with no dependencies. Too hard to accurately assess their validity.
         });
       },
     };
