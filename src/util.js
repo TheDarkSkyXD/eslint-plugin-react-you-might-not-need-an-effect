@@ -52,21 +52,22 @@ export const isReactFunctionalComponent = (node) => {
   );
 };
 
-// TODO: Might be able to simplify this with `getScope().references`?
-// Then I don't have to traverse the AST myself.
-export const getCallExpressions = (node) => {
-  if (node.type === "CallExpression") return [node];
+export const getCallExpressions = (context, node) => {
+  const scope = context.sourceCode.getScope(node);
 
-  if (node.type === "ExpressionStatement") {
-    return getCallExpressions(node.expression);
-  } else if (node.type === "IfStatement") {
-    return getCallExpressions(node.consequent);
-  } else if (node.type === "BlockStatement") {
-    return node.body.map((stmt) => getCallExpressions(stmt)).flat();
-  } else {
-    // TODO: what other node types?
-    return null;
-  }
+  return (
+    scope.references
+      .concat(
+        scope.childScopes?.flatMap((childScope) => childScope.references) || [],
+      )
+      .map((ref) => ref.identifier.parent)
+      .filter((node) => node.type === "CallExpression")
+      // Remove duplicates - `references` includes both the callee (i.e. function) and
+      // any arguments that reference variables. In which case their parent is the same CallExpression.
+      .filter(
+        (node, i, self) => i === self.findIndex((t) => t.range === node.range),
+      )
+  );
 };
 
 export const isSingleStatementFn = (fn) =>
