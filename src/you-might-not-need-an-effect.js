@@ -5,7 +5,7 @@ import {
   getCallExpressions,
   isReactFunctionalComponent,
   getUseEffectDeps,
-  findDepUsedInArgs,
+  findDepInArgs,
   getPropsNames,
   getBaseName,
   isSingleStatementFn,
@@ -68,17 +68,21 @@ export default {
         const depsNodes = getUseEffectDeps(node);
         if (!effectFn || !depsNodes) return;
 
-        getCallExpressions(context, context.sourceCode.getScope(effectFn.body))
-          ?.filter(
-            (callExpr) =>
-              // It calls a state setter
-              callExpr.callee.type === "Identifier" &&
-              useStates.has(callExpr.callee.name) &&
-              // The set value is derived from the dependencies
-              findDepUsedInArgs(context, depsNodes, callExpr.arguments) !==
-                undefined,
-          )
-          .forEach((callExpr) => {
+        getCallExpressions(
+          context,
+          context.sourceCode.getScope(effectFn.body),
+        ).forEach((callExpr) => {
+          const callee = callExpr.callee;
+          const depInArgs = findDepInArgs(
+            context,
+            depsNodes,
+            callExpr.arguments,
+          );
+          const isStateSetterCall =
+            callee.type === "Identifier" && useStates.has(callee.name);
+          const isPropCallbackCall = propsNames.has(getBaseName(callee));
+
+          if (depInArgs && isStateSetterCall) {
             const { stateName, node: stateDeclNode } = useStates.get(
               callExpr.callee.name,
             );
@@ -110,37 +114,14 @@ export default {
                 return [...computeStateFix, fixer.remove(stateDeclNode.parent)];
               },
             });
-          });
-
-        getCallExpressions(context, context.sourceCode.getScope(effectFn.body))
-          // Only check calls to props
-          ?.filter(
-            ({ callee }) =>
-              // Destructured prop
-              (callee.type === "Identifier" && propsNames.has(callee.name)) ||
-              // Field access on non-destructured prop
-              (callee.type === "MemberExpression" &&
-                callee.object.type === "Identifier" &&
-                propsNames.has(callee.object.name)),
-          )
-          .forEach((callExpr) => {
-            const propCallbackArgs = callExpr.arguments;
-            const propCallbackArgFromDeps = findDepUsedInArgs(
-              context,
-              depsNodes,
-              propCallbackArgs,
-            );
-
-            if (propCallbackArgFromDeps) {
-              context.report({
-                node: callExpr.callee,
-                messageId: "avoidPassingDataToParent",
-                data: {
-                  data: getBaseName(propCallbackArgFromDeps),
-                },
-              });
-            }
-          });
+          } else if (depInArgs && isPropCallbackCall) {
+            context.report({
+              node: callExpr.callee,
+              messageId: "avoidPassingDataToParent",
+              data: { data: getBaseName(depInArgs) },
+            });
+          }
+        });
       },
     };
   },

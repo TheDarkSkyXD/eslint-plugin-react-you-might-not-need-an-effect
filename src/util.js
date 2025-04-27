@@ -102,7 +102,7 @@ export const getBaseName = (node) => {
 // NOTE: Comparing source text is the easiest way to handle various structures
 // (Identifier vs MemberExpression, complex nested expressions, etc.),
 // but it probably can't handle edge cases like shadowed variables
-export const findDepUsedInArgs = (context, deps, args) => {
+export const findDepInArgs = (context, deps, args) => {
   return args.find((arg) =>
     deps.find((dep) =>
       context.sourceCode.getText(arg).includes(context.sourceCode.getText(dep)),
