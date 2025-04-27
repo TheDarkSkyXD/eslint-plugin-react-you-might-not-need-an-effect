@@ -61,7 +61,7 @@ new RuleTester().run(
     ],
     invalid: [
       {
-        name: "Derived state from other state (single-statement body; replaced entirely)",
+        name: "Derived state from other state in single-statement body (replaced entirely)",
         code: js`
           function Form() {
             const [firstName, setFirstName] = useState('Taylor');
@@ -87,7 +87,7 @@ new RuleTester().run(
         ],
       },
       {
-        name: "Derived state from other state (multi-statement body; only the setter is removed, computed state is placed above `useEffect`)",
+        name: "Derived state from other state in multi-statement body (only the setter is removed, computed state is placed above `useEffect`)",
         code: js`
           function Form() {
             const [firstName, setFirstName] = useState('Taylor');
@@ -117,7 +117,7 @@ new RuleTester().run(
         ],
       },
       {
-        name: "Derived state from other state (one-liner body; replaced entirely)",
+        name: "Derived state from other state in one-liner body (replaced entirely)",
         code: js`
           function Form() {
             const [firstName, setFirstName] = useState('Taylor');
@@ -165,41 +165,7 @@ new RuleTester().run(
         ],
       },
       {
-        name: "Function component",
-        code: js`
-          function Child({ onFetched }) {
-            const data = useSomeAPI();
-
-            useEffect(() => {
-              onFetched(data);
-            }, [onFetched, data]);
-          }`,
-        errors: [
-          {
-            messageId: "avoidPassingDataToParent",
-            data: { data: "data" },
-          },
-        ],
-      },
-      {
-        name: "Arrow function component",
-        code: js`
-          const Child = ({ onFetched }) => {
-            const data = useSomeAPI();
-
-            useEffect(() => {
-              onFetched(data);
-            }, [onFetched, data]);
-          }`,
-        errors: [
-          {
-            messageId: "avoidPassingDataToParent",
-            data: { data: "data" },
-          },
-        ],
-      },
-      {
-        name: "Non-destructured props",
+        name: "State passed to parent via non-destructured props",
         code: js`
           const Child = (props) => {
             const data = useSomeAPI();
@@ -216,7 +182,7 @@ new RuleTester().run(
         ],
       },
       {
-        name: "One-liner `useEffect` body",
+        name: "One-liner useEffect body",
         code: js`
           const Child = ({ onFetched }) => {
             const data = useSomeAPI();
@@ -231,22 +197,7 @@ new RuleTester().run(
         ],
       },
       {
-        name: "Member access in dependencies",
-        code: js`
-          const Child = ({ onFetched }) => {
-            const data = useSomeAPI();
-
-            useEffect(() => onFetched(data.result), [onFetched, data.result]);
-          }`,
-        errors: [
-          {
-            messageId: "avoidPassingDataToParent",
-            data: { data: "data" },
-          },
-        ],
-      },
-      {
-        name: "Double member access in dependencies",
+        name: "Arbitrarily deep member access in useEffect body and dependencies",
         code: js`
           const Child = ({ onFetched }) => {
             const data = useSomeAPI();
@@ -261,26 +212,7 @@ new RuleTester().run(
         ],
       },
       {
-        name: "Nested in if block",
-        code: js`
-          function Child({ onFetched }) {
-            const data = useSomeAPI();
-
-            useEffect(() => {
-              if (data) {
-                onFetched(data);
-              }
-            }, [onFetched, data]);
-          }`,
-        errors: [
-          {
-            messageId: "avoidPassingDataToParent",
-            data: { data: "data" },
-          },
-        ],
-      },
-      {
-        name: "Nested in two if blocks",
+        name: "Arbitrarily deep nesting in useEffect body",
         code: js`
           function Child({ onFetched }) {
             const data = useSomeAPI();
