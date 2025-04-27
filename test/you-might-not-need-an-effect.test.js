@@ -77,13 +77,6 @@ new RuleTester({
               setFullName(firstName + ' ' + lastName);
             }, [firstName, lastName]);
           }`,
-      output: js`
-          function Form() {
-            const [firstName, setFirstName] = useState('Taylor');
-            const [lastName, setLastName] = useState('Swift');
-
-            const fullName = firstName + ' ' + lastName;
-          }`,
       errors: [
         {
           messageId: "avoidDerivedState",
@@ -104,16 +97,6 @@ new RuleTester({
               console.log('meow');
             }, [firstName, lastName]);
           }`,
-      output: js`
-          function Form() {
-            const [firstName, setFirstName] = useState('Taylor');
-            const [lastName, setLastName] = useState('Swift');
-
-            const fullName = firstName + ' ' + lastName;
-            useEffect(() => {
-              console.log('meow');
-            }, [firstName, lastName]);
-          }`,
       errors: [
         {
           messageId: "avoidDerivedState",
@@ -130,13 +113,6 @@ new RuleTester({
 
             const [fullName, setFullName] = useState('');
             useEffect(() => setFullName(firstName + ' ' + lastName), [firstName, lastName]);
-          }`,
-      output: js`
-          function Form() {
-            const [firstName, setFirstName] = useState('Taylor');
-            const [lastName, setLastName] = useState('Swift');
-
-            const fullName = firstName + ' ' + lastName;
           }`,
       errors: [
         {
@@ -155,12 +131,6 @@ new RuleTester({
             useEffect(() => {
               setVisibleTodos(getFilteredTodos(todos, filter));
             }, [todos, filter]);
-          }`,
-      output: js`
-          function TodoList({ todos, filter }) {
-            const [newTodo, setNewTodo] = useState("");
-
-            const visibleTodos = getFilteredTodos(todos, filter);
           }`,
       errors: [
         {

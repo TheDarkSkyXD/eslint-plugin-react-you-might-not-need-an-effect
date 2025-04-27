@@ -18,7 +18,6 @@ export default {
       description: "Warn against unnecessary useEffect.",
       url: "https://react.dev/learn/you-might-not-need-an-effect",
     },
-    fixable: "code",
     schema: [],
     messages: {
       // TODO: One of these needs to suggest that state be updated in a callback, rather than a useEffect that monitors state.
@@ -96,36 +95,11 @@ export default {
           const isPropCallbackCall = propsNames.has(getBaseName(callee));
 
           if (depInArgs && isStateSetterCall) {
-            const { stateName, node: stateDeclNode } = useStates.get(
-              callExpr.callee.name,
-            );
+            const { stateName } = useStates.get(callExpr.callee.name);
             context.report({
               node: callExpr.callee,
               messageId: "avoidDerivedState",
               data: { state: stateName },
-              fix: (fixer) => {
-                const setStateArgs = callExpr.arguments;
-                const argSource = context.sourceCode.getText(setStateArgs[0]);
-                const computeDuringRenderText = `const ${stateName} = ${argSource};`;
-
-                const computeStateFix = isSingleStatementFn(effectFn)
-                  ? // The setState call is the only statement in the effect, so we can entirely replace it
-                    [fixer.replaceText(node.parent, computeDuringRenderText)]
-                  : [
-                      // Remove the setState call from the `useEffect`, but keep the rest
-                      fixer.remove(callExpr.parent),
-                      // Insert the computed state just before the `useEffect`.
-                      // Location is important - we know its dependencies have been declared by this point
-                      // because they were used in the `useEffect`.
-                      // That may not be the case if we replaced the higher-up `useState` node.
-                      fixer.insertTextBefore(
-                        node.parent,
-                        `${computeDuringRenderText}\n`,
-                      ),
-                    ];
-
-                return [...computeStateFix, fixer.remove(stateDeclNode.parent)];
-              },
             });
           } else if (depInArgs && isPropCallbackCall) {
             context.report({
