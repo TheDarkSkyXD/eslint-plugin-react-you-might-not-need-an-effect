@@ -52,23 +52,21 @@ export const isReactFunctionalComponent = (node) => {
   );
 };
 
-export const getCallExpressions = (context, node) => {
-  const scope = context.sourceCode.getScope(node);
-
-  return (
-    scope.references
-      .concat(
-        scope.childScopes?.flatMap((childScope) => childScope.references) || [],
-      )
-      .map((ref) => ref.identifier.parent)
-      .filter((node) => node.type === "CallExpression")
-      // Remove duplicates - `references` includes both the callee (i.e. function) and
-      // any arguments that reference variables. In which case their parent is the same CallExpression.
-      .filter(
-        (node, i, self) => i === self.findIndex((t) => t.range === node.range),
-      )
-  );
-};
+export const getCallExpressions = (context, scope) =>
+  scope.references
+    .map((ref) => ref.identifier.parent)
+    .filter((node) => node.type === "CallExpression")
+    // Remove duplicates - `references` includes both the callee (i.e. function) and
+    // any arguments that reference variables. In which case their parent is the same CallExpression.
+    .filter(
+      (node1, i, self) =>
+        i === self.findIndex((node2) => node2.range === node1.range),
+    )
+    .concat(
+      scope.childScopes.flatMap((childScope) =>
+        getCallExpressions(context, childScope),
+      ),
+    );
 
 export const isSingleStatementFn = (fn) =>
   fn.body.type === "CallExpression" ||

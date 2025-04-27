@@ -68,7 +68,7 @@ export default {
         const depsNodes = getUseEffectDeps(node);
         if (!effectFn || !depsNodes) return;
 
-        getCallExpressions(context, effectFn.body)
+        getCallExpressions(context, context.sourceCode.getScope(effectFn.body))
           ?.filter(
             (callExpr) =>
               // It calls a state setter
@@ -112,7 +112,7 @@ export default {
             });
           });
 
-        getCallExpressions(context, effectFn.body)
+        getCallExpressions(context, context.sourceCode.getScope(effectFn.body))
           // Only check calls to props
           ?.filter(
             ({ callee }) =>

@@ -279,6 +279,27 @@ new RuleTester().run(
           },
         ],
       },
+      {
+        name: "Nested in two if blocks",
+        code: js`
+          function Child({ onFetched }) {
+            const data = useSomeAPI();
+
+            useEffect(() => {
+              if (data) {
+                if (data.value) {
+                  onFetched(data);
+                }
+              }
+            }, [onFetched, data]);
+          }`,
+        errors: [
+          {
+            messageId: "avoidPassingDataToParent",
+            data: { data: "data" },
+          },
+        ],
+      },
     ],
   },
 );
