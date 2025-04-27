@@ -33,7 +33,7 @@ new RuleTester({
           }`,
     },
     {
-      name: "Two components with overlapping names should not affect each other",
+      name: "Two components with overlapping names",
       // Not a super realistic example
       code: js`
           function One() {
@@ -270,10 +270,35 @@ new RuleTester({
               setComment('');
             }, [userId]);
           }`,
-      // TODO: More accurately, should be a separate message to set `key` on the component instead
+      // TODO: More accurately, should be a separate message to set `key` on the component instead of resetting local state. I think only when *all* local state is reset. Otherwise React docs advise updating state during render.
       errors: [
         {
           messageId: "avoidDelayedSideEffect",
+        },
+      ],
+    },
+    {
+      name: "Resetting or deriving state when other state changes",
+      code: js`
+        function Form() {
+          const [error, setError] = useState();
+          const result = useSomeAPI();
+
+          useEffect(() => {
+            if (result.data) {
+              setError(null);
+            } else if (result.error) {
+              setError(result.error);
+            }
+          }, [result]);
+        }`,
+      errors: [
+        {
+          // Because `setError` is called with an argument that's not in the dependencies
+          messageId: "avoidDelayedSideEffect",
+        },
+        {
+          messageId: "avoidDerivedState",
         },
       ],
     },

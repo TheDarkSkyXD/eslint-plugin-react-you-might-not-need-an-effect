@@ -25,7 +25,7 @@ export default {
       avoidPassingIntermediateDataToParent:
         "Avoid making parent components depend on a child's intermediate state. If the parent needs live updates, consider lifting state up.",
       avoidDelayedSideEffect:
-        "Avoid using useEffect to trigger side effects in response to state changes. When possible, use direct callbacks (like `onCompleted`) instead. If no callback exists, reacting to state may be necessary.",
+        "Avoid using useEffect to react to state changes. When possible, use direct callbacks (like `onCompleted`) instead. If no callback exists, reacting to state may be necessary.",
     },
   },
   create: (context) => {
