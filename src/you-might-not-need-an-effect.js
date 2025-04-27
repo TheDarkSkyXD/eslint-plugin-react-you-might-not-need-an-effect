@@ -20,25 +20,12 @@ export default {
     },
     schema: [],
     messages: {
-      // TODO: One of these needs to suggest that state be updated in a callback, rather than a useEffect that monitors state.
-      // e.g. using Apollo's `onCompleted` instead of a `useEffect` that reacts to the query result.
-      // Maybe in avoidDerivedState? Because it would flag that currently.
-      // However it kinda fits avoidDelayedSideEffect too, because the intermediate state (the query result) is used to trigger the event handler (setting other state),
-      // when the event handler should be handled directly (in `onCompleted`). Not entirely sure this can be understood in all cases.
-      // And some libraries don't offer callbacks, only values, in which case you *have* to react to changes with a useEffect.
-      // But generally I think it should be in your control, and you can ignore it when not.
-      // I think...?
-      // Anyway, how can I tell those apart to give the right suggestion?
-      // Maybe check if the callback is a state setter vs anything else?
-      // Pretty good chance I need to remove the fixes too. Seems complex to handle correctly, if possible at all.
       avoidDerivedState:
         'Avoid storing derived state. Compute "{{state}}" directly during render, optionally with `useMemo` if it\'s expensive.',
-      // TODO: I think this gives false positives sometimes. Like if the child exposes some form UI and
-      // then notifies the parent with the results upon completion. Which I think is a valid use case?
       avoidPassingIntermediateDataToParent:
-        "Avoid making parent components depend on a child component's intermediate state. Consider lifting state if needed.",
+        "Avoid making parent components depend on a child's intermediate state. If the parent needs live updates, consider lifting state up.",
       avoidDelayedSideEffect:
-        "Avoid waiting for state changes to trigger side effects in useEffect. When possible, handle the action directly.",
+        "Avoid using useEffect to trigger side effects in response to state changes. When possible, use direct callbacks (like `onCompleted`) instead. If no callback exists, reacting to state may be necessary.",
     },
   },
   create: (context) => {
