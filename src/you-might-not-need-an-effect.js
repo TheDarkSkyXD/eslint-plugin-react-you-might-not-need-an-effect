@@ -5,7 +5,7 @@ import {
   getCallExpressions,
   isReactFunctionalComponent,
   getUseEffectDeps,
-  findDepInArgs,
+  findReference,
   getPropsNames,
   getBaseName,
 } from "./util.js";
@@ -21,6 +21,8 @@ export default {
     messages: {
       avoidDerivedState:
         'Avoid storing derived state. Compute "{{state}}" directly during render, optionally with `useMemo` if it\'s expensive.',
+      avoidChainingState:
+        "Avoid chaining state changes. When possible, update all relevant state simultaneously.",
       avoidPassingIntermediateDataToParent:
         "Avoid making parent components depend on a child's intermediate state. If the parent needs live updates, consider lifting state up.",
       avoidDelayedSideEffect:
@@ -62,31 +64,45 @@ export default {
         const depsNodes = getUseEffectDeps(node);
         if (!effectFn || !depsNodes) return;
 
+        // Usually these are valid.
+        // Unless we care to check for something really jank, like setting state on mount.
+        if (depsNodes.length === 0) return;
+
         getCallExpressions(
           context,
           context.sourceCode.getScope(effectFn.body),
         ).forEach((callExpr) => {
           const callee = callExpr.callee;
-          const depInArgs = findDepInArgs(
+          const depInArgs = findReference(
             context,
-            depsNodes,
             callExpr.arguments,
+            depsNodes,
           );
           const isStateSetterCall =
             callee.type === "Identifier" && useStates.has(callee.name);
           const isPropCallback = propsNames.has(getBaseName(callee));
+          // TODO: Is this always the case? Could it be anything else?
+          const isSideEffect = !isStateSetterCall && !isPropCallback;
 
-          if (depInArgs && isStateSetterCall) {
-            // TODO: Should also trigger if the dep is used in an if statement?
+          if (isStateSetterCall && depInArgs) {
             const { stateName } = useStates.get(callExpr.callee.name);
-            context.report({
-              node: callExpr.callee,
-              messageId: "avoidDerivedState",
-              data: { state: stateName },
-            });
+            if (depInArgs) {
+              context.report({
+                node: callExpr.callee,
+                messageId: "avoidDerivedState",
+                data: { state: stateName },
+              });
+            } else {
+              // TODO: Should maybe check that the triggering dep is also a useState?
+              // There are some valid reasons to call a setter inside an effect. Like storing a fetch result.
+              context.report({
+                node: callExpr.callee,
+                messageId: "avoidChainingState",
+              });
+            }
           } else if (
             isPropCallback &&
-            depInArgs &&
+            depInArgs && // TODO: Should this trigger without depinArgs too? Technically that could result in parent state changes. But maybe it's more valid.
             // The rule is only meant to prevent passing *intermediate* state.
             // Passing *final* state, like when the user completes a form, is a valid use case.
             // So we check the callback name as a heuristic.

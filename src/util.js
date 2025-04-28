@@ -103,10 +103,12 @@ export const getBaseName = (node) => {
 // (Identifier vs MemberExpression, complex nested expressions, etc.),
 // but it probably can't handle edge cases like derived variables.
 // e.g. Confirmed that it misses variables destructured from the dependency.
-export const findDepInArgs = (context, deps, args) => {
-  return args.find((arg) =>
-    deps.find((dep) =>
-      context.sourceCode.getText(arg).includes(context.sourceCode.getText(dep)),
+export const findReference = (context, haystack, needles) => {
+  return haystack.find((hay) =>
+    needles.find((needle) =>
+      context.sourceCode
+        .getText(hay)
+        .includes(context.sourceCode.getText(needle)),
     ),
   );
 };
