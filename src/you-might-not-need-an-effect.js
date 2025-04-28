@@ -25,6 +25,10 @@ export default {
         "Avoid chaining state changes. When possible, update all relevant state simultaneously.",
       avoidPassingIntermediateDataToParent:
         "Avoid making parent components depend on a child's intermediate state. If the parent needs live updates, consider lifting state up.",
+      // TODO: Okay I think I get it now. This should really be "avoidEventHandler".
+      // Per https://react.dev/learn/separating-events-from-effects
+      // Maybe with that in mind, I can check some other code to better validate it?
+      // Like find the set state call that corresponds to the state in the deps.
       avoidDelayedSideEffect:
         "Avoid using useEffect to react to state changes. When possible, use direct callbacks (like `onCompleted`) instead. If no callback exists, reacting to state may be necessary.",
     },
