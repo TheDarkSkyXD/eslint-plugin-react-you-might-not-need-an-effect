@@ -82,6 +82,10 @@ export default {
             callee.type === "Identifier" && useStates.has(callee.name);
           const isPropCallback = propsNames.has(getBaseName(callee));
           // TODO: Is this always the case? Could it be anything else?
+          // Basically we are doing something outside of React.
+          // We can't know if it's a valid side effect (?).
+          // The best we can do is warn of calling the side effect in response to state change,
+          // instead of directly.
           const isSideEffect = !isStateSetterCall && !isPropCallback;
 
           if (isStateSetterCall && depInArgs) {
@@ -95,6 +99,8 @@ export default {
             } else {
               // TODO: Check that the triggering dep is also a useState?
               // There are some valid reasons to call a setter inside an effect. Like storing a fetch result.
+              // I think the key detail is identifying when we're operating on internal/React state.
+              // That seems easier than knowing when we're operating on external state (a valid use).
               context.report({
                 node: callExpr.callee,
                 messageId: "avoidChainingState",
