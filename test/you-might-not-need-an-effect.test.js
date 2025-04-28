@@ -51,6 +51,20 @@ new RuleTester({
           }
         `,
     },
+    {
+      name: "Fetching then storing state on mount",
+      code: js`
+        function Form() {
+          const [data, setData] = useState();
+
+          useEffect(() => {
+            fetchData().then((data) => {
+              setData(data);
+            });
+          }, []);
+        }`,
+    },
+    ,
   ],
   invalid: [
     {

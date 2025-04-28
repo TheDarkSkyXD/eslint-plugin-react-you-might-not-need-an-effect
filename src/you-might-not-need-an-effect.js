@@ -93,7 +93,7 @@ export default {
                 data: { state: stateName },
               });
             } else {
-              // TODO: Should maybe check that the triggering dep is also a useState?
+              // TODO: Check that the triggering dep is also a useState?
               // There are some valid reasons to call a setter inside an effect. Like storing a fetch result.
               context.report({
                 node: callExpr.callee,
