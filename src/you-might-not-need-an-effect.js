@@ -29,6 +29,7 @@ export default {
       // Per https://react.dev/learn/separating-events-from-effects
       // Maybe with that in mind, I can check some other code to better validate it?
       // Like find the set state call that corresponds to the state in the deps.
+      // Maybe this whole rule is a combination of "what is the effect doing" and "in response to what"?
       avoidDelayedSideEffect:
         "Avoid using useEffect to react to state changes. When possible, use direct callbacks (like `onCompleted`) instead. If no callback exists, reacting to state may be necessary.",
     },
@@ -148,6 +149,10 @@ export default {
             //
             // Separately we can still flag true side effects that react to state,
             // that could possibly be avoided via callbacks. But that is less reliable.
+            //
+            // I think we can check whether the deps is a state or prop as a heuristic.
+            // Because if we are reacting to React state, and only updating other React state, it's 100% internal and unnecessary.
+            // When it's our own React state, we must have a callback available (where we call the setter).
             context.report({
               node: callExpr.callee,
               messageId: "avoidDelayedSideEffect",
