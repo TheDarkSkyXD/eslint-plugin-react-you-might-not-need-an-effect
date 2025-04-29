@@ -423,20 +423,8 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
         {
           messageId: "avoidDerivedState",
         },
+        // TODO: And some more specific error?
       ],
     },
-    // TODO:
-    // {
-    //   name: "Redeclared dependency used in args",
-    //   code: js`
-    //     function Child({ onFetched }) {
-    //       const data = useSomeAPI();
-    //
-    //       useEffect(() => {
-    //         const value = data.value;
-    //         onFetched(value);
-    //       }, [onFetched, data]);
-    //     }`,
-    // },
   ],
 });
