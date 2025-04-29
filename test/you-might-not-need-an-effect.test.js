@@ -215,6 +215,26 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
         }
       `,
     },
+    {
+      name: "Logging/Analytics",
+      code: js`
+        function Nav() {
+          const [page, setPage] = useState('home');
+
+          useEffect(() => {
+            logPageView(page);
+          }, [page]);
+
+          return (
+            <div>
+              <button onClick={() => setPage('home')}>Home</button>
+              <button onClick={() => setPage('about')}>About</button>
+              <div>{page}</div>
+            </div>
+          )
+        }
+      `,
+    },
   ],
   invalid: [
     {
