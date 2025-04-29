@@ -19,13 +19,20 @@ export default {
     },
     schema: [],
     messages: {
-      avoidInternalEffect: "TODO",
+      // Overall warning
+      avoidInternalEffect:
+        "This effect operates entirely on internal React state, with no external dependencies. It is likely unnecessary.",
+      // State setter warnings
       avoidDerivedState:
         'Avoid storing derived state. Compute "{{state}}" directly during render, optionally with `useMemo` if it\'s expensive.',
+      avoidInitializingState:
+        "Avoid initializing state in an effect. Instead, pass the initial value to `useState`.",
       avoidChainingState:
         "Avoid chaining state changes. When possible, update all relevant state simultaneously.",
+      // Prop callback warnings
       avoidPassingIntermediateDataToParent:
         "Avoid making parent components depend on a child's intermediate state. If the parent needs live updates, consider lifting state up.",
+
       // TODO: Okay I think I get it now. This should really be "avoidEventHandler".
       // Per https://react.dev/learn/separating-events-from-effects
       // Maybe with that in mind, I can check some other code to better validate it?
@@ -39,6 +46,8 @@ export default {
     let useStates; // Map of setter name -> { stateName, node }
     let propsNames; // Set of prop names
 
+    // TODO: Could use scope to make this more apparent?
+    // Not sure it'd have a functional difference though.
     const setupComponentScope = (param) => {
       useStates = new Map();
       propsNames = new Set();
@@ -76,10 +85,6 @@ export default {
         const deps = getUseEffectDeps(node);
         if (!effectFn || !deps) return;
 
-        // Usually these are valid.
-        // Unless we care to check for something really jank, like setting state on mount.
-        if (deps.length === 0) return;
-
         const callExprs = getCallExpressions(
           context,
           context.sourceCode.getScope(effectFn.body),
@@ -98,100 +103,57 @@ export default {
             node,
             messageId: "avoidInternalEffect",
           });
+
           // Give more specific feedback
           callExprs
             .filter((callExpr) => isStateSetterCall(callExpr))
             .forEach((callExpr) => {
-              // TODO: Should this consider using deps in control flow prior to the call?
               if (findReference(context, callExpr.arguments, deps)) {
-                // derived state
+                context.report({
+                  node: callExpr.callee,
+                  messageId: "avoidDerivedState",
+                  data: { state: stateName },
+                });
+              } else if (deps.length === 0) {
+                context.report({
+                  node: callExpr.callee,
+                  messageId: "avoidInitializingState",
+                });
+              } else {
+                // TODO: Is this always the final case?
+                context.report({
+                  node: callExpr.callee,
+                  messageId: "avoidChainingState",
+                });
+              }
+            });
+
+          callExprs
+            .filter((callExpr) => isPropCallback(callExpr))
+            .forEach((callExpr) => {
+              if (findReference(context, callExpr.arguments, deps)) {
+                // The rule is only meant to prevent passing *intermediate* state.
+                // Passing *final* state, like when the user completes a form, is a valid use case.
+                // So we check the callback name as a heuristic.
+                // TODO: Is there ever a valid use case for passing final state via an effect though?
+                // Surely that could fall under chaining state?
+                // TODO: Should this trigger without depinArgs too? Technically that could result in parent state changes. But maybe it's more valid.
+                context.report({
+                  node: callExpr.callee,
+                  messageId: "avoidPassingIntermediateDataToParent",
+                });
               }
             });
         } else {
           // Do nothing. Too hard to accurately assess the side effect's validity.
           // May be some cases we can sus out...
+          // At best I think we can warn against using state as a signal to trigger the action
+          // rather than calling it directly in response to the event.
+          // i.e. avoid state as event handler.
+          // But I thinkkk that's frequently valid.
+          // Maybe we can make some guesses based on the external function names?
+          // If we do anything here, it should be configurable due to possible false positives.
         }
-
-        getCallExpressions(
-          context,
-          context.sourceCode.getScope(effectFn.body),
-        ).forEach((callExpr) => {
-          const callee = callExpr.callee;
-          const depInArgs = findReference(context, callExpr.arguments, deps);
-          // TODO: Is this always the case? Could it be anything else?
-          // Basically we are doing something outside of React.
-          // We can't know if it's a valid side effect (?).
-          // The best we can do is warn of calling the side effect in response to state change,
-          // instead of directly.
-          const isSideEffect = !isStateSetterCall && !isPropCallback;
-
-          if (isStateSetterCall && depInArgs) {
-            const { stateName } = useStates.get(callExpr.callee.name);
-            if (depInArgs) {
-              context.report({
-                node: callExpr.callee,
-                messageId: "avoidDerivedState",
-                data: { state: stateName },
-              });
-            } else {
-              // TODO: Check that the triggering dep is also a useState?
-              // There are some valid reasons to call a setter inside an effect. Like storing a fetch result.
-              // I think the key detail is identifying when we're operating on internal/React state.
-              // That seems easier than knowing when we're operating on external state (a valid use).
-              context.report({
-                node: callExpr.callee,
-                messageId: "avoidChainingState",
-              });
-            }
-          } else if (
-            isPropCallback &&
-            depInArgs && // TODO: Should this trigger without depinArgs too? Technically that could result in parent state changes. But maybe it's more valid.
-            // The rule is only meant to prevent passing *intermediate* state.
-            // Passing *final* state, like when the user completes a form, is a valid use case.
-            // So we check the callback name as a heuristic.
-            // It's also intentional that we then proceed to the check for delayed side effects;
-            // in the form example, that's the correct warning to give.
-            // I don't think there's a valid use case for passing final state via a useEffect?
-            // TODO: or maybe we should give both warnings?
-            !allowedPropsCallbacks.includes(getBaseName(callee))
-          ) {
-            context.report({
-              node: callExpr.callee,
-              messageId: "avoidPassingIntermediateDataToParent",
-            });
-          } else if (deps.length > 0) {
-            // We're reacting to a state change.
-            // WARNING: Sometimes this case can't be avoided or is preferrable.
-            // It requires that the state we're reacting to has an equivalent callback,
-            // e.g. `onCompleted` instead of reacting to `data` changing.
-            // Additionally, it is often more readable to use an effect to synchronize React state with external state.
-            // TODO: Flags https://react.dev/learn/you-might-not-need-an-effect#fetching-data
-            // which apparently is valid. Possible to detect?
-            // Maybe just mention in the message that it's also okay if there are multiple reasons to trigger the effect?
-            // TODO: As the most unreliable check, it should have an option to disable it.
-            //
-            // Maybe the key here is "side effect"?
-            // We could flag it only if the effect is not truly a side effect.
-            // i.e. it exists within React and thus doesn't need an escape hatch - setting state, calling a prop, etc.
-            // That is more reliable. And a frequent misuse.
-            // "avoidUnnecessaryEscapeHatch"?
-            // Do the prior two rules already cover that?
-            // I don't think so? Or at least, not as specifically?
-            // They both check that a dep is used in the arg - that's not always the case, but can still be inadvisable.
-            //
-            // Separately we can still flag true side effects that react to state,
-            // that could possibly be avoided via callbacks. But that is less reliable.
-            //
-            // I think we can check whether the deps is a state or prop as a heuristic.
-            // Because if we are reacting to React state, and only updating other React state, it's 100% internal and unnecessary.
-            // When it's our own React state, we must have a callback available (where we call the setter).
-            context.report({
-              node: callExpr.callee,
-              messageId: "avoidDelayedSideEffect",
-            });
-          }
-          // NOTE: We don't examine effects with no dependencies. Too hard to accurately assess their validity.
-        });
       },
     };
   },
