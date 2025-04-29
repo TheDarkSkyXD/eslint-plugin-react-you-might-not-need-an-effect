@@ -56,6 +56,27 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
       `,
     },
     {
+      name: "Reacting to library state changes that may not offer a callback",
+      code: js`
+        function Feed() {
+          const { data: posts } = useQuery('posts');
+          const [scrollPosition, setScrollPosition] = useState(0);
+
+          useEffect(() => {
+            setScrollPosition(0);
+          }, [posts]);
+
+          return (
+            <div>
+              {posts.map((post) => (
+                <Post key={post.id} post={post} />
+              ))}
+            </div>
+          );
+        }
+      `,
+    },
+    {
       // TODO: Questionable, but we'll leave it for now.
       // Probably shouldn't receive the general "internal state only" warning,
       // But we can give a better warning - the React docs say to either use `key` for this or update state in render, not an effect.
