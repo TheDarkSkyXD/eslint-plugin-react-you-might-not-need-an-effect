@@ -19,6 +19,7 @@ export default {
     },
     schema: [],
     messages: {
+      avoidInternalEffect: "TODO",
       avoidDerivedState:
         'Avoid storing derived state. Compute "{{state}}" directly during render, optionally with `useMemo` if it\'s expensive.',
       avoidChainingState:
@@ -48,6 +49,12 @@ export default {
       });
     };
 
+    const isStateSetterCall = (callExpr) =>
+      callExpr.callee.type === "Identifier" &&
+      useStates.has(callExpr.callee.name);
+    const isPropCallback = (callExpr) =>
+      propsNames.has(getBaseName(callExpr.callee));
+
     return {
       FunctionDeclaration: (node) => {
         if (isReactFunctionalComponent(node)) {
@@ -66,26 +73,51 @@ export default {
       CallExpression: (node) => {
         if (!isUseEffect(node)) return;
         const effectFn = getUseEffectFn(node);
-        const depsNodes = getUseEffectDeps(node);
-        if (!effectFn || !depsNodes) return;
+        const deps = getUseEffectDeps(node);
+        if (!effectFn || !deps) return;
 
         // Usually these are valid.
         // Unless we care to check for something really jank, like setting state on mount.
-        if (depsNodes.length === 0) return;
+        if (deps.length === 0) return;
+
+        const callExprs = getCallExpressions(
+          context,
+          context.sourceCode.getScope(effectFn.body),
+        );
+
+        // TODO: Should also check that either deps is empty, or all useState/props?
+        // Otherwise we could get false positive when the dep is state from e.g. a library,
+        // because we might not have a callback to use instead (whereas with useState we always do).
+        const isInternalEffect = callExprs.every(
+          (callExpr) => isStateSetterCall(callExpr) || isPropCallback(callExpr),
+        );
+
+        if (isInternalEffect) {
+          // Warn about the entire effect
+          context.report({
+            node,
+            messageId: "avoidInternalEffect",
+          });
+          // Give more specific feedback
+          callExprs
+            .filter((callExpr) => isStateSetterCall(callExpr))
+            .forEach((callExpr) => {
+              // TODO: Should this consider using deps in control flow prior to the call?
+              if (findReference(context, callExpr.arguments, deps)) {
+                // derived state
+              }
+            });
+        } else {
+          // Do nothing. Too hard to accurately assess the side effect's validity.
+          // May be some cases we can sus out...
+        }
 
         getCallExpressions(
           context,
           context.sourceCode.getScope(effectFn.body),
         ).forEach((callExpr) => {
           const callee = callExpr.callee;
-          const depInArgs = findReference(
-            context,
-            callExpr.arguments,
-            depsNodes,
-          );
-          const isStateSetterCall =
-            callee.type === "Identifier" && useStates.has(callee.name);
-          const isPropCallback = propsNames.has(getBaseName(callee));
+          const depInArgs = findReference(context, callExpr.arguments, deps);
           // TODO: Is this always the case? Could it be anything else?
           // Basically we are doing something outside of React.
           // We can't know if it's a valid side effect (?).
@@ -127,7 +159,7 @@ export default {
               node: callExpr.callee,
               messageId: "avoidPassingIntermediateDataToParent",
             });
-          } else if (depsNodes.length > 0) {
+          } else if (deps.length > 0) {
             // We're reacting to a state change.
             // WARNING: Sometimes this case can't be avoided or is preferrable.
             // It requires that the state we're reacting to has an equivalent callback,
