@@ -63,9 +63,9 @@ ruleTester.run(
       {
         name: "Effect multi-statement body",
         code: code({
-          effectBody: js`{ setDoubleCount(count * 2); console.log("Double count updated"); }`,
+          effectBody: js`{ setDoubleCount(count * 2); setDoubleCount(count * 2); }`,
         }),
-        errors: 2,
+        errors: 3,
       },
       {
         name: "Non-destructured props",

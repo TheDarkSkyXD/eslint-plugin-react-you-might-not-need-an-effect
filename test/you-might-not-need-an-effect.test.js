@@ -180,7 +180,7 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
       `,
     },
     {
-      name: "Imperatively interacting with the DOM",
+      name: "Imperatively syncing with the DOM",
       // Could technically play/pause the video in the `onClick` handler,
       // but the use of an effect to sync state is arguably more readable and a valid use.
       code: js`

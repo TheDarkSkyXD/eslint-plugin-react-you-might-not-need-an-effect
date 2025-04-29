@@ -52,21 +52,32 @@ export const getUseEffectDeps = (node) => {
   return deps.elements;
 };
 
-export const getCallExpressions = (context, scope) =>
-  scope.references
-    .map((ref) => ref.identifier.parent)
-    .filter((node) => node.type === "CallExpression")
-    // Remove duplicates - `references` includes both the callee (i.e. function) and
-    // any arguments that reference variables. In which case their parent is the same CallExpression.
-    .filter(
-      (node1, i, self) =>
-        i === self.findIndex((node2) => node2.range === node1.range),
-    )
-    .concat(
-      scope.childScopes.flatMap((childScope) =>
-        getCallExpressions(context, childScope),
-      ),
-    );
+export const getCallExpressions = (context, scope) => {
+  return (
+    scope.references
+      .map((ref) => {
+        let node = ref.identifier.parent;
+        while (node.type === "MemberExpression") {
+          // Walk up to the CallExpression
+          node = node.parent;
+        }
+        return node;
+      })
+      // Sometimes it walks all the way to the top of the tree...
+      .filter((node) => node?.type === "CallExpression")
+      // Remove duplicates - `scope.references` includes both the callee (i.e. function) and
+      // any of its arguments that reference variables - their parent is the same CallExpression.
+      .filter(
+        (node1, i, self) =>
+          i === self.findIndex((node2) => node2.range === node1.range),
+      )
+      .concat(
+        scope.childScopes.flatMap((childScope) =>
+          getCallExpressions(context, childScope),
+        ),
+      )
+  );
+};
 
 // NOTE: Comparing source text is the easiest way to handle various structures
 // (Identifier vs MemberExpression, complex nested expressions, etc.),
