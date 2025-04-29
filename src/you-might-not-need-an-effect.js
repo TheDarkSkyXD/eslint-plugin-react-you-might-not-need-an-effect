@@ -108,6 +108,7 @@ export default {
           callExprs
             .filter((callExpr) => isStateSetterCall(callExpr))
             .forEach((callExpr) => {
+              const stateName = useStates.get(callExpr.callee.name).stateName;
               if (findReference(context, callExpr.arguments, deps)) {
                 context.report({
                   node: callExpr.callee,
