@@ -36,7 +36,7 @@ class NormalizedWhitespaceRuleTester extends RuleTester {
 const normalizeWhitespace = (str) =>
   typeof str === "string" ? str.replace(/\s+/g, " ").trim() : str;
 
-export default new NormalizedWhitespaceRuleTester({
+export const ruleTester = new NormalizedWhitespaceRuleTester({
   languageOptions: {
     parserOptions: {
       ecmaFeatures: {

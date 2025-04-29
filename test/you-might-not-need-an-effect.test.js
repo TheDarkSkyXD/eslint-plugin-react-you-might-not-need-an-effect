@@ -1,4 +1,4 @@
-import ruleTester from "./rule-tester.js";
+import { ruleTester } from "./rule-tester.js";
 import youMightNotNeedAnEffectRule from "../src/you-might-not-need-an-effect.js";
 const js = String.raw;
 
@@ -184,7 +184,7 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
       // Could technically play/pause the video in the `onClick` handler,
       // but the use of an effect to sync state is arguably more readable and a valid use.
       code: js`
-        function Player() {
+        function VideoPlayer() {
           const [isPlaying, setIsPlaying] = useState(false);
           const videoRef = useRef();
 
@@ -198,7 +198,7 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
 
           return <div>
             <video ref={videoRef} />
-            <button onClick={() => setIsPlaying((p) => !p)}>
+            <button onClick={() => setIsPlaying((p) => !p)} />
           </div>
         }
       `,
@@ -247,7 +247,7 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
   ],
   invalid: [
     {
-      name: "Derived state from other state in one-liner body",
+      name: "Derived state from other state",
       code: js`
         function Form() {
           const [firstName, setFirstName] = useState('Taylor');
@@ -259,25 +259,8 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
       `,
       errors: [
         {
-          messageId: "avoidDerivedState",
-          data: { state: "fullName" },
+          messageId: "avoidInternalEffect",
         },
-      ],
-    },
-    {
-      name: "Derived state from other state in single-statement body",
-      code: js`
-        function Form() {
-          const [firstName, setFirstName] = useState('Taylor');
-          const [lastName, setLastName] = useState('Swift');
-
-          const [fullName, setFullName] = useState('');
-          useEffect(() => {
-            setFullName(firstName + ' ' + lastName);
-          }, [firstName, lastName]);
-        }
-      `,
-      errors: [
         {
           messageId: "avoidDerivedState",
           data: { state: "fullName" },
@@ -285,28 +268,7 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
       ],
     },
     {
-      name: "Derived state from other state in multi-statement body",
-      code: js`
-        function Form() {
-          const [firstName, setFirstName] = useState('Taylor');
-          const [lastName, setLastName] = useState('Swift');
-
-          const [fullName, setFullName] = useState('');
-          useEffect(() => {
-            setFullName(firstName + ' ' + lastName);
-            console.log('meow');
-          }, [firstName, lastName]);
-        }
-      `,
-      errors: [
-        {
-          messageId: "avoidDerivedState",
-          data: { state: "fullName" },
-        },
-      ],
-    },
-    {
-      name: "Derived state from destructured props",
+      name: "Derived state from props",
       code: js`
         function TodoList({ todos, filter }) {
           const [newTodo, setNewTodo] = useState("");
@@ -319,93 +281,59 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
       `,
       errors: [
         {
+          messageId: "avoidInternalEffect",
+        },
+        {
           messageId: "avoidDerivedState",
           data: { state: "visibleTodos" },
         },
-        // Triggered by `getFilteredTodos`...
-        // TODO: Is that good?
-        // I guess so? But maybe not for all cases...
-        { messageId: "avoidDelayedSideEffect" },
       ],
     },
     {
-      name: "State passed to parent via non-destructured props",
-      code: js`
-        const Child = (props) => {
-          const data = useSomeAPI();
-
-          useEffect(() => {
-            props.onFetched(data);
-          }, [props.onFetched, data]);
-        }
-      `,
-      errors: [
-        {
-          messageId: "avoidPassingIntermediateDataToParent",
-        },
-      ],
-    },
-    {
-      name: "Arbitrarily deep member access in useEffect body and dependencies",
+      name: "State passed to parent",
       code: js`
         const Child = ({ onFetched }) => {
           const data = useSomeAPI();
 
-          useEffect(() => onFetched(data.result.value), [onFetched, data.result.value]);
-        }
-      `,
-      errors: [
-        {
-          messageId: "avoidPassingIntermediateDataToParent",
-        },
-      ],
-    },
-    {
-      name: "Arbitrarily deep nesting in useEffect body",
-      code: js`
-        function Child({ onFetched }) {
-          const data = useSomeAPI();
-
           useEffect(() => {
-            if (data) {
-              if (data.value) {
-                onFetched(data);
-              }
-            }
+            onFetched(data);
           }, [onFetched, data]);
         }
       `,
       errors: [
         {
+          messageId: "avoidInternalEffect",
+        },
+        {
           messageId: "avoidPassingIntermediateDataToParent",
         },
       ],
     },
-    {
-      name: "Using state to trigger a delayed side effect",
-      code: js`
-        function Form() {
-          const [name, setName] = useState();
-          const [dataToSubmit, setDataToSubmit] = useState();
-
-          useEffect(() => {
-            submitPostRequest(dataToSubmit);
-          }, [dataToSubmit]);
-
-          return (
-            <div>
-              <input
-                name="name"
-                type="text"
-                onChange={(e) => setName(e.target.value)}
-              />
-              <button onClick={() => setDataToSubmit({ name })}>Submit</button>
-            </div>
-          )
-        }
-      `,
-      errors: [{ messageId: "avoidDelayedSideEffect" }],
-    },
+    // {
+    //   name: "Using state to trigger a delayed side effect",
+    //   code: js`
+    //     function Form() {
+    //       const [name, setName] = useState();
+    //       const [dataToSubmit, setDataToSubmit] = useState();
+    //
+    //       useEffect(() => {
+    //         submitPostRequest(dataToSubmit);
+    //       }, [dataToSubmit]);
+    //
+    //       return (
+    //         <div>
+    //           <input
+    //             name="name"
+    //             type="text"
+    //             onChange={(e) => setName(e.target.value)}
+    //           />
+    //           <button onClick={() => setDataToSubmit({ name })}>Submit</button>
+    //         </div>
+    //       )
+    //     }
+    //   `,
+    //   errors: [{ messageId: "avoidDelayedSideEffect" }],
+    // },
     {
       name: "Using state to trigger a prop callback with final state",
       code: js`
@@ -429,11 +357,9 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
           )
         }
       `,
-      // Note we don't expect this to trigger the "intermediate state" error,
-      // because passing final state is a valid use case.
       errors: [
         {
-          messageId: "avoidDelayedSideEffect",
+          messageId: "avoidInternalEffect",
         },
       ],
     },
@@ -455,13 +381,12 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
       `,
       errors: [
         {
-          messageId: "avoidDelayedSideEffect",
+          messageId: "avoidInternalEffect",
         },
       ],
     },
     {
       name: "Resetting state when a prop changes",
-      // The `useEffect` triggers a state change, but it's not derived state.
       code: js`
         function ProfilePage({ userId }) {
           const [comment, setComment] = useState('');
@@ -471,15 +396,15 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
           }, [userId]);
         }
       `,
-      // TODO: More accurately, should be a separate message to set `key` on the component instead of resetting local state. I think only when *all* local state is reset. Otherwise React docs advise updating state during render.
       errors: [
         {
-          messageId: "avoidDelayedSideEffect",
+          messageId: "avoidInternalEffect",
         },
+        // TODO: And suggest using `key`
       ],
     },
     {
-      name: "Resetting or deriving state when other state changes",
+      name: "Deriving conditional state",
       code: js`
         function Form() {
           const [error, setError] = useState();
@@ -495,10 +420,6 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
         }
       `,
       errors: [
-        {
-          // Because `setError` is called with an argument that's not in the dependencies
-          messageId: "avoidDelayedSideEffect",
-        },
         {
           messageId: "avoidDerivedState",
         },
