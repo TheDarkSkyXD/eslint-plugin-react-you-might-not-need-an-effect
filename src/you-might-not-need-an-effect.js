@@ -6,8 +6,6 @@ import {
   isReactFunctionalComponent,
   getUseEffectDeps,
   findReference,
-  getPropsNames,
-  getBaseName,
 } from "./util.js";
 
 export default {

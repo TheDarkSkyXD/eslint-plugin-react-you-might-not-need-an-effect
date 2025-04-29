@@ -68,37 +68,6 @@ export const getCallExpressions = (context, scope) =>
       ),
     );
 
-export const isSingleStatementFn = (fn) =>
-  fn.body.type === "CallExpression" ||
-  (fn.body.type === "BlockStatement" && fn.body.body.length === 1);
-
-export const isEqualFields = (node1, node2) => {
-  // Base case
-  if (node1.type === "Identifier" && node2.type === "Identifier") {
-    return node1.name === node2.name;
-  }
-
-  // Recursively check nested members
-  if (node1.type === "MemberExpression" && node2.type === "MemberExpression") {
-    return (
-      node1.property.name === node2.property.name &&
-      isEqualFields(node1.object, node2.object)
-    );
-  }
-
-  // They're not the same type
-  return false;
-};
-
-export const getBaseName = (node) => {
-  if (node.type === "MemberExpression") {
-    return getBaseName(node.object);
-  } else if (node.type === "Identifier") {
-    return node.name;
-  }
-  return null;
-};
-
 // NOTE: Comparing source text is the easiest way to handle various structures
 // (Identifier vs MemberExpression, complex nested expressions, etc.),
 // but it probably can't handle edge cases like derived variables.
@@ -111,15 +80,4 @@ export const findReference = (context, haystack, needles) => {
         .includes(context.sourceCode.getText(needle)),
     ),
   );
-};
-
-export const getPropsNames = (fnParam) => {
-  if (fnParam.type === "ObjectPattern") {
-    return fnParam.properties.map(
-      // Important to use `value`, not `name`, in case it was renamed in the destructuring
-      (property) => property.value.name,
-    );
-  } else if (fnParam.type === "Identifier") {
-    return [fnParam.name];
-  }
 };
