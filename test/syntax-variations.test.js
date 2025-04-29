@@ -105,6 +105,16 @@ ruleTester.run(
         errors: 2,
       },
       {
+        // `exhaustive-deps` doesn't enforce member access in the deps
+        name: "Member access in effect body but not in deps",
+        code: code({
+          componentDeclaration: js`function DoubleCounter(props)`,
+          effectBody: js`setDoubleCount(props.count * 2)`,
+          effectDeps: js`[props]`,
+        }),
+        errors: 2,
+      },
+      {
         name: "Arbitrarily deep nested scopes in effect body",
         code: js`
           function Child({ onFetched }) {
