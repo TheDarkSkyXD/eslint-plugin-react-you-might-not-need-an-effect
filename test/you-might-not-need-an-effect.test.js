@@ -445,7 +445,7 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
       ],
     },
     {
-      name: "Effect calls a non-React function, but it's pure",
+      name: "Effect calls a pure non-React function",
       code: js`
         function Todos({ todos }) {
           const [newTodo, setNewTodo] = useState('');
