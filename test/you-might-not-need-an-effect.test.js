@@ -4,7 +4,7 @@ const js = String.raw;
 
 import "./normalize-test-whitespace.js";
 
-new RuleTester({
+const ruleTester = new RuleTester({
   languageOptions: {
     parserOptions: {
       ecmaFeatures: {
@@ -12,7 +12,9 @@ new RuleTester({
       },
     },
   },
-}).run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
+});
+
+ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
   valid: [
     {
       name: "Computed state from other state",
@@ -52,7 +54,21 @@ new RuleTester({
         `,
     },
     {
-      name: "Fetching then storing state on mount",
+      // TODO: Questionable, but we'll leave it for now.
+      // Probably shouldn't receive the general "internal state only" warning,
+      // But we can give a better warning - the React docs say to either use `key` for this or update state in render, not an effect.
+      name: "Syncing external prop changes to internal state",
+      code: js`
+        function Form({ initialData }) {
+          const [data, setData] = useState(initialData);
+
+          useEffect(() => {
+            setData(initialData);
+          }, [initialData]);
+        }`,
+    },
+    {
+      name: "Fetching external state on mount",
       code: js`
         function Form() {
           const [data, setData] = useState();
@@ -64,9 +80,150 @@ new RuleTester({
           }, []);
         }`,
     },
-    ,
+    {
+      name: "Fetching external state (network call) from state change",
+      // Technically we could trigger the network call in `input.onChange`,
+      // but that assumes we are okay with an uncontrolled input, which is often not the case.
+      code: js`
+          function Search() {
+            const [query, setQuery] = useState();
+            const [data, setData] = useState();
+
+            useEffect(() => {
+              fetchData(query).then((data) => {
+                setData(data);
+              });
+            }, [query]);
+
+            return (
+              <input
+                name="query"
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            )
+          }`,
+    },
+    {
+      name: "Subscribing to external state",
+      code: js`
+          function Status() {
+            const [status, setStatus] = useState();
+
+            useEffect(() => {
+              const unsubscribe = subscribeToStatus(topic, (status) => {
+                setStatus(status);
+              });
+
+              return () => unsubscribe();
+            }, [topic]);
+
+            return <div>{status}</div>;
+          }`,
+    },
+    {
+      name: "Managing a timer",
+      code: js`
+          function Timer() {
+            const [seconds, setSeconds] = useState(0);
+
+            useEffect(() => {
+              const interval = setInterval(() => {
+                setSeconds((s) => s + 1);
+              }, 1000);
+
+              return () => { 
+                clearInterval(interval); 
+              }
+            }, []);
+
+            return <div>{seconds}</div>;
+          }`,
+    },
+    {
+      name: "Listening for window events",
+      code: js`
+          function WindowSize() {
+            const [size, setSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+
+            useEffect(() => {
+              const handleResize = () => {
+                setSize({ width: window.innerWidth, height: window.innerHeight });
+              };
+
+              window.addEventListener('resize', handleResize);
+
+              return () => {
+                window.removeEventListener('resize', handleResize);
+              };
+            }, []);
+
+            return <div>{size.width} x {size.height}</div>;
+          }`,
+    },
+    {
+      name: "Imperatively interacting with the DOM",
+      // Could technically play/pause the video in the `onClick` handler,
+      // but the use of an effect to sync state is arguably more readable and a valid use.
+      code: js`
+          function Player() {
+            const [isPlaying, setIsPlaying] = useState(false);
+            const videoRef = useRef();
+
+            useEffect(() => {
+              if (isPlaying) {
+                videoRef.current.play();
+              } else {
+                videoRef.current.pause();
+              }
+            }, [isPlaying]);
+
+            return <div>
+              <video ref={videoRef} />
+              <button onClick={() => setIsPlaying((p) => !p)}>
+            </div>
+          }`,
+    },
+    {
+      name: "Saving to LocalStorage",
+      code: js`
+          function Notes() {
+            const [notes, setNotes] = useState(() => {
+              const savedNotes = localStorage.getItem('notes');
+              return savedNotes ? JSON.parse(savedNotes) : [];
+            });
+
+            useEffect(() => {
+              localStorage.setItem('notes', JSON.stringify(notes));
+            }, [notes]);
+
+            return <input
+              type="text"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
+          }`,
+    },
   ],
   invalid: [
+    {
+      name: "Derived state from other state in one-liner body",
+      code: js`
+          function Form() {
+            const [firstName, setFirstName] = useState('Taylor');
+            const [lastName, setLastName] = useState('Swift');
+
+            const [fullName, setFullName] = useState('');
+            useEffect(() => setFullName(firstName + ' ' + lastName), [firstName, lastName]);
+          }`,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
+        },
+      ],
+    },
     {
       name: "Derived state from other state in single-statement body",
       code: js`
@@ -98,23 +255,6 @@ new RuleTester({
               setFullName(firstName + ' ' + lastName);
               console.log('meow');
             }, [firstName, lastName]);
-          }`,
-      errors: [
-        {
-          messageId: "avoidDerivedState",
-          data: { state: "fullName" },
-        },
-      ],
-    },
-    {
-      name: "Derived state from other state in one-liner body",
-      code: js`
-          function Form() {
-            const [firstName, setFirstName] = useState('Taylor');
-            const [lastName, setLastName] = useState('Swift');
-
-            const [fullName, setFullName] = useState('');
-            useEffect(() => setFullName(firstName + ' ' + lastName), [firstName, lastName]);
           }`,
       errors: [
         {
