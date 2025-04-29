@@ -65,21 +65,6 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
       `,
     },
     {
-      // TODO: Questionable, but we'll leave it for now.
-      // Probably shouldn't receive the general "internal state only" warning,
-      // But we can give a better warning - the React docs say to either use `key` for this or update state in render, not an effect.
-      name: "Syncing external prop changes to internal state",
-      code: js`
-        function Form({ initialData }) {
-          const [data, setData] = useState(initialData);
-
-          useEffect(() => {
-            setData(initialData);
-          }, [initialData]);
-        }
-      `,
-    },
-    {
       name: "Fetching external state on mount",
       code: js`
         function Form() {
@@ -303,6 +288,30 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
       ],
     },
     {
+      // React docs recommend to first update state in render instead of an effect.
+      // But then continue on to say that usually you can avoid the sync entirely by more wisely choosing your state.
+      // So we'll just always call it derived state.
+      name: "Syncing external prop changes to internal state",
+      code: js`
+        function List({ items }) {
+          const [isReverse, setIsReverse] = useState(false);
+          const [selection, setSelection] = useState(null);
+
+          useEffect(() => {
+            setSelection(null);
+          }, [items]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidInternalEffect",
+        },
+        {
+          messageId: "avoidDerivedState",
+        },
+      ],
+    },
+    {
       name: "State passed to parent",
       code: js`
         const Child = ({ onFetched }) => {
@@ -318,7 +327,7 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
           messageId: "avoidInternalEffect",
         },
         {
-          messageId: "avoidPassingIntermediateDataToParent",
+          messageId: "avoidPassingStateToParent",
         },
       ],
     },
@@ -348,14 +357,15 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
     //   errors: [{ messageId: "avoidDelayedSideEffect" }],
     // },
     {
-      name: "Using state to trigger a prop callback with state",
+      // TODO: How to detect this though? Not sure it's discernable...
+      name: "Using state to handle an event",
       code: js`
-        function Form({ onSubmit }) {
+        function Form() {
           const [name, setName] = useState();
           const [dataToSubmit, setDataToSubmit] = useState();
 
           useEffect(() => {
-            onSubmit(dataToSubmit);
+            submitData(dataToSubmit);
           }, [dataToSubmit]);
 
           return (
@@ -372,10 +382,7 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
       `,
       errors: [
         {
-          messageId: "avoidInternalEffect",
-        },
-        {
-          messageId: "avoidPassingIntermediateDataToParent",
+          messageId: "avoidEventHandler",
         },
       ],
     },
@@ -402,12 +409,14 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
       ],
     },
     {
-      name: "Resetting state when a prop changes",
+      name: "Resetting all state when a prop changes",
       code: js`
         function ProfilePage({ userId }) {
+          const [user, setUser] = useState(null);
           const [comment, setComment] = useState('type something');
 
           useEffect(() => {
+            setUser(null);
             setComment('type something');
           }, [userId]);
         }
