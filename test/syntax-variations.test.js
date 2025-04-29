@@ -105,6 +105,27 @@ ruleTester.run(
         errors: 2,
       },
       {
+        name: "Objects stored in state",
+        code: js`
+          function DoubleCounter() {
+            const [count, setCount] = useState({ value: 0 });
+            const [doubleCount, setDoubleCount] = useState({ value: 0 });
+
+            useEffect(() => {
+              setDoubleCount({ value: count.value * 2 });
+            }, [count]);
+
+            return (
+              <div>
+                <p>Count: {count.value}</p>
+                <p>Double Count: {doubleCount.value}</p>
+              </div>
+            );
+          }
+        `,
+        errors: 2,
+      },
+      {
         // `exhaustive-deps` doesn't enforce member access in the deps
         name: "Member access in effect body but not in deps",
         code: code({
