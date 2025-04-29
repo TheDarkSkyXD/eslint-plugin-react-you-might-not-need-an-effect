@@ -1,18 +1,6 @@
-import { RuleTester } from "eslint";
+import ruleTester from "./rule-tester.js";
 import youMightNotNeedAnEffectRule from "../src/you-might-not-need-an-effect.js";
 const js = String.raw;
-
-import "./normalize-test-whitespace.js";
-
-const ruleTester = new RuleTester({
-  languageOptions: {
-    parserOptions: {
-      ecmaFeatures: {
-        jsx: true,
-      },
-    },
-  },
-});
 
 ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
   valid: [
@@ -318,7 +306,7 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
       ],
     },
     {
-      name: "Derived state from props",
+      name: "Derived state from destructured props",
       code: js`
         function TodoList({ todos, filter }) {
           const [newTodo, setNewTodo] = useState("");
