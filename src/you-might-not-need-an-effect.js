@@ -29,9 +29,11 @@ export default {
         "Avoid initializing state in an effect. Instead, pass the initial value to `useState`.",
       avoidChainingState:
         "Avoid chaining state changes. When possible, update all relevant state simultaneously.",
-      // Prop callback warnings
+      // Props warnings
       avoidPassingIntermediateDataToParent:
         "Avoid making parent components depend on a child's intermediate state. If the parent needs live updates, consider lifting state up.",
+      avoidResettingStateFromProps:
+        "Avoid resetting state from props. If the prop is a key, pass it as `key` instead so React will reset the component.",
 
       // TODO: Okay I think I get it now. This should really be "avoidEventHandler".
       // Per https://react.dev/learn/separating-events-from-effects
@@ -44,25 +46,31 @@ export default {
   },
   create: (context) => {
     let useStates; // Map of setter name -> { stateName, node }
-    let propsNames; // Set of prop names
+    let props; // Set of prop names
 
     // TODO: Could use scope to make this more apparent?
     // Not sure it'd have a functional difference though.
     const setupComponentScope = (param) => {
       useStates = new Map();
-      propsNames = new Set();
+      props = [];
 
       if (!param) return;
-      getPropsNames(param).forEach((name) => {
-        propsNames.add(name);
-      });
+
+      if (param.type === "ObjectPattern") {
+        props = param.properties.map(
+          // Important to use `value`, not `name`, in case it was renamed in the destructuring
+          (property) => property.value,
+        );
+      } else if (param.type === "Identifier") {
+        props = [param];
+      }
     };
 
     const isStateSetterCall = (callExpr) =>
       callExpr.callee.type === "Identifier" &&
       useStates.has(callExpr.callee.name);
     const isPropCallback = (callExpr) =>
-      propsNames.has(getBaseName(callExpr.callee));
+      findReference(context, [callExpr.callee], props) !== undefined;
 
     return {
       FunctionDeclaration: (node) => {
@@ -93,6 +101,8 @@ export default {
         // TODO: Should also check that either deps is empty, or all useState/props?
         // Otherwise we could get false positive when the dep is state from e.g. a library,
         // because we might not have a callback to use instead (whereas with useState we always do).
+        // TODO: callExprs includes e.g. `todos.concat()`, which is pure but not a state setter...
+        // Is it possible to tell if it's pure? At worst we can check a long list of them? Lol.
         const isInternalEffect = callExprs.every(
           (callExpr) => isStateSetterCall(callExpr) || isPropCallback(callExpr),
         );
@@ -108,7 +118,9 @@ export default {
           callExprs
             .filter((callExpr) => isStateSetterCall(callExpr))
             .forEach((callExpr) => {
-              const stateName = useStates.get(callExpr.callee.name).stateName;
+              const { stateName, node: useStateNode } = useStates.get(
+                callExpr.callee.name,
+              );
               if (findReference(context, callExpr.arguments, deps)) {
                 context.report({
                   node: callExpr.callee,
@@ -120,8 +132,22 @@ export default {
                   node: callExpr.callee,
                   messageId: "avoidInitializingState",
                 });
+              } else if (
+                // The state setter is called with the default value
+                context.sourceCode.getText(callExpr.arguments[0]) ===
+                  context.sourceCode.getText(
+                    useStateNode.init.arguments?.[0],
+                  ) &&
+                // Props trigger the effect
+                findReference(context, deps, props)
+              ) {
+                context.report({
+                  node: callExpr.callee,
+                  messageId: "avoidResettingStateFromProps",
+                });
               } else {
                 // TODO: Is this a correct assumption by now?
+                // TODO: Can get false positive if reacting to state change from library that doesn't offer callback
                 context.report({
                   node: callExpr.callee,
                   messageId: "avoidChainingState",

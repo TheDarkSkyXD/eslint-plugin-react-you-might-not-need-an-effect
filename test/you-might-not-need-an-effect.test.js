@@ -389,10 +389,10 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
       name: "Resetting state when a prop changes",
       code: js`
         function ProfilePage({ userId }) {
-          const [comment, setComment] = useState('');
+          const [comment, setComment] = useState('type something');
 
           useEffect(() => {
-            setComment('');
+            setComment('type something');
           }, [userId]);
         }
       `,
@@ -400,7 +400,9 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
         {
           messageId: "avoidInternalEffect",
         },
-        // TODO: And suggest using `key`
+        {
+          messageId: "avoidResettingStateFromProps",
+        },
       ],
     },
     {
