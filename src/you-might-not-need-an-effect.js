@@ -121,12 +121,14 @@ export default {
                   messageId: "avoidInitializingState",
                 });
               } else {
-                // TODO: Is this always the final case?
+                // TODO: Is this a correct assumption by now?
                 context.report({
                   node: callExpr.callee,
                   messageId: "avoidChainingState",
                 });
               }
+              // TODO: When in response to a props change, and the state setter is called with
+              // seState's default, it should warn to use `key` instead
             });
 
           callExprs
