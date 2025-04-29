@@ -244,6 +244,20 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
         }
       `,
     },
+    {
+      name: "Calling possibly unpure function in effect",
+      code: js`
+        function TodoList({ todos, filter }) {
+          const [newTodo, setNewTodo] = useState("");
+
+          const [visibleTodos, setVisibleTodos] = useState([]);
+          useEffect(() => {
+            // Semantically we can guess 'getFilteredTodos' is probably pure, but we can't be sure
+            setVisibleTodos(getFilteredTodos(todos, filter));
+          }, [todos, filter]);
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -270,13 +284,12 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
     {
       name: "Derived state from props",
       code: js`
-        function TodoList({ todos, filter }) {
-          const [newTodo, setNewTodo] = useState("");
+        function Form({ firstName, lastName }) {
+          const [fullName, setFullName] = useState('');
 
-          const [visibleTodos, setVisibleTodos] = useState([]);
           useEffect(() => {
-            setVisibleTodos(getFilteredTodos(todos, filter));
-          }, [todos, filter]);
+            setFullName(firstName + ' ' + lastName);
+          }, [firstName, lastName]);
         }
       `,
       errors: [
@@ -285,7 +298,7 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
         },
         {
           messageId: "avoidDerivedState",
-          data: { state: "visibleTodos" },
+          data: { state: "fullName" },
         },
       ],
     },
@@ -335,7 +348,7 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
     //   errors: [{ messageId: "avoidDelayedSideEffect" }],
     // },
     {
-      name: "Using state to trigger a prop callback with final state",
+      name: "Using state to trigger a prop callback with state",
       code: js`
         function Form({ onSubmit }) {
           const [name, setName] = useState();
@@ -360,6 +373,9 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
       errors: [
         {
           messageId: "avoidInternalEffect",
+        },
+        {
+          messageId: "avoidPassingIntermediateDataToParent",
         },
       ],
     },
@@ -415,17 +431,47 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
           useEffect(() => {
             if (result.data) {
               setError(null);
-            } else if (result.error) {
-              setError(result.error);
             }
           }, [result]);
         }
       `,
       errors: [
         {
-          messageId: "avoidDerivedState",
+          messageId: "avoidInternalEffect",
         },
-        // TODO: And some more specific error?
+        {
+          messageId: "avoidChainingState",
+        },
+      ],
+    },
+    {
+      name: "Effect calls a non-React function, but it's pure",
+      code: js`
+        function Todos({ todos }) {
+          const [newTodo, setNewTodo] = useState('');
+          const [visibleTodos, setVisibleTodos] = useState([]);
+
+          useEffect(() => {
+            setVisibleTodos(todos.concat([newTodo]));
+          }, [todos, newTodo]);
+
+          return (
+            <div>
+              {visibleTodos.map((todo) => (
+                <Todo key={todo.id} todo={todo} />
+              ))}
+            </div>
+          );
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidInternalEffect",
+        },
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "visibleTodos" },
+        },
       ],
     },
   ],
