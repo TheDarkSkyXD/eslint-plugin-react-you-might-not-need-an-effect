@@ -19,39 +19,41 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
     {
       name: "Computed state from other state",
       code: js`
-          function Form() {
-            const [firstName, setFirstName] = useState('Taylor');
-            const [lastName, setLastName] = useState('Swift');
+        function Form() {
+          const [firstName, setFirstName] = useState('Taylor');
+          const [lastName, setLastName] = useState('Swift');
 
-            const fullName = firstName + ' ' + lastName;
-          }`,
+          const fullName = firstName + ' ' + lastName;
+        }
+      `,
     },
     {
       name: "Computed state from props",
       code: js`
-          function TodoList({ todos, filter }) {
-            const [newTodo, setNewTodo] = useState('');
-            const visibleTodos = getFilteredTodos(todos, filter);
-          }`,
+        function TodoList({ todos, filter }) {
+          const [newTodo, setNewTodo] = useState('');
+          const visibleTodos = getFilteredTodos(todos, filter);
+        }
+      `,
     },
     {
       name: "Two components with overlapping names",
       // Not a super realistic example
       code: js`
-          function One() {
-            const [data, setData] = useState();
+        function One() {
+          const [data, setData] = useState();
+        }
+
+        function Two() {
+          const setData = (data) => {
+            console.log(data);
           }
 
-          function Two() {
-            const setData = (data) => {
-              console.log(data);
-            }
-
-            useEffect(() => {
-              setData('hello');
-            }, []);
-          }
-        `,
+          useEffect(() => {
+            setData('hello');
+          }, []);
+        }
+      `,
     },
     {
       // TODO: Questionable, but we'll leave it for now.
@@ -65,7 +67,8 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
           useEffect(() => {
             setData(initialData);
           }, [initialData]);
-        }`,
+        }
+      `,
     },
     {
       name: "Fetching external state on mount",
@@ -78,145 +81,153 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
               setData(data);
             });
           }, []);
-        }`,
+        }
+      `,
     },
     {
       name: "Fetching external state (network call) from state change",
       // Technically we could trigger the network call in `input.onChange`,
       // but that assumes we are okay with an uncontrolled input, which is often not the case.
       code: js`
-          function Search() {
-            const [query, setQuery] = useState();
-            const [data, setData] = useState();
+        function Search() {
+          const [query, setQuery] = useState();
+          const [data, setData] = useState();
 
-            useEffect(() => {
-              fetchData(query).then((data) => {
-                setData(data);
-              });
-            }, [query]);
+          useEffect(() => {
+            fetchData(query).then((data) => {
+              setData(data);
+            });
+          }, [query]);
 
-            return (
-              <input
-                name="query"
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-              />
-            )
-          }`,
+          return (
+            <input
+              name="query"
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          )
+        }
+      `,
     },
     {
       name: "Subscribing to external state",
       code: js`
-          function Status() {
-            const [status, setStatus] = useState();
+        function Status() {
+          const [status, setStatus] = useState();
 
-            useEffect(() => {
-              const unsubscribe = subscribeToStatus(topic, (status) => {
-                setStatus(status);
-              });
+          useEffect(() => {
+            const unsubscribe = subscribeToStatus(topic, (status) => {
+              setStatus(status);
+            });
 
-              return () => unsubscribe();
-            }, [topic]);
+            return () => unsubscribe();
+          }, [topic]);
 
-            return <div>{status}</div>;
-          }`,
+          return <div>{status}</div>;
+        }
+      `,
     },
     {
       name: "Managing a timer",
       code: js`
-          function Timer() {
-            const [seconds, setSeconds] = useState(0);
+        function Timer() {
+          const [seconds, setSeconds] = useState(0);
 
-            useEffect(() => {
-              const interval = setInterval(() => {
-                setSeconds((s) => s + 1);
-              }, 1000);
+          useEffect(() => {
+            const interval = setInterval(() => {
+              setSeconds((s) => s + 1);
+            }, 1000);
 
-              return () => { 
-                clearInterval(interval); 
-              }
-            }, []);
+            return () => { 
+              clearInterval(interval); 
+            }
+          }, []);
 
-            return <div>{seconds}</div>;
-          }`,
+          return <div>{seconds}</div>;
+        }
+      `,
     },
     {
       name: "Listening for window events",
       code: js`
-          function WindowSize() {
-            const [size, setSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+        function WindowSize() {
+          const [size, setSize] = useState({ width: window.innerWidth, height: window.innerHeight });
 
-            useEffect(() => {
-              const handleResize = () => {
-                setSize({ width: window.innerWidth, height: window.innerHeight });
-              };
+          useEffect(() => {
+            const handleResize = () => {
+              setSize({ width: window.innerWidth, height: window.innerHeight });
+            };
 
-              window.addEventListener('resize', handleResize);
+            window.addEventListener('resize', handleResize);
 
-              return () => {
-                window.removeEventListener('resize', handleResize);
-              };
-            }, []);
+            return () => {
+              window.removeEventListener('resize', handleResize);
+            };
+          }, []);
 
-            return <div>{size.width} x {size.height}</div>;
-          }`,
+          return <div>{size.width} x {size.height}</div>;
+        }
+      `,
     },
     {
       name: "Imperatively interacting with the DOM",
       // Could technically play/pause the video in the `onClick` handler,
       // but the use of an effect to sync state is arguably more readable and a valid use.
       code: js`
-          function Player() {
-            const [isPlaying, setIsPlaying] = useState(false);
-            const videoRef = useRef();
+        function Player() {
+          const [isPlaying, setIsPlaying] = useState(false);
+          const videoRef = useRef();
 
-            useEffect(() => {
-              if (isPlaying) {
-                videoRef.current.play();
-              } else {
-                videoRef.current.pause();
-              }
-            }, [isPlaying]);
+          useEffect(() => {
+            if (isPlaying) {
+              videoRef.current.play();
+            } else {
+              videoRef.current.pause();
+            }
+          }, [isPlaying]);
 
-            return <div>
-              <video ref={videoRef} />
-              <button onClick={() => setIsPlaying((p) => !p)}>
-            </div>
-          }`,
+          return <div>
+            <video ref={videoRef} />
+            <button onClick={() => setIsPlaying((p) => !p)}>
+          </div>
+        }
+      `,
     },
     {
       name: "Saving to LocalStorage",
       code: js`
-          function Notes() {
-            const [notes, setNotes] = useState(() => {
-              const savedNotes = localStorage.getItem('notes');
-              return savedNotes ? JSON.parse(savedNotes) : [];
-            });
+        function Notes() {
+          const [notes, setNotes] = useState(() => {
+            const savedNotes = localStorage.getItem('notes');
+            return savedNotes ? JSON.parse(savedNotes) : [];
+          });
 
-            useEffect(() => {
-              localStorage.setItem('notes', JSON.stringify(notes));
-            }, [notes]);
+          useEffect(() => {
+            localStorage.setItem('notes', JSON.stringify(notes));
+          }, [notes]);
 
-            return <input
-              type="text"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-            />
-          }`,
+          return <input
+            type="text"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+          />
+        }
+      `,
     },
   ],
   invalid: [
     {
       name: "Derived state from other state in one-liner body",
       code: js`
-          function Form() {
-            const [firstName, setFirstName] = useState('Taylor');
-            const [lastName, setLastName] = useState('Swift');
+        function Form() {
+          const [firstName, setFirstName] = useState('Taylor');
+          const [lastName, setLastName] = useState('Swift');
 
-            const [fullName, setFullName] = useState('');
-            useEffect(() => setFullName(firstName + ' ' + lastName), [firstName, lastName]);
-          }`,
+          const [fullName, setFullName] = useState('');
+          useEffect(() => setFullName(firstName + ' ' + lastName), [firstName, lastName]);
+        }
+      `,
       errors: [
         {
           messageId: "avoidDerivedState",
@@ -227,15 +238,16 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
     {
       name: "Derived state from other state in single-statement body",
       code: js`
-          function Form() {
-            const [firstName, setFirstName] = useState('Taylor');
-            const [lastName, setLastName] = useState('Swift');
+        function Form() {
+          const [firstName, setFirstName] = useState('Taylor');
+          const [lastName, setLastName] = useState('Swift');
 
-            const [fullName, setFullName] = useState('');
-            useEffect(() => {
-              setFullName(firstName + ' ' + lastName);
-            }, [firstName, lastName]);
-          }`,
+          const [fullName, setFullName] = useState('');
+          useEffect(() => {
+            setFullName(firstName + ' ' + lastName);
+          }, [firstName, lastName]);
+        }
+      `,
       errors: [
         {
           messageId: "avoidDerivedState",
@@ -246,16 +258,17 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
     {
       name: "Derived state from other state in multi-statement body",
       code: js`
-          function Form() {
-            const [firstName, setFirstName] = useState('Taylor');
-            const [lastName, setLastName] = useState('Swift');
+        function Form() {
+          const [firstName, setFirstName] = useState('Taylor');
+          const [lastName, setLastName] = useState('Swift');
 
-            const [fullName, setFullName] = useState('');
-            useEffect(() => {
-              setFullName(firstName + ' ' + lastName);
-              console.log('meow');
-            }, [firstName, lastName]);
-          }`,
+          const [fullName, setFullName] = useState('');
+          useEffect(() => {
+            setFullName(firstName + ' ' + lastName);
+            console.log('meow');
+          }, [firstName, lastName]);
+        }
+      `,
       errors: [
         {
           messageId: "avoidDerivedState",
@@ -266,14 +279,15 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
     {
       name: "Derived state from props",
       code: js`
-          function TodoList({ todos, filter }) {
-            const [newTodo, setNewTodo] = useState("");
+        function TodoList({ todos, filter }) {
+          const [newTodo, setNewTodo] = useState("");
 
-            const [visibleTodos, setVisibleTodos] = useState([]);
-            useEffect(() => {
-              setVisibleTodos(getFilteredTodos(todos, filter));
-            }, [todos, filter]);
-          }`,
+          const [visibleTodos, setVisibleTodos] = useState([]);
+          useEffect(() => {
+            setVisibleTodos(getFilteredTodos(todos, filter));
+          }, [todos, filter]);
+        }
+      `,
       errors: [
         {
           messageId: "avoidDerivedState",
@@ -288,13 +302,14 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
     {
       name: "State passed to parent via non-destructured props",
       code: js`
-          const Child = (props) => {
-            const data = useSomeAPI();
+        const Child = (props) => {
+          const data = useSomeAPI();
 
-            useEffect(() => {
-              props.onFetched(data);
-            }, [props.onFetched, data]);
-          }`,
+          useEffect(() => {
+            props.onFetched(data);
+          }, [props.onFetched, data]);
+        }
+      `,
       errors: [
         {
           messageId: "avoidPassingIntermediateDataToParent",
@@ -304,11 +319,12 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
     {
       name: "Arbitrarily deep member access in useEffect body and dependencies",
       code: js`
-          const Child = ({ onFetched }) => {
-            const data = useSomeAPI();
+        const Child = ({ onFetched }) => {
+          const data = useSomeAPI();
 
-            useEffect(() => onFetched(data.result.value), [onFetched, data.result.value]);
-          }`,
+          useEffect(() => onFetched(data.result.value), [onFetched, data.result.value]);
+        }
+      `,
       errors: [
         {
           messageId: "avoidPassingIntermediateDataToParent",
@@ -318,17 +334,18 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
     {
       name: "Arbitrarily deep nesting in useEffect body",
       code: js`
-          function Child({ onFetched }) {
-            const data = useSomeAPI();
+        function Child({ onFetched }) {
+          const data = useSomeAPI();
 
-            useEffect(() => {
-              if (data) {
-                if (data.value) {
-                  onFetched(data);
-                }
+          useEffect(() => {
+            if (data) {
+              if (data.value) {
+                onFetched(data);
               }
-            }, [onFetched, data]);
-          }`,
+            }
+          }, [onFetched, data]);
+        }
+      `,
       errors: [
         {
           messageId: "avoidPassingIntermediateDataToParent",
@@ -338,28 +355,26 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
     {
       name: "Using state to trigger a delayed side effect",
       code: js`
-          const submitPostRequest = (data) => {
-          }
+        function Form() {
+          const [name, setName] = useState();
+          const [dataToSubmit, setDataToSubmit] = useState();
 
-          function Form() {
-            const [name, setName] = useState();
-            const [dataToSubmit, setDataToSubmit] = useState();
+          useEffect(() => {
+            submitPostRequest(dataToSubmit);
+          }, [dataToSubmit]);
 
-            useEffect(() => {
-              submitPostRequest(dataToSubmit);
-            }, [dataToSubmit]);
-
-            return (
-              <div>
-                <input
-                  name="name"
-                  type="text"
-                  onChange={(e) => setName(e.target.value)}
-                />
-                <button onClick={() => setDataToSubmit({ name })}>Submit</button>
-              </div>
-            )
-          }`,
+          return (
+            <div>
+              <input
+                name="name"
+                type="text"
+                onChange={(e) => setName(e.target.value)}
+              />
+              <button onClick={() => setDataToSubmit({ name })}>Submit</button>
+            </div>
+          )
+        }
+      `,
       errors: [{ messageId: "avoidDelayedSideEffect" }],
     },
     {
@@ -383,7 +398,8 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
               <button onClick={() => setDataToSubmit({ name })}>Submit</button>
             </div>
           )
-        }`,
+        }
+      `,
       // Note we don't expect this to trigger the "intermediate state" error,
       // because passing final state is a valid use case.
       errors: [
@@ -395,18 +411,19 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
     {
       name: "Using state to trigger no-arg prop callback",
       code: js`
-          function Form({ onClose }) {
-            const [name, setName] = useState();
-            const [isOpen, setIsOpen] = useState(true);
+        function Form({ onClose }) {
+          const [name, setName] = useState();
+          const [isOpen, setIsOpen] = useState(true);
 
-            useEffect(() => {
-              onClose();
-            }, [isOpen]);
+          useEffect(() => {
+            onClose();
+          }, [isOpen]);
 
-            return (
-              <button onClick={() => setIsOpen(false)}>Submit</button>
-            )
-          }`,
+          return (
+            <button onClick={() => setIsOpen(false)}>Submit</button>
+          )
+        }
+      `,
       errors: [
         {
           messageId: "avoidDelayedSideEffect",
@@ -417,13 +434,14 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
       name: "Resetting state when a prop changes",
       // The `useEffect` triggers a state change, but it's not derived state.
       code: js`
-          function ProfilePage({ userId }) {
-            const [comment, setComment] = useState('');
+        function ProfilePage({ userId }) {
+          const [comment, setComment] = useState('');
 
-            useEffect(() => {
-              setComment('');
-            }, [userId]);
-          }`,
+          useEffect(() => {
+            setComment('');
+          }, [userId]);
+        }
+      `,
       // TODO: More accurately, should be a separate message to set `key` on the component instead of resetting local state. I think only when *all* local state is reset. Otherwise React docs advise updating state during render.
       errors: [
         {
@@ -445,7 +463,8 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
               setError(result.error);
             }
           }, [result]);
-        }`,
+        }
+      `,
       errors: [
         {
           // Because `setError` is called with an argument that's not in the dependencies
