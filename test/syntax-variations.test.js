@@ -72,7 +72,6 @@ ruleTester.run(
         code: code({
           componentDeclaration: js`function DoubleCounter(props)`,
           effectBody: js`setDoubleCount(props.count * 2)`,
-          // TODO: Do we need to check just `props` in the deps too? Or does `exhaustive-deps` warn about that?
           effectDeps: js`[props.count]`,
         }),
         errors: 2,

@@ -97,9 +97,6 @@ export default {
           context.sourceCode.getScope(effectFn.body),
         );
 
-        // TODO: Should also check that either deps is empty, or all useState/props?
-        // Otherwise we could get false positive when the dep is state from e.g. a library,
-        // because we might not have a callback to use instead (whereas with useState we always do).
         // TODO: callExprs includes e.g. `todos.concat()`, which is pure but not a state setter...
         // Is it possible to tell if it's pure? At worst we can check a long list of them? Lol.
         const isInternalEffect =
@@ -170,7 +167,6 @@ export default {
                 });
               } else {
                 // TODO: Is this a correct assumption by now?
-                // TODO: Can get false positive if reacting to state change from library that doesn't offer callback
                 context.report({
                   node: callExpr.callee,
                   messageId: "avoidChainingState",
