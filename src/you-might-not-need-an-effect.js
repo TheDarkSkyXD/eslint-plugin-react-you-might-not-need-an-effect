@@ -45,13 +45,13 @@ export default {
     },
   },
   create: (context) => {
-    let useStates; // Map of setter name -> { stateName, node }
-    let props; // Set of prop names
+    let useStates;
+    let props;
 
     // TODO: Could use scope to make this more apparent?
     // Not sure it'd have a functional difference though.
     const setupComponentScope = (param) => {
-      useStates = new Map();
+      useStates = [];
       props = [];
 
       if (!param) return;
@@ -68,7 +68,9 @@ export default {
 
     const isStateSetterCall = (callExpr) =>
       callExpr.callee.type === "Identifier" &&
-      useStates.has(callExpr.callee.name);
+      useStates.some(
+        (useState) => useState.id.elements[1].name === callExpr.callee.name,
+      );
     const isPropCallback = (callExpr) =>
       findReference(context, [callExpr.callee], props) !== undefined;
 
@@ -82,8 +84,7 @@ export default {
         if (isReactFunctionalComponent(node)) {
           setupComponentScope(node.init.params[0]);
         } else if (isUseState(node)) {
-          const [state, setter] = node.id.elements;
-          useStates.set(setter.name, { stateName: state.name, node });
+          useStates.push(node);
         }
       },
 
@@ -118,14 +119,15 @@ export default {
           callExprs
             .filter((callExpr) => isStateSetterCall(callExpr))
             .forEach((callExpr) => {
-              const { stateName, node: useStateNode } = useStates.get(
-                callExpr.callee.name,
+              const useStateNode = useStates.find(
+                (useState) =>
+                  useState.id.elements[1].name === callExpr.callee.name,
               );
               if (findReference(context, callExpr.arguments, deps)) {
                 context.report({
                   node: callExpr.callee,
                   messageId: "avoidDerivedState",
-                  data: { state: stateName },
+                  data: { state: useStateNode.id.elements[0].name },
                 });
               } else if (deps.length === 0) {
                 context.report({
