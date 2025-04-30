@@ -471,23 +471,16 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
       ],
     },
     {
-      name: "Effect calls a pure non-React function",
+      name: "Deriving state from props via function",
       code: js`
-        function Todos({ todos }) {
-          const [newTodo, setNewTodo] = useState('');
-          const [visibleTodos, setVisibleTodos] = useState([]);
+        function DoubleList({ list }) {
+          const [doubleList, setDoubleList] = useState([]);
 
           useEffect(() => {
-            setVisibleTodos(todos.concat([newTodo]));
-          }, [todos, newTodo]);
-
-          return (
-            <div>
-              {visibleTodos.map((todo) => (
-                <Todo key={todo.id} todo={todo} />
-              ))}
-            </div>
-          );
+            // list.concat is a call expression, but it's
+            // considered a prop call, thus still internal
+            setDoubleList(list.concat(list));
+          }, [list]);
         }
       `,
       errors: [
@@ -496,7 +489,51 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
         },
         {
           messageId: "avoidDerivedState",
-          data: { state: "visibleTodos" },
+          data: { state: "doubleList" },
+        },
+      ],
+    },
+    {
+      name: "Deriving state from other state via function",
+      code: js`
+        function DoubleList() {
+          const [list, setList] = useState([]);
+          const [doubleList, setDoubleList] = useState([]);
+
+          useEffect(() => {
+            setDoubleList(list.concat(list));
+          }, [list]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidInternalEffect",
+        },
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "doubleList" },
+        },
+      ],
+    },
+    {
+      name: "Mutating state in effect",
+      code: js`
+        function DoubleList() {
+          const [list, setList] = useState([]);
+          const [doubleList, setDoubleList] = useState([]);
+
+          useEffect(() => {
+            doubleList.push(...list);
+          }, [list]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidInternalEffect",
+        },
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "doubleList" },
         },
       ],
     },

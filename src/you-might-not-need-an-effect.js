@@ -70,7 +70,9 @@ export default {
       useStates.some(
         (useState) => useState.id.elements[1].name === callExpr.callee.name,
       );
-    const isPropCallback = (callExpr) =>
+    // Note this returns true for function calls on stateful props, like `props.list.concat()`.
+    // Which I think is fine - it's still internal.
+    const isPropCall = (callExpr) =>
       findReference(context, [callExpr.callee], props) !== undefined;
 
     return {
@@ -97,12 +99,10 @@ export default {
           context.sourceCode.getScope(effectFn.body),
         );
 
-        // TODO: callExprs includes e.g. `todos.concat()`, which is pure but not a state setter...
-        // Is it possible to tell if it's pure? At worst we can check a long list of them? Lol.
+        // TODO: Check if the call is on state, like `list.concat`, in which case it's internal
         const isInternalEffect =
           callExprs.every(
-            (callExpr) =>
-              isStateSetterCall(callExpr) || isPropCallback(callExpr),
+            (callExpr) => isStateSetterCall(callExpr) || isPropCall(callExpr),
           ) &&
           deps.every((dep) => {
             const depName = context.sourceCode.getText(dep);
@@ -175,8 +175,9 @@ export default {
             });
 
           callExprs
-            .filter((callExpr) => isPropCallback(callExpr))
+            .filter((callExpr) => isPropCall(callExpr))
             .forEach((callExpr) => {
+              // FIX: Wrongly flags functions called on stateful props, like `props.list.concat()`
               if (findReference(context, callExpr.arguments, deps)) {
                 context.report({
                   node: callExpr.callee,

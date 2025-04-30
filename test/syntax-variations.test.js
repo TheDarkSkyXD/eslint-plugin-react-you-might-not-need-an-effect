@@ -29,7 +29,30 @@ ruleTester.run(
   "you-might-not-need-an-effect/syntax-variations",
   youMightNotNeedAnEffectRule,
   {
-    valid: [],
+    valid: [
+      {
+        name: "Member call expression side effect without args",
+        code: code({
+          effectBody: js`
+            {
+              const value = someObject.someMethod();
+              setDoubleCount(value * count);
+            }
+          `,
+        }),
+      },
+      {
+        name: "Member call expression side effect with args",
+        code: code({
+          effectBody: js`
+            {
+              const value = someObject.someMethod(count);
+              setDoubleCount(value);
+            }
+          `,
+        }),
+      },
+    ],
     invalid: [
       {
         name: "Function component",
@@ -166,6 +189,7 @@ ruleTester.run(
       //       }, [onFetched, data]);
       //     }`,
       // },
+      ,
     ],
   },
 );
