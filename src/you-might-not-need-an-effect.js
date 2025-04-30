@@ -163,7 +163,31 @@ export default {
           // But I thinkkk that's frequently valid.
           // Maybe we can make some guesses based on the external function names?
           // If we do anything here, it should be configurable due to possible false positives.
-          // TODO: I think we can still warn about passing state to parent, and suggest lifting it?
+
+          const fnRefs = effectFnRefs.filter(
+            (ref) =>
+              ref.identifier.parent.type === "CallExpression" &&
+              ref.identifier.parent.callee === ref.identifier,
+          );
+          fnRefs.forEach((ref) => {
+            const callExpr = ref.identifier.parent;
+            const isDepUsedInArgs = callExpr.arguments.some((arg) =>
+              depsRefs.some((depRef) =>
+                context.sourceCode
+                  .getText(arg)
+                  .includes(depRef.identifier.name),
+              ),
+            );
+            if (isPropsRef(ref)) {
+              if (isDepUsedInArgs) {
+                // I think this is relatively safe to report...?
+                context.report({
+                  node: callExpr.callee,
+                  messageId: "avoidPassingStateToParent",
+                });
+              }
+            }
+          });
         }
       },
     };
