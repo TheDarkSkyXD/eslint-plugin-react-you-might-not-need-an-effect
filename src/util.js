@@ -31,20 +31,6 @@ export const isUseEffect = (node) => {
   );
 };
 
-export const getUseEffectFnAndDeps = (node) => {
-  if (!isUseEffect(node) || node.arguments.length !== 2) return [null, null];
-
-  const depsArr = node.arguments[1];
-
-  return [
-    effectFn?.type === "ArrowFunctionExpression" ||
-    effectFn?.type === "FunctionExpression"
-      ? effectFn
-      : null,
-    depsArr?.type === "ArrayExpression" ? depsArr.elements : null,
-  ];
-};
-
 export const getEffectFnRefs = (context, node) => {
   if (!isUseEffect(node) || node.arguments.length < 1) return null;
 
@@ -84,30 +70,3 @@ export function getDepArrRefs(context, node) {
 
   return references;
 }
-
-// If this is a reference to a function call, get the CallExpression node
-export const getRefCallExpr = (ref) => {
-  let node = ref.identifier.parent;
-  while (node.type === "MemberExpression") {
-    // Walk up to the CallExpression
-    node = node.parent;
-  }
-  // I think this is the case when the ref is not a function call
-  if (node.type !== "CallExpression") return null;
-
-  return node;
-};
-
-// NOTE: Comparing source text is the easiest way to handle various structures
-// (Identifier vs MemberExpression, complex nested expressions, etc.),
-// but it probably can't handle edge cases like derived variables.
-// e.g. Confirmed that it misses variables destructured from the dependency.
-export const findReference = (context, haystack, needles) => {
-  return haystack.find((hay) =>
-    needles.find((needle) =>
-      context.sourceCode
-        .getText(hay)
-        .startsWith(context.sourceCode.getText(needle)),
-    ),
-  );
-};
