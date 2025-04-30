@@ -246,6 +246,7 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
   ],
   invalid: [
     {
+      only: true,
       name: "Derived state from other state",
       code: js`
         function Form() {
@@ -267,6 +268,7 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
       ],
     },
     {
+      only: true,
       name: "Derived state from props",
       code: js`
         function Form({ firstName, lastName }) {

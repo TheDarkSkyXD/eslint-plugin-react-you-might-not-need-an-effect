@@ -21,5 +21,8 @@
   "peerDependencies": {
     "eslint": ">=9.0.0"
   },
-  "packageManager": "yarn@4.6.0"
+  "packageManager": "yarn@4.6.0",
+  "dependencies": {
+    "eslint-utils": "^3.0.0"
+  }
 }

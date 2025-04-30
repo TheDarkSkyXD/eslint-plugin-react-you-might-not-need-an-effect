@@ -1,10 +1,12 @@
 import {
   isUseState,
   isUseEffect,
-  getCallExpressions,
   isReactFunctionalComponent,
   getUseEffectFnAndDeps,
   findReference,
+  getRefCallExpr,
+  getEffectFnRefs,
+  getDepArrRefs,
 } from "./util.js";
 
 export default {
@@ -44,77 +46,29 @@ export default {
     },
   },
   create: (context) => {
-    let useStates;
-    let props;
-
-    // TODO: Could use scope to make this more apparent?
-    // Not sure it'd have a functional difference though.
-    const setupComponentScope = (param) => {
-      useStates = [];
-      props = [];
-
-      if (!param) return;
-
-      if (param.type === "ObjectPattern") {
-        props = param.properties.map(
-          // Important to use `value`, not `name`, in case it was renamed in the destructuring
-          (property) => property.value,
-        );
-      } else if (param.type === "Identifier") {
-        props = [param];
-      }
-    };
-
-    const isStateSetterCall = (callExpr) =>
-      callExpr.callee.type === "Identifier" &&
-      useStates.some(
-        (useState) => useState.id.elements[1].name === callExpr.callee.name,
+    // When would defs.length be > 0...? Shadowed variables?
+    const isStateRef = (ref) =>
+      ref.resolved?.defs.some(
+        (def) => def.type === "Variable" && isUseState(def.node),
       );
-    // Note this returns true for function calls on stateful props, like `props.list.concat()`.
-    // Which I think is fine - it's still internal.
-    const isPropCall = (callExpr) =>
-      findReference(context, [callExpr.callee], props) !== undefined;
+    const isPropsRef = (ref) =>
+      ref.resolved?.defs.some(
+        (def) =>
+          def.type === "Parameter" && isReactFunctionalComponent(def.node),
+      );
 
     return {
-      FunctionDeclaration: (node) => {
-        if (isReactFunctionalComponent(node)) {
-          setupComponentScope(node.params[0]);
-        }
-      },
-      VariableDeclarator: (node) => {
-        if (isReactFunctionalComponent(node)) {
-          setupComponentScope(node.init.params[0]);
-        } else if (isUseState(node)) {
-          useStates.push(node);
-        }
-      },
-
       CallExpression: (node) => {
         if (!isUseEffect(node)) return;
-        const [effectFn, deps] = getUseEffectFnAndDeps(node);
-        if (!effectFn || !deps) return;
 
-        const callExprs = getCallExpressions(
-          context,
-          context.sourceCode.getScope(effectFn.body),
-        );
+        const effectFnRefs = getEffectFnRefs(context, effectFn);
+        const depsRefs = getDepArrRefs(context, node);
 
-        // TODO: Check if the call is on state, like `list.concat`, in which case it's internal
+        if (!effectFnRefs || !depsRefs) return;
+
         const isInternalEffect =
-          callExprs.every(
-            (callExpr) => isStateSetterCall(callExpr) || isPropCall(callExpr),
-          ) &&
-          deps.every((dep) => {
-            const depName = context.sourceCode.getText(dep);
-            return (
-              useStates.some((useState) =>
-                depName.startsWith(useState.id.elements[0].name),
-              ) ||
-              props.some((prop) =>
-                depName.startsWith(context.sourceCode.getText(prop)),
-              )
-            );
-          });
+          effectFnRefs.every((ref) => isStateRef(ref) || isPropsRef(ref)) &&
+          depsRefs.every((ref) => isStateRef(ref) || isPropsRef(ref));
 
         if (isInternalEffect) {
           // Warn about the entire effect
@@ -123,50 +77,57 @@ export default {
             messageId: "avoidInternalEffect",
           });
 
-          if (
-            findReference(context, deps, props) &&
-            callExprs.every((callExpr) => {
-              if (!isStateSetterCall(callExpr)) return false;
+          // if (
+          //   findReference(context, deps, props) &&
+          //   callExprs.every((callExpr) => {
+          //     if (!isStateRef(callExpr)) return false;
+          //
+          //     const useStateNode = useStates.find(
+          //       (useState) =>
+          //         useState.id.elements[1].name === callExpr.callee.name,
+          //     );
+          //     const useStateDefaultValue = useStateNode.init.arguments?.[0];
+          //     return (
+          //       context.sourceCode.getText(callExpr.arguments[0]) ===
+          //       context.sourceCode.getText(useStateDefaultValue)
+          //     );
+          //   })
+          // ) {
+          //   context.report({
+          //     node: node,
+          //     messageId: "avoidResettingStateFromProps",
+          //   });
+          //   return;
+          // }
 
-              const useStateNode = useStates.find(
-                (useState) =>
-                  useState.id.elements[1].name === callExpr.callee.name,
-              );
-              const useStateDefaultValue = useStateNode.init.arguments?.[0];
-              return (
-                context.sourceCode.getText(callExpr.arguments[0]) ===
-                context.sourceCode.getText(useStateDefaultValue)
-              );
-            })
-          ) {
-            context.report({
-              node: node,
-              messageId: "avoidResettingStateFromProps",
-            });
-            return;
-          }
-
-          // Give more specific feedback
-          callExprs
-            .filter((callExpr) => isStateSetterCall(callExpr))
+          effectFnRefs
+            .filter((ref) => isStateRef(ref))
+            .map((ref) => getRefCallExpr(ref))
+            .filter((callExpr) => callExpr) // Only state setters, not the state itself
+            .filter(
+              (node1, i, self) =>
+                i === self.findIndex((node2) => node2.range === node1.range),
+            )
             .forEach((callExpr) => {
               const useStateNode = useStates.find(
                 (useState) =>
                   useState.id.elements[1].name === callExpr.callee.name,
               );
-              if (findReference(context, callExpr.arguments, deps)) {
+              if (findReference(context, callExpr.arguments, depsArr)) {
                 context.report({
                   node: callExpr.callee,
                   messageId: "avoidDerivedState",
                   data: { state: useStateNode.id.elements[0].name },
                 });
-              } else if (deps.length === 0) {
+              } else if (depsRefs.length === 0) {
                 context.report({
                   node: callExpr.callee,
                   messageId: "avoidInitializingState",
                 });
               } else {
                 // TODO: Is this a correct assumption by now?
+                // Should I flag this whenever the call expr argument is *only* the state?
+                // Like this seems more appropriate than "derived" state.
                 context.report({
                   node: callExpr.callee,
                   messageId: "avoidChainingState",
@@ -174,11 +135,13 @@ export default {
               }
             });
 
-          callExprs
-            .filter((callExpr) => isPropCall(callExpr))
+          effectFnRefs
+            .filter((ref) => isPropsRef(ref))
+            .map((ref) => getRefCallExpr(ref))
+            .filter((callExpr) => callExpr) // Only state setters, not the state itself
             .forEach((callExpr) => {
               // FIX: Wrongly flags functions called on stateful props, like `props.list.concat()`
-              if (findReference(context, callExpr.arguments, deps)) {
+              if (findReference(context, callExpr.arguments, depsArr)) {
                 context.report({
                   node: callExpr.callee,
                   messageId: "avoidPassingStateToParent",
@@ -200,5 +163,3 @@ export default {
     };
   },
 };
-
-const allowedPropsCallbacks = ["onSave", "onSubmit"];
