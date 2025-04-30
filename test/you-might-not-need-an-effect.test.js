@@ -298,7 +298,7 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
           const [selection, setSelection] = useState(null);
 
           useEffect(() => {
-            setSelection(null);
+            setSelection(items[0]);
           }, [items]);
         }
       `,
