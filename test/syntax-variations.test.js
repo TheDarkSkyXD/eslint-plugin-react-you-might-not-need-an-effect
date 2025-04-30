@@ -137,20 +137,22 @@ ruleTester.run(
       },
       {
         name: "Arbitrarily deep nested scopes in effect body",
-        code: js`
-          function Child({ onFetched }) {
-            const data = useSomeAPI();
-
-            useEffect(() => {
-              if (data) {
-                if (data.value) {
-                  onFetched(data.value);
+        code: code({
+          effectBody: js`
+            {
+              if (count > 10) {
+                if (count > 100) {
+                  setDoubleCount(count * 4);
+                } else {
+                  setDoubleCount(count * 2);
                 }
+              } else {
+                setDoubleCount(count);
               }
-            }, [onFetched, data]);
-          }
-      `,
-        errors: 2,
+            }
+          `,
+        }),
+        errors: 4,
       },
       // TODO:
       // {
