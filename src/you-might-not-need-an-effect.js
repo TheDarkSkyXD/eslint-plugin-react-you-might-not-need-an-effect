@@ -107,8 +107,6 @@ export default {
             node: node,
             messageId: "avoidResettingStateFromProps",
           });
-          // TODO: Or should we still report other stuff? Confusing or nah?
-          return;
         }
 
         fnRefs.forEach((ref) => {

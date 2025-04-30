@@ -420,6 +420,12 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
         {
           messageId: "avoidResettingStateFromProps",
         },
+        {
+          messageId: "avoidChainingState",
+        },
+        {
+          messageId: "avoidChainingState",
+        },
       ],
     },
     {
