@@ -128,6 +128,29 @@ export default {
             messageId: "avoidInternalEffect",
           });
 
+          if (
+            findReference(context, deps, props) &&
+            callExprs.every((callExpr) => {
+              if (!isStateSetterCall(callExpr)) return false;
+
+              const useStateNode = useStates.find(
+                (useState) =>
+                  useState.id.elements[1].name === callExpr.callee.name,
+              );
+              const useStateDefaultValue = useStateNode.init.arguments?.[0];
+              return (
+                context.sourceCode.getText(callExpr.arguments[0]) ===
+                context.sourceCode.getText(useStateDefaultValue)
+              );
+            })
+          ) {
+            context.report({
+              node: node,
+              messageId: "avoidResettingStateFromProps",
+            });
+            return;
+          }
+
           // Give more specific feedback
           callExprs
             .filter((callExpr) => isStateSetterCall(callExpr))
@@ -147,20 +170,6 @@ export default {
                   node: callExpr.callee,
                   messageId: "avoidInitializingState",
                 });
-              } else if (
-                // TODO: Should check that this effect calls *every* setter with the default value
-                // The state setter is called with the default value
-                context.sourceCode.getText(callExpr.arguments[0]) ===
-                  context.sourceCode.getText(
-                    useStateNode.init.arguments?.[0],
-                  ) &&
-                // Props trigger the effect
-                findReference(context, deps, props)
-              ) {
-                context.report({
-                  node: callExpr.callee,
-                  messageId: "avoidResettingStateFromProps",
-                });
               } else {
                 // TODO: Is this a correct assumption by now?
                 // TODO: Can get false positive if reacting to state change from library that doesn't offer callback
@@ -169,8 +178,6 @@ export default {
                   messageId: "avoidChainingState",
                 });
               }
-              // TODO: When in response to a props change, and the state setter is called with
-              // seState's default, it should warn to use `key` instead
             });
 
           callExprs
