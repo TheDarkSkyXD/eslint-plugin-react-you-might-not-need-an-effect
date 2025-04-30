@@ -348,8 +348,8 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
         },
       ],
     },
+    //  TODO: How to detect this though? Not sure it's discernable from legit synchronization effects
     // {
-    //   // TODO: How to detect this though? Not sure it's discernable from legit synchronization effects
     //   name: "Using state to handle an event",
     //   code: js`
     //     function Form() {
