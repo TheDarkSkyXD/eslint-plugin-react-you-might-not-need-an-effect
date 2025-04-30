@@ -72,19 +72,19 @@ export default {
           effectFnRefs.every((ref) => isStateRef(ref) || isPropsRef(ref)) &&
           depsRefs.every((ref) => isStateRef(ref) || isPropsRef(ref));
 
+        // Filter down to just function call references so we can examine them further
+        const fnRefs = effectFnRefs.filter(
+          (ref) =>
+            ref.identifier.parent.type === "CallExpression" &&
+            ref.identifier.parent.callee === ref.identifier,
+        );
+
         if (isInternalEffect) {
           // Warn about the entire effect
           context.report({
             node,
             messageId: "avoidInternalEffect",
           });
-
-          // Filter down to just function call references so we can examine them further
-          const fnRefs = effectFnRefs.filter(
-            (ref) =>
-              ref.identifier.parent.type === "CallExpression" &&
-              ref.identifier.parent.callee === ref.identifier,
-          );
 
           const isPropUsedInDeps = depsRefs.some((ref) => isPropsRef(ref));
           const isEveryStateSetterCalledWithDefaultValue =
@@ -164,11 +164,6 @@ export default {
           // Maybe we can make some guesses based on the external function names?
           // If we do anything here, it should be configurable due to possible false positives.
 
-          const fnRefs = effectFnRefs.filter(
-            (ref) =>
-              ref.identifier.parent.type === "CallExpression" &&
-              ref.identifier.parent.callee === ref.identifier,
-          );
           fnRefs.forEach((ref) => {
             const callExpr = ref.identifier.parent;
             const isDepUsedInArgs = callExpr.arguments.some((arg) =>
