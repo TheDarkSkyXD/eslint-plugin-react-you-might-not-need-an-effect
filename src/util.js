@@ -88,7 +88,7 @@ export const findReference = (context, haystack, needles) => {
     needles.find((needle) =>
       context.sourceCode
         .getText(hay)
-        .includes(context.sourceCode.getText(needle)),
+        .startsWith(context.sourceCode.getText(needle)),
     ),
   );
 };
