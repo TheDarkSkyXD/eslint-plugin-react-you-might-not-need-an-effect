@@ -29,27 +29,19 @@ export const isUseEffect = (node) => {
   );
 };
 
-export const getUseEffectFn = (node) => {
-  if (!isUseEffect(node) || node.arguments.length < 1) return null;
+export const getUseEffectFnAndDeps = (node) => {
+  if (!isUseEffect(node) || node.arguments.length !== 2) return [null, null];
 
   const effectFn = node.arguments[0];
-  if (
-    !effectFn ||
-    (effectFn.type !== "ArrowFunctionExpression" &&
-      effectFn.type !== "FunctionExpression")
-  )
-    return null;
-
-  return effectFn;
-};
-
-export const getUseEffectDeps = (node) => {
-  if (!isUseEffect(node) || node.arguments.length < 2) return null;
-
   const deps = node.arguments[1];
-  if (deps.type !== "ArrayExpression") return null;
 
-  return deps.elements;
+  return [
+    effectFn?.type === "ArrowFunctionExpression" ||
+    effectFn?.type === "FunctionExpression"
+      ? effectFn
+      : null,
+    deps?.type === "ArrayExpression" ? deps.elements : null,
+  ];
 };
 
 export const getCallExpressions = (context, scope) => {

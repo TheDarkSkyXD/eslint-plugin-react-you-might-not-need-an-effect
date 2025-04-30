@@ -1,10 +1,9 @@
 import {
   isUseState,
   isUseEffect,
-  getUseEffectFn,
   getCallExpressions,
   isReactFunctionalComponent,
-  getUseEffectDeps,
+  getUseEffectFnAndDeps,
   findReference,
 } from "./util.js";
 
@@ -90,8 +89,7 @@ export default {
 
       CallExpression: (node) => {
         if (!isUseEffect(node)) return;
-        const effectFn = getUseEffectFn(node);
-        const deps = getUseEffectDeps(node);
+        const [effectFn, deps] = getUseEffectFnAndDeps(node);
         if (!effectFn || !deps) return;
 
         const callExprs = getCallExpressions(
