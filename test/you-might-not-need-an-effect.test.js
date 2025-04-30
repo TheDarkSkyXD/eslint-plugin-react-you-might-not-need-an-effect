@@ -246,7 +246,6 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
   ],
   invalid: [
     {
-      only: true,
       name: "Derived state from other state",
       code: js`
         function Form() {
@@ -268,7 +267,6 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
       ],
     },
     {
-      only: true,
       name: "Derived state from props",
       code: js`
         function Form({ firstName, lastName }) {
@@ -350,33 +348,8 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
         },
       ],
     },
-    // {
-    //   name: "Using state to trigger a delayed side effect",
-    //   code: js`
-    //     function Form() {
-    //       const [name, setName] = useState();
-    //       const [dataToSubmit, setDataToSubmit] = useState();
-    //
-    //       useEffect(() => {
-    //         submitPostRequest(dataToSubmit);
-    //       }, [dataToSubmit]);
-    //
-    //       return (
-    //         <div>
-    //           <input
-    //             name="name"
-    //             type="text"
-    //             onChange={(e) => setName(e.target.value)}
-    //           />
-    //           <button onClick={() => setDataToSubmit({ name })}>Submit</button>
-    //         </div>
-    //       )
-    //     }
-    //   `,
-    //   errors: [{ messageId: "avoidDelayedSideEffect" }],
-    // },
     {
-      // TODO: How to detect this though? Not sure it's discernable...
+      // TODO: How to detect this though? Not sure it's discernable from legit synchronization effects
       name: "Using state to handle an event",
       code: js`
         function Form() {
@@ -532,10 +505,6 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
       errors: [
         {
           messageId: "avoidInternalEffect",
-        },
-        {
-          messageId: "avoidDerivedState",
-          data: { state: "doubleList" },
         },
       ],
     },
