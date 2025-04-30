@@ -104,9 +104,22 @@ export default {
         // because we might not have a callback to use instead (whereas with useState we always do).
         // TODO: callExprs includes e.g. `todos.concat()`, which is pure but not a state setter...
         // Is it possible to tell if it's pure? At worst we can check a long list of them? Lol.
-        const isInternalEffect = callExprs.every(
-          (callExpr) => isStateSetterCall(callExpr) || isPropCallback(callExpr),
-        );
+        const isInternalEffect =
+          callExprs.every(
+            (callExpr) =>
+              isStateSetterCall(callExpr) || isPropCallback(callExpr),
+          ) &&
+          deps.every((dep) => {
+            const depName = context.sourceCode.getText(dep);
+            return (
+              useStates.some((useState) =>
+                depName.startsWith(useState.id.elements[0].name),
+              ) ||
+              props.some((prop) =>
+                depName.startsWith(context.sourceCode.getText(prop)),
+              )
+            );
+          });
 
         if (isInternalEffect) {
           // Warn about the entire effect
@@ -179,6 +192,7 @@ export default {
           // But I thinkkk that's frequently valid.
           // Maybe we can make some guesses based on the external function names?
           // If we do anything here, it should be configurable due to possible false positives.
+          // TODO: I think we can still warn about passing state to parent, and suggest lifting it?
         }
       },
     };

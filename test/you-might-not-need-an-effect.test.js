@@ -312,10 +312,10 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
       ],
     },
     {
-      name: "State passed to parent",
+      name: "Passing internal state to parent",
       code: js`
         const Child = ({ onFetched }) => {
-          const data = useSomeAPI();
+          const [data, setData] = useState();
 
           useEffect(() => {
             onFetched(data);
@@ -326,6 +326,23 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
         {
           messageId: "avoidInternalEffect",
         },
+        {
+          messageId: "avoidPassingStateToParent",
+        },
+      ],
+    },
+    {
+      name: "Passing external state to parent",
+      code: js`
+        const Child = ({ onFetched }) => {
+          const data = useSomeAPI();
+
+          useEffect(() => {
+            onFetched(data);
+          }, [onFetched, data]);
+        }
+      `,
+      errors: [
         {
           messageId: "avoidPassingStateToParent",
         },
@@ -435,7 +452,7 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
       code: js`
         function Form() {
           const [error, setError] = useState();
-          const result = useSomeAPI();
+          const [result, setResult] = useState();
 
           useEffect(() => {
             if (result.data) {
