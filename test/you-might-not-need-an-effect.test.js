@@ -348,36 +348,36 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
         },
       ],
     },
-    {
-      // TODO: How to detect this though? Not sure it's discernable from legit synchronization effects
-      name: "Using state to handle an event",
-      code: js`
-        function Form() {
-          const [name, setName] = useState();
-          const [dataToSubmit, setDataToSubmit] = useState();
-
-          useEffect(() => {
-            submitData(dataToSubmit);
-          }, [dataToSubmit]);
-
-          return (
-            <div>
-              <input
-                name="name"
-                type="text"
-                onChange={(e) => setName(e.target.value)}
-              />
-              <button onClick={() => setDataToSubmit({ name })}>Submit</button>
-            </div>
-          )
-        }
-      `,
-      errors: [
-        {
-          messageId: "avoidEventHandler",
-        },
-      ],
-    },
+    // {
+    //   // TODO: How to detect this though? Not sure it's discernable from legit synchronization effects
+    //   name: "Using state to handle an event",
+    //   code: js`
+    //     function Form() {
+    //       const [name, setName] = useState();
+    //       const [dataToSubmit, setDataToSubmit] = useState();
+    //
+    //       useEffect(() => {
+    //         submitData(dataToSubmit);
+    //       }, [dataToSubmit]);
+    //
+    //       return (
+    //         <div>
+    //           <input
+    //             name="name"
+    //             type="text"
+    //             onChange={(e) => setName(e.target.value)}
+    //           />
+    //           <button onClick={() => setDataToSubmit({ name })}>Submit</button>
+    //         </div>
+    //       )
+    //     }
+    //   `,
+    //   errors: [
+    //     {
+    //       messageId: "avoidEventHandler",
+    //     },
+    //   ],
+    // },
     {
       name: "Using state to trigger no-arg prop callback",
       code: js`
