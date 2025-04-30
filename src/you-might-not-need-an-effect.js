@@ -2,9 +2,6 @@ import {
   isUseState,
   isUseEffect,
   isReactFunctionalComponent,
-  getUseEffectFnAndDeps,
-  findReference,
-  getRefCallExpr,
   getEffectFnRefs,
   getDepArrRefs,
 } from "./util.js";
@@ -82,33 +79,29 @@ export default {
             messageId: "avoidInternalEffect",
           });
 
-          const stateSetterRefs = effectFnRefs.filter(
+          // Filter down to just function call references so we can examine them further
+          const fnRefs = effectFnRefs.filter(
             (ref) =>
-              isStateRef(ref) &&
-              ref.identifier.parent.type === "CallExpression" &&
-              ref.identifier.parent.callee === ref.identifier,
-          );
-          const propCallbackRefs = effectFnRefs.filter(
-            (ref) =>
-              isPropsRef(ref) &&
               ref.identifier.parent.type === "CallExpression" &&
               ref.identifier.parent.callee === ref.identifier,
           );
 
           const isPropUsedInDeps = depsRefs.some((ref) => isPropsRef(ref));
           const isEveryStateSetterCalledWithDefaultValue =
-            stateSetterRefs.length > 0 &&
-            stateSetterRefs.every((ref) => {
-              const callExpr = ref.identifier.parent;
-              const useStateNode = ref.resolved.defs.find(
-                (def) => def.type === "Variable" && isUseState(def.node),
-              )?.node;
-              const useStateDefaultValue = useStateNode.init.arguments?.[0];
-              return (
-                context.sourceCode.getText(callExpr.arguments[0]) ===
-                context.sourceCode.getText(useStateDefaultValue)
-              );
-            });
+            fnRefs.filter((ref) => isStateRef(ref)).length > 0 &&
+            fnRefs
+              .filter((ref) => isStateRef(ref))
+              .every((ref) => {
+                const callExpr = ref.identifier.parent;
+                const useStateNode = ref.resolved.defs.find(
+                  (def) => def.type === "Variable" && isUseState(def.node),
+                )?.node;
+                const useStateDefaultValue = useStateNode.init.arguments?.[0];
+                return (
+                  context.sourceCode.getText(callExpr.arguments[0]) ===
+                  context.sourceCode.getText(useStateDefaultValue)
+                );
+              });
           if (isPropUsedInDeps && isEveryStateSetterCalledWithDefaultValue) {
             context.report({
               node: node,
@@ -117,42 +110,7 @@ export default {
             return;
           }
 
-          stateSetterRefs.forEach((ref) => {
-            const callExpr = ref.identifier.parent;
-            const useStateNode = ref.resolved.defs.find(
-              (def) => def.type === "Variable" && isUseState(def.node),
-            )?.node;
-
-            const isDepUsedInArgs = callExpr.arguments.some((arg) =>
-              depsRefs.some((depRef) =>
-                context.sourceCode
-                  .getText(arg)
-                  .includes(depRef.identifier.name),
-              ),
-            );
-            if (isDepUsedInArgs) {
-              context.report({
-                node: callExpr.callee,
-                messageId: "avoidDerivedState",
-                data: { state: useStateNode.id.elements[0].name },
-              });
-            } else if (depsRefs.length === 0) {
-              context.report({
-                node: callExpr.callee,
-                messageId: "avoidInitializingState",
-              });
-            } else {
-              // TODO: Is this a correct assumption by now?
-              // Should I flag this whenever the call expr argument is *only* the state?
-              // Like this seems more appropriate than "derived" state.
-              context.report({
-                node: callExpr.callee,
-                messageId: "avoidChainingState",
-              });
-            }
-          });
-
-          propCallbackRefs.forEach((ref) => {
+          fnRefs.forEach((ref) => {
             const callExpr = ref.identifier.parent;
             const isDepUsedInArgs = callExpr.arguments.some((arg) =>
               depsRefs.some((depRef) =>
@@ -161,11 +119,39 @@ export default {
                   .includes(depRef.identifier.name),
               ),
             );
-            if (isDepUsedInArgs) {
-              context.report({
-                node: callExpr.callee,
-                messageId: "avoidPassingStateToParent",
-              });
+
+            if (isStateRef(ref)) {
+              const useStateNode = ref.resolved.defs.find(
+                (def) => def.type === "Variable" && isUseState(def.node),
+              )?.node;
+
+              if (isDepUsedInArgs) {
+                context.report({
+                  node: callExpr.callee,
+                  messageId: "avoidDerivedState",
+                  data: { state: useStateNode.id.elements[0].name },
+                });
+              } else if (depsRefs.length === 0) {
+                context.report({
+                  node: callExpr.callee,
+                  messageId: "avoidInitializingState",
+                });
+              } else {
+                // TODO: Is this a correct assumption by now?
+                // Should I flag this whenever the call expr argument is *only* the state?
+                // Like this seems more appropriate than "derived" state.
+                context.report({
+                  node: callExpr.callee,
+                  messageId: "avoidChainingState",
+                });
+              }
+            } else if (isPropsRef(ref)) {
+              if (isDepUsedInArgs) {
+                context.report({
+                  node: callExpr.callee,
+                  messageId: "avoidPassingStateToParent",
+                });
+              }
             }
           });
         } else {
