@@ -17,7 +17,8 @@
   "keywords": [
     "eslint",
     "eslintplugin",
-    "eslint-plugin"
+    "eslint-plugin",
+    "react"
   ],
   "dependencies": {
     "eslint-utils": "^3.0.0"
