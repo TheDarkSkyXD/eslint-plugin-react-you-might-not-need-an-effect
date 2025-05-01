@@ -4,8 +4,14 @@
   "description": "ESLint rule to warn against unnecessary React useEffect hooks",
   "author": "Nick van Dyke",
   "type": "module",
-  "main": "./src/index.js",
+  "main": "./dist/index.cjs",
+  "module": "./src/index.js",
+  "exports": {
+    "import": "./src/index.js",
+    "require": "./dist/index.js"
+  },
   "scripts": {
+    "build": "node build.js",
     "test": "mocha"
   },
   "keywords": [
@@ -13,7 +19,11 @@
     "eslintplugin",
     "eslint-plugin"
   ],
+  "dependencies": {
+    "eslint-utils": "^3.0.0"
+  },
   "devDependencies": {
+    "esbuild": "^0.25.3",
     "eslint": "^9.20.1",
     "eslint-plugin-eslint-plugin": "^6.4.0",
     "mocha": "11.1.0"
@@ -21,8 +31,5 @@
   "peerDependencies": {
     "eslint": ">=9.0.0"
   },
-  "packageManager": "yarn@4.6.0",
-  "dependencies": {
-    "eslint-utils": "^3.0.0"
-  }
+  "packageManager": "yarn@4.6.0"
 }
