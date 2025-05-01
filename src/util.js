@@ -71,6 +71,11 @@ export function getDepArrRefs(context, node) {
   return references;
 }
 
+export const isFnRef = (ref) =>
+  ref.identifier.parent.type === "CallExpression" &&
+  // ref.identifier.parent will also be CallExpression when the ref is an argument, which we don't want
+  ref.identifier.parent.callee === ref.identifier;
+
 // When would defs.length be > 0...? Shadowed variables?
 export const isStateRef = (ref) =>
   ref.resolved?.defs.some(
@@ -85,4 +90,24 @@ export const isPropsRef = (ref) =>
           ? def.node.parent
           : def.node,
       ),
+  );
+
+export const getUseStateNode = (stateRef) =>
+  stateRef.resolved.defs.find(
+    (def) => def.type === "Variable" && isUseState(def.node),
+  )?.node;
+
+export const isStateSetterCalledWithDefaultValue = (setterRef, context) => {
+  const callExpr = setterRef.identifier.parent;
+  const useStateDefaultValue = getUseStateNode(setterRef).init.arguments?.[0];
+  return (
+    context.sourceCode.getText(callExpr.arguments[0]) ===
+    context.sourceCode.getText(useStateDefaultValue)
+  );
+};
+
+// TODO: Returns true for e.g. ref name is `foo` and arg is `foobar`
+export const isRefUsedInArgs = (ref, args, context) =>
+  args.some((arg) =>
+    context.sourceCode.getText(arg).includes(ref.identifier.name),
   );

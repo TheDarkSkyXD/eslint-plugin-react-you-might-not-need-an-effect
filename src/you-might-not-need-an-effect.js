@@ -1,9 +1,13 @@
 import {
-  isUseState,
   isUseEffect,
-  isReactFunctionalComponent,
   getEffectFnRefs,
   getDepArrRefs,
+  isStateSetterCalledWithDefaultValue,
+  isPropsRef,
+  isStateRef,
+  isFnRef,
+  getUseStateNode,
+  isRefUsedInArgs,
 } from "./util.js";
 
 export default {
@@ -51,9 +55,9 @@ export default {
 
       if (!effectFnRefs || !depsRefs) return;
 
-      const isInternalEffect =
-        effectFnRefs.every((ref) => isStateRef(ref) || isPropsRef(ref)) &&
-        depsRefs.every((ref) => isStateRef(ref) || isPropsRef(ref));
+      const isInternalEffect = effectFnRefs
+        .concat(depsRefs)
+        .every((ref) => isStateRef(ref) || isPropsRef(ref));
 
       if (isInternalEffect) {
         context.report({
@@ -62,29 +66,14 @@ export default {
         });
       }
 
-      // Filter down to just function call references so we can examine them further
-      const fnRefs = effectFnRefs.filter(
-        (ref) =>
-          ref.identifier.parent.type === "CallExpression" &&
-          ref.identifier.parent.callee === ref.identifier,
-      );
+      const fnRefs = effectFnRefs.filter((ref) => isFnRef(ref));
 
       const isPropUsedInDeps = depsRefs.some((ref) => isPropsRef(ref));
       const isEveryStateSetterCalledWithDefaultValue =
         fnRefs.filter((ref) => isStateRef(ref)).length > 0 &&
         fnRefs
           .filter((ref) => isStateRef(ref))
-          .every((ref) => {
-            const callExpr = ref.identifier.parent;
-            const useStateNode = ref.resolved.defs.find(
-              (def) => def.type === "Variable" && isUseState(def.node),
-            )?.node;
-            const useStateDefaultValue = useStateNode.init.arguments?.[0];
-            return (
-              context.sourceCode.getText(callExpr.arguments[0]) ===
-              context.sourceCode.getText(useStateDefaultValue)
-            );
-          });
+          .every((ref) => isStateSetterCalledWithDefaultValue(ref, context));
       if (isPropUsedInDeps && isEveryStateSetterCalledWithDefaultValue) {
         context.report({
           node: node,
@@ -94,18 +83,13 @@ export default {
 
       fnRefs.forEach((ref) => {
         const callExpr = ref.identifier.parent;
-        const isDepUsedInArgs = callExpr.arguments.some((arg) =>
-          depsRefs.some((depRef) =>
-            context.sourceCode.getText(arg).includes(depRef.identifier.name),
-          ),
+        const isDepUsedInArgs = depsRefs.some((depRef) =>
+          isRefUsedInArgs(depRef, callExpr.arguments, context),
         );
 
         if (isInternalEffect) {
           if (isStateRef(ref)) {
-            const useStateNode = ref.resolved.defs.find(
-              (def) => def.type === "Variable" && isUseState(def.node),
-            )?.node;
-
+            const useStateNode = getUseStateNode(ref);
             if (isDepUsedInArgs) {
               context.report({
                 node: callExpr.callee,
