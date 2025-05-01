@@ -55,6 +55,7 @@ export default {
 
       if (!effectFnRefs || !depsRefs) return;
 
+      // TODO: Should not consider variables declared inside the effect as external
       const isInternalEffect = effectFnRefs
         .concat(depsRefs)
         .every((ref) => isStateRef(ref) || isPropsRef(ref));
