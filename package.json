@@ -4,11 +4,11 @@
   "description": "ESLint rule to warn against unnecessary React useEffect hooks.",
   "author": "Nick van Dyke",
   "type": "module",
-  "main": "./dist/index.cjs",
   "module": "./src/index.js",
+  "main": "./dist/index.cjs",
   "files": [
-    "dist",
-    "src"
+    "src",
+    "dist"
   ],
   "exports": {
     "import": "./src/index.js",
