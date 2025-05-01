@@ -10,7 +10,7 @@ import {
   isRefUsedInArgs,
 } from "./util.js";
 
-export default {
+export const youMightNotNeedAnEffectRule = {
   meta: {
     type: "suggestion",
     docs: {

@@ -1,7 +1,7 @@
 import { build } from "esbuild";
 
 build({
-  entryPoints: ["src/index.cjs"],
+  entryPoints: ["src/index.js"],
   bundle: true,
   sourcemap: true,
   format: "cjs",
