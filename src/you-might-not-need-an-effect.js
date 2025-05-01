@@ -39,6 +39,9 @@ export default {
         "Avoid resetting state from props. If the prop is a key, pass it as `key` instead so React will reset the component.",
 
       // TODO: This would be nice, but I'm not sure it can be done accurately
+      // Maybe we can accurately warn about this when the state being reacted to is one of our own `useState`s?
+      // Because if we have a setter then we have a callback.
+      // But, I think that would also warn about valid uses that synchronize internal state to external state.
       // avoidEventHandler:
       //   "Avoid using state as an event handler. Instead, call the event handler directly.",
     },
