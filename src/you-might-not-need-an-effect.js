@@ -18,6 +18,7 @@ export default {
       url: "https://react.dev/learn/you-might-not-need-an-effect",
     },
     schema: [],
+    // TODO: Could include more info in messages, like the relevant node
     messages: {
       // Overall warning
       avoidInternalEffect:
@@ -37,13 +38,9 @@ export default {
       avoidResettingStateFromProps:
         "Avoid resetting state from props. If the prop is a key, pass it as `key` instead so React will reset the component.",
 
-      // TODO: Okay I think I get it now. This should really be "avoidEventHandler".
-      // Per https://react.dev/learn/separating-events-from-effects
-      // Maybe with that in mind, I can check some other code to better validate it?
-      // Like find the set state call that corresponds to the state in the deps.
-      // Maybe this whole rule is a combination of "what is the effect doing" and "in response to what"?
-      avoidEventHandler:
-        "Avoid using state as an event handler. Instead, call the event handler directly.",
+      // TODO: This would be nice, but I'm not sure it can be done accurately
+      // avoidEventHandler:
+      //   "Avoid using state as an event handler. Instead, call the event handler directly.",
     },
   },
   create: (context) => ({
