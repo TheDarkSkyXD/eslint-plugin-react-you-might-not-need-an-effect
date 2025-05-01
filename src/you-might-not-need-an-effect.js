@@ -43,22 +43,6 @@ export default {
     },
   },
   create: (context) => {
-    // When would defs.length be > 0...? Shadowed variables?
-    const isStateRef = (ref) =>
-      ref.resolved?.defs.some(
-        (def) => def.type === "Variable" && isUseState(def.node),
-      );
-    const isPropsRef = (ref) =>
-      ref.resolved?.defs.some(
-        (def) =>
-          def.type === "Parameter" &&
-          isReactFunctionalComponent(
-            def.node.type === "ArrowFunctionExpression"
-              ? def.node.parent
-              : def.node,
-          ),
-      );
-
     return {
       CallExpression: (node) => {
         if (!isUseEffect(node)) return;

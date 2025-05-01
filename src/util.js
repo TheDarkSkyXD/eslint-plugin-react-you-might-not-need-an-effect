@@ -70,3 +70,19 @@ export function getDepArrRefs(context, node) {
 
   return references;
 }
+
+// When would defs.length be > 0...? Shadowed variables?
+export const isStateRef = (ref) =>
+  ref.resolved?.defs.some(
+    (def) => def.type === "Variable" && isUseState(def.node),
+  );
+export const isPropsRef = (ref) =>
+  ref.resolved?.defs.some(
+    (def) =>
+      def.type === "Parameter" &&
+      isReactFunctionalComponent(
+        def.node.type === "ArrowFunctionExpression"
+          ? def.node.parent
+          : def.node,
+      ),
+  );
