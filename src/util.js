@@ -51,27 +51,18 @@ export const getEffectFnRefs = (context, node) => {
 export function getDepArrRefs(context, node) {
   if (!isUseEffect(node) || node.arguments.length < 2) return null;
 
-  const depsArray = node.arguments[1];
-  if (depsArray.type !== "ArrayExpression") return null;
+  const depsArr = node.arguments[1];
+  if (depsArr.type !== "ArrayExpression") return null;
 
   const scope = context.sourceCode.getScope(node);
 
-  const references = [];
-
-  for (const element of depsArray.elements) {
-    if (!element || element.type !== "Identifier") continue;
-
-    const variable = findVariable(scope, element);
-    if (!variable) continue;
-
-    for (const ref of variable.references) {
-      if (ref.identifier === element) {
-        references.push(ref);
-      }
-    }
-  }
-
-  return references;
+  return depsArr.elements
+    .filter((element) => element?.type === "Identifier")
+    .map((element) => [element, findVariable(scope, element)])
+    .filter(([_element, variable]) => variable)
+    .flatMap(([element, variable]) =>
+      variable.references.filter((ref) => ref.identifier === element),
+    );
 }
 
 export const isFnRef = (ref) =>
