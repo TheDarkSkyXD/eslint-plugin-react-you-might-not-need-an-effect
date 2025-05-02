@@ -1,5 +1,5 @@
 import { ruleTester } from "./rule-tester.js";
-import youMightNotNeedAnEffectRule from "../src/you-might-not-need-an-effect.js";
+import { youMightNotNeedAnEffectRule } from "../src/you-might-not-need-an-effect.js";
 const js = String.raw;
 
 const code = ({
