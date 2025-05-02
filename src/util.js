@@ -25,9 +25,12 @@ export const isUseState = (node) => {
 
 export const isUseEffect = (node) => {
   return (
-    node.type === "CallExpression" &&
-    node.callee.type === "Identifier" &&
-    node.callee.name === "useEffect"
+    (node.type === "CallExpression" &&
+      node.callee.type === "Identifier" &&
+      node.callee.name === "useEffect") ||
+    (node.callee.type === "MemberExpression" &&
+      node.callee.object.name === "React" &&
+      node.callee.property.name === "useEffect")
   );
 };
 
