@@ -1,5 +1,5 @@
-import { youMightNotNeedAnEffectRule } from "./you-might-not-need-an-effect.js";
+import { rule } from "./rule.js";
 
 export const rules = {
-  "you-might-not-need-an-effect": youMightNotNeedAnEffectRule,
+  "you-might-not-need-an-effect": rule,
 };

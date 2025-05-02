@@ -1,5 +1,5 @@
 import { ruleTester } from "./rule-tester.js";
-import { youMightNotNeedAnEffectRule } from "../src/you-might-not-need-an-effect.js";
+import { rule } from "../src/rule.js";
 const js = String.raw;
 
 const code = ({
@@ -27,7 +27,7 @@ const code = ({
 // Could be overkill; they shouldn't affect each other (supposedly, but I guess that's the point of tests!)
 ruleTester.run(
   "you-might-not-need-an-effect/syntax-variations",
-  youMightNotNeedAnEffectRule,
+  rule,
   {
     valid: [
       {

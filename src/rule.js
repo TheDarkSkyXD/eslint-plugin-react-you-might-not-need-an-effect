@@ -11,7 +11,7 @@ import {
   isDerivedRef,
 } from "./util.js";
 
-export const youMightNotNeedAnEffectRule = {
+export const rule = {
   meta: {
     type: "suggestion",
     docs: {
