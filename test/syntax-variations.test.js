@@ -62,6 +62,19 @@ ruleTester.run(name, rule, {
         }
       `,
     },
+    {
+      name: "Wrapping external state dep in CallExpression",
+      code: js`
+        function Feed() {
+          const { data } = useQuery('/posts');
+          const [scrollPosition, setScrollPosition] = useState(0);
+
+          useEffect(() => {
+            setScrollPosition(0);
+          }, [JSON.stringify(data.posts)]);
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -199,6 +212,19 @@ ruleTester.run(name, rule, {
           `,
       }),
       errors: 4,
+    },
+    {
+      name: "Wrapping internal state dep in CallExpression",
+      code: js`
+        function Feed() {
+          const [posts, setPosts] = useState([]);
+          const [scrollPosition, setScrollPosition] = useState(0);
+
+          useEffect(() => {
+            setScrollPosition(0);
+          }, [JSON.stringify(posts)]);
+        }
+      `,
     },
   ],
 });
