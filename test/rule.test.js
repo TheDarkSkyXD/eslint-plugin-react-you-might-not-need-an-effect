@@ -1,8 +1,8 @@
 import { ruleTester } from "./rule-tester.js";
-import { rule } from "../src/rule.js";
+import { name, rule } from "../src/rule.js";
 const js = String.raw;
 
-ruleTester.run("you-might-not-need-an-effect", rule, {
+ruleTester.run(name, rule, {
   valid: [
     {
       name: "Computed state from other state",
