@@ -57,11 +57,12 @@ export function getDepArrRefs(context, node) {
   const scope = context.sourceCode.getScope(node);
 
   return depsArr.elements
-    .filter((element) => element?.type === "Identifier")
-    .map((element) => [element, findVariable(scope, element)])
-    .filter(([_element, variable]) => variable)
-    .flatMap(([element, variable]) =>
-      variable.references.filter((ref) => ref.identifier === element),
+    // TODO: Doesn't this exclude MemberExpressions?
+    .filter((node) => node?.type === "Identifier")
+    .map((node) => [node, findVariable(scope, node)])
+    .filter(([_node, variable]) => variable)
+    .flatMap(([node, variable]) =>
+      variable.references.filter((ref) => ref.identifier === node),
     );
 }
 

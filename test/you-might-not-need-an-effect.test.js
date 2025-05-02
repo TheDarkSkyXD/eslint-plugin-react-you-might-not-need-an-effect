@@ -47,20 +47,12 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
       name: "Reacting to library state changes that may not offer a callback",
       code: js`
         function Feed() {
-          const { data: posts } = useQuery('posts');
+          const { data: posts } = useQuery('/posts');
           const [scrollPosition, setScrollPosition] = useState(0);
 
           useEffect(() => {
             setScrollPosition(0);
           }, [posts]);
-
-          return (
-            <div>
-              {posts.map((post) => (
-                <Post key={post.id} post={post} />
-              ))}
-            </div>
-          );
         }
       `,
     },

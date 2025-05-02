@@ -52,6 +52,19 @@ ruleTester.run(
           `,
         }),
       },
+      {
+        name: "Reacting to external state changes with member access in deps",
+        code: js`
+          function Feed() {
+            const { data } = useQuery('/posts');
+            const [scrollPosition, setScrollPosition] = useState(0);
+
+            useEffect(() => {
+              setScrollPosition(0);
+            }, [data.posts]);
+          }
+        `,
+      },
     ],
     invalid: [
       {
