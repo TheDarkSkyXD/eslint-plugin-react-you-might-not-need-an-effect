@@ -190,20 +190,6 @@ ruleTester.run(
         }),
         errors: 4,
       },
-      // TODO:
-      // {
-      //   name: "Shadowed dependency used in args",
-      //   code: js`
-      //     function Child({ onFetched }) {
-      //       const data = useSomeAPI();
-      //
-      //       useEffect(() => {
-      //         const value = data.value;
-      //         onFetched(value);
-      //       }, [onFetched, data]);
-      //     }`,
-      // },
-      ,
     ],
   },
 );
