@@ -85,6 +85,11 @@ export const isPropsRef = (ref) =>
           : def.node,
       ),
   );
+export const isDerivedRef = (ref, effectFnScope) => {
+  return effectFnScope.variables.some(
+    (variable) => variable.defs === ref.resolved?.defs,
+  );
+};
 
 export const getUseStateNode = (stateRef) =>
   stateRef.resolved.defs.find(

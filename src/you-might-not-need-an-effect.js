@@ -8,6 +8,7 @@ import {
   isFnRef,
   getUseStateNode,
   isRefUsedInArgs,
+  isDerivedRef,
 } from "./util.js";
 
 export const youMightNotNeedAnEffectRule = {
@@ -55,10 +56,14 @@ export const youMightNotNeedAnEffectRule = {
 
       if (!effectFnRefs || !depsRefs) return;
 
-      // TODO: Should not consider variables declared inside the effect as external
       const isInternalEffect = effectFnRefs
         .concat(depsRefs)
-        .every((ref) => isStateRef(ref) || isPropsRef(ref));
+        .every(
+          (ref) =>
+            isStateRef(ref) ||
+            isPropsRef(ref) ||
+            isDerivedRef(ref, context.sourceCode.getScope(node.arguments[0])),
+        );
 
       if (isInternalEffect) {
         context.report({
@@ -84,6 +89,7 @@ export const youMightNotNeedAnEffectRule = {
 
       fnRefs.forEach((ref) => {
         const callExpr = ref.identifier.parent;
+        // TODO: Include intermediate local variables along this derivation chain
         const isDepUsedInArgs = depsRefs.some((depRef) =>
           isRefUsedInArgs(depRef, callExpr.arguments, context),
         );
