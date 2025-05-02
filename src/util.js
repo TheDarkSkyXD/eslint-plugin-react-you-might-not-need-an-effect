@@ -1,5 +1,24 @@
 import { findVariable } from "eslint-utils";
 
+// Lightweight AST traversal
+const traverse = (context, node, visit) => {
+  visit(node);
+
+  const visitorKeys = context.sourceCode.visitorKeys;
+
+  const keys = visitorKeys[node.type];
+  keys.forEach((key) => {
+    const child = node[key];
+    if (Array.isArray(child)) {
+      child.forEach((childNode) => {
+        traverse(context, childNode, visit);
+      });
+    } else {
+      traverse(context, child, visit);
+    }
+  });
+};
+
 export const isReactFunctionalComponent = (node) => {
   const isFunctionComponent = node.type === "FunctionDeclaration";
   const isArrowFunctionComponent =
@@ -54,16 +73,15 @@ export function getDepArrRefs(context, node) {
   const depsArr = node.arguments[1];
   if (depsArr.type !== "ArrayExpression") return null;
 
-  const scope = context.sourceCode.getScope(node);
+  const identifiers = [];
+  traverse(context, depsArr, (node) => {
+    if (node.type === "Identifier") {
+      identifiers.push(node);
+    }
+  });
 
-  return depsArr.elements
-    .map((node) => {
-      while (node?.type === "MemberExpression") {
-        node = node.object;
-      }
-      return node;
-    })
-    .filter((node) => node?.type === "Identifier")
+  const scope = context.sourceCode.getScope(node);
+  return identifiers
     .map((node) => [node, findVariable(scope, node)])
     .filter(([_node, variable]) => variable)
     .flatMap(([node, variable]) =>

@@ -75,6 +75,20 @@ ruleTester.run(name, rule, {
         }
       `,
     },
+    {
+      // Valid because we can't be sure the CallExpression has no side effects
+      name: "Wrapping internal state dep in CallExpression",
+      code: js`
+        function Feed() {
+          const [posts, setPosts] = useState([]);
+          const [scrollPosition, setScrollPosition] = useState();
+
+          useEffect(() => {
+            setScrollPosition(posts);
+          }, [JSON.stringify(posts)]);
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -212,19 +226,6 @@ ruleTester.run(name, rule, {
           `,
       }),
       errors: 4,
-    },
-    {
-      name: "Wrapping internal state dep in CallExpression",
-      code: js`
-        function Feed() {
-          const [posts, setPosts] = useState([]);
-          const [scrollPosition, setScrollPosition] = useState(0);
-
-          useEffect(() => {
-            setScrollPosition(0);
-          }, [JSON.stringify(posts)]);
-        }
-      `,
     },
   ],
 });
