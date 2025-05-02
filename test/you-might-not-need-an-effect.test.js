@@ -246,7 +246,7 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
   ],
   invalid: [
     {
-      name: "Derived state from other state",
+      name: "Deriving state from other state",
       code: js`
         function Form() {
           const [firstName, setFirstName] = useState('Taylor');
@@ -267,7 +267,7 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
       ],
     },
     {
-      name: "Derived state from other state via intermediate variable",
+      name: "Deriving state from other state via intermediate variable",
       code: js`
         function Form() {
           const [firstName, setFirstName] = useState('Taylor');
@@ -291,7 +291,7 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
       ],
     },
     {
-      name: "Derived state from props",
+      name: "Deriving state from props",
       code: js`
         function Form({ firstName, lastName }) {
           const [fullName, setFullName] = useState('');
