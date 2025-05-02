@@ -91,6 +91,20 @@ ruleTester.run(
         errors: 3,
       },
       {
+        name: "React.useEffect",
+        code: js`
+          function DoubleCounter() {
+            const [count, setCount] = useState(0);
+            const [doubleCount, setDoubleCount] = useState(0);
+
+            React.useEffect(() => {
+              setDoubleCount(count * 2);
+            }, [count]);
+          }
+        `,
+        errors: 2,
+      },
+      {
         name: "Non-destructured props",
         code: code({
           componentDeclaration: js`function DoubleCounter(props)`,
