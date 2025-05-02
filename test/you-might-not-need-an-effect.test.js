@@ -291,6 +291,31 @@ ruleTester.run("you-might-not-need-an-effect", youMightNotNeedAnEffectRule, {
       ],
     },
     {
+      name: "Deriving state from other state via two intermediate variables",
+      code: js`
+        function Form() {
+          const [firstName, setFirstName] = useState('Taylor');
+          const [lastName, setLastName] = useState('Swift');
+
+          const [fullName, setFullName] = useState('');
+          useEffect(() => {
+            const name = firstName + ' ' + lastName;
+            const prefixedName = 'Dr. ' + name;
+            setFullName(prefixedName) 
+          }, [firstName, lastName]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidInternalEffect",
+        },
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
+        },
+      ],
+    },
+    {
       name: "Deriving state from props",
       code: js`
         function Form({ firstName, lastName }) {
