@@ -2,7 +2,7 @@ import { ruleTester } from "./rule-tester.js";
 import { name, rule } from "../src/rule.js";
 const js = String.raw;
 
-ruleTester.run(name, rule, {
+ruleTester.run(name + "/rule", rule, {
   valid: [
     {
       name: "Computed state from other state",

@@ -25,7 +25,7 @@ const code = ({
 // Syntax variations that are semantically equivalent
 // TODO: Could dynamically generate variations: https://mochajs.org/#dynamically-generating-tests
 // Could be overkill; they shouldn't affect each other (supposedly, but I guess that's the point of tests!)
-ruleTester.run(name, rule, {
+ruleTester.run(name + "/syntax", rule, {
   valid: [
     {
       name: "Member call expression side effect without args",
