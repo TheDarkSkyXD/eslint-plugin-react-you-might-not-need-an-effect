@@ -844,7 +844,7 @@ __metadata:
     eslint-utils: "npm:^3.0.0"
     mocha: "npm:11.1.0"
   peerDependencies:
-    eslint: ">=9.0.0"
+    eslint: ">=7.0.0"
   languageName: unknown
   linkType: soft
 
