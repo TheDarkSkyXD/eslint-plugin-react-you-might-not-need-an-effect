@@ -48,6 +48,7 @@ export const getEffectFnRefs = (context, node) => {
 };
 
 // Dependency array doesn't have its own scope, so collecting refs is trickier
+// TODO: Probably misses crazier uses like `JSON.stringify(state)`
 export function getDepArrRefs(context, node) {
   if (!isUseEffect(node) || node.arguments.length < 2) return null;
 
@@ -57,7 +58,12 @@ export function getDepArrRefs(context, node) {
   const scope = context.sourceCode.getScope(node);
 
   return depsArr.elements
-    // TODO: Doesn't this exclude MemberExpressions?
+    .map((node) => {
+      while (node?.type === "MemberExpression") {
+        node = node.object;
+      }
+      return node;
+    })
     .filter((node) => node?.type === "Identifier")
     .map((node) => [node, findVariable(scope, node)])
     .filter(([_node, variable]) => variable)
