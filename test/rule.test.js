@@ -330,16 +330,16 @@ ruleTester.run(name + "/rule", rule, {
     },
     {
       // React docs recommend to first update state in render instead of an effect.
-      // But then continue on to say that usually you can avoid the sync entirely by more wisely choosing your state.
-      // So we'll just always call it derived state.
-      name: "Syncing external prop changes to internal state",
+      // But then continue on to say that usually you can avoid the sync entirely by
+      // more wisely choosing your state. So we'll just always warn about derived state.
+      name: "Syncing prop changes to internal state",
       code: js`
         function List({ items }) {
           const [isReverse, setIsReverse] = useState(false);
-          const [selection, setSelection] = useState(null);
+          const [selection, setSelection] = useState(items[0]);
 
           useEffect(() => {
-            setSelection(items[0]);
+            setSelection(null);
           }, [items]);
         }
       `,
