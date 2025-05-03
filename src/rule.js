@@ -104,18 +104,18 @@ export const rule = {
                 messageId: "avoidDerivedState",
                 data: { state: useStateNode.id.elements[0].name },
               });
-            } else if (depsRefs.length === 0) {
-              context.report({
-                node: callExpr.callee,
-                messageId: "avoidInitializingState",
-              });
-            } else {
+            } else if (depsRefs.length > 0) {
               // TODO: Is this a correct assumption by now?
               // Should I flag this whenever the call expr argument is *only* the state?
               // Like this seems more appropriate than "derived" state.
               context.report({
                 node: callExpr.callee,
                 messageId: "avoidChainingState",
+              });
+            } else {
+              context.report({
+                node: callExpr.callee,
+                messageId: "avoidInitializingState",
               });
             }
           }
