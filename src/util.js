@@ -61,7 +61,9 @@ export const isUseEffect = (node) => {
 };
 
 export const getEffectFnRefs = (context, node) => {
-  if (!isUseEffect(node) || node.arguments.length < 1) return null;
+  if (!isUseEffect(node) || node.arguments.length < 1) {
+    return null;
+  }
 
   const effectFn = node.arguments[0];
 
@@ -75,10 +77,14 @@ export const getEffectFnRefs = (context, node) => {
 
 // Dependency array doesn't have its own scope, so collecting refs is trickier
 export function getDepArrRefs(context, node) {
-  if (!isUseEffect(node) || node.arguments.length < 2) return null;
+  if (!isUseEffect(node) || node.arguments.length < 2) {
+    return null;
+  }
 
   const depsArr = node.arguments[1];
-  if (depsArr.type !== "ArrayExpression") return null;
+  if (depsArr.type !== "ArrayExpression") {
+    return null;
+  }
 
   const identifiers = collectIdentifiers(context, depsArr);
 

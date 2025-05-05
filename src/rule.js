@@ -51,13 +51,17 @@ export const rule = {
   },
   create: (context) => ({
     CallExpression: (node) => {
-      if (!isUseEffect(node)) return;
+      if (!isUseEffect(node)) {
+        return;
+      }
 
       const effectFnRefs = getEffectFnRefs(context, node);
       const depsRefs = getDepArrRefs(context, node);
       const effectFn = node.arguments[0];
 
-      if (!effectFnRefs || !depsRefs || !effectFn) return;
+      if (!effectFnRefs || !depsRefs || !effectFn) {
+        return;
+      }
 
       const isInternalEffect = effectFnRefs
         .concat(depsRefs)
