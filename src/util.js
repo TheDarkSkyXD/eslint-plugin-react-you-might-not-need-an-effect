@@ -162,6 +162,8 @@ export const isStateSetterCalledWithDefaultValue = (setterRef, context) => {
   );
 };
 
+// TODO: This causes infinite recursion in some cases.
+// Maybe it walks *outside* the scope of the effect function?
 export const isPathBetween = (src, dest, context, scope) => {
   const identifiers = collectIdentifiers(context, dest);
 
