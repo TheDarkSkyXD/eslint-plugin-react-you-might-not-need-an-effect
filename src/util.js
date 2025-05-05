@@ -1,16 +1,21 @@
 import { findVariable } from "eslint-utils";
 
 // Lightweight AST traversal
-const traverse = (context, node, visit) => {
+const traverse = (context, node, visit, visited = new Set()) => {
+  if (visited.has(node)) {
+    return;
+  }
+
+  visited.add(node);
+
   visit(node);
 
   context.sourceCode.visitorKeys[node.type]
     .map((key) => node[key])
-    // Some `visitorKeys` are optional.
-    // e.g. `IfStatement.alternate`
-    .filter((child) => child && typeof child === "object")
+    // Some `visitorKeys` are optional, e.g. `IfStatement.alternate`.
+    .filter((child) => child)
     // `child` can be an array, like `CallExpression.arguments`
-    .flatMap((child) => child)
+    .flatMap((child) => (Array.isArray(child) ? child : [child]))
     .forEach((child) => traverse(context, child, visit));
 };
 
