@@ -1,8 +1,9 @@
-import pkg from "eslint-plugin-eslint-plugin";
-const { configs } = pkg;
+import eslintPlugin from "eslint-plugin-eslint-plugin";
+import nodePlugin from "eslint-plugin-n";
 
 export default [
-  configs["flat/recommended"],
+  eslintPlugin.configs["flat/recommended"],
+  nodePlugin.configs["flat/recommended"],
   {
     rules: {},
   },
