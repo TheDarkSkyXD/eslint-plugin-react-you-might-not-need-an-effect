@@ -31,16 +31,15 @@ Add the plugin to your ESLint configuration file.
 import youMightNotNeedAnEffect from "eslint-plugin-react-you-might-not-need-an-effect";
 
 export default [
-	{
-		files: ["**/*.js"],
-		plugins: {
-      "react-you-might-not-need-an-effect":
-        youMightNotNeedAnEffect,
-		},
-		rules: {
+  {
+    files: ["**/*.js"],
+    plugins: {
+      "react-you-might-not-need-an-effect": youMightNotNeedAnEffect,
+    },
+    rules: {
       "react-you-might-not-need-an-effect/you-might-not-need-an-effect": "warn",
-		},
-	},
+    },
+  },
 ];
 
 ```
