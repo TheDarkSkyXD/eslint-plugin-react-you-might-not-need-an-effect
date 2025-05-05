@@ -4,10 +4,7 @@ import { findVariable } from "eslint-utils";
 const traverse = (context, node, visit) => {
   visit(node);
 
-  const visitorKeys = context.sourceCode.visitorKeys;
-
-  const keys = visitorKeys[node.type];
-  keys.forEach((key) => {
+  context.sourceCode.visitorKeys[node.type].forEach((key) => {
     const child = node[key];
     if (Array.isArray(child)) {
       child.forEach((childNode) => {
@@ -17,6 +14,16 @@ const traverse = (context, node, visit) => {
       traverse(context, child, visit);
     }
   });
+};
+
+const collectIdentifiers = (context, rootNode) => {
+  const identifiers = [];
+  traverse(context, rootNode, (node) => {
+    if (node.type === "Identifier") {
+      identifiers.push(node);
+    }
+  });
+  return identifiers;
 };
 
 export const isReactFunctionalComponent = (node) => {
@@ -73,12 +80,7 @@ export function getDepArrRefs(context, node) {
   const depsArr = node.arguments[1];
   if (depsArr.type !== "ArrayExpression") return null;
 
-  const identifiers = [];
-  traverse(context, depsArr, (node) => {
-    if (node.type === "Identifier") {
-      identifiers.push(node);
-    }
-  });
+  const identifiers = collectIdentifiers(context, depsArr);
 
   const scope = context.sourceCode.getScope(node);
   return identifiers
@@ -129,8 +131,19 @@ export const isStateSetterCalledWithDefaultValue = (setterRef, context) => {
   );
 };
 
-// TODO: Returns true for e.g. ref name is `foo` and arg is `foobar`
-export const isRefUsedInArgs = (ref, args, context) =>
-  args.some((arg) =>
-    context.sourceCode.getText(arg).includes(ref.identifier.name),
-  );
+export const isPathBetween = (src, dest, context, scope) => {
+  const identifiers = collectIdentifiers(context, dest);
+
+  if (identifiers.some((identifier) => identifier.name === src.name)) {
+    return true;
+  }
+
+  return identifiers
+    .map((identifier) => findVariable(scope, identifier))
+    .filter((variable) => variable)
+    .some((variable) =>
+      variable.defs
+        .filter((def) => def.type === "Variable") // Could be e.g. `Parameter` if it's a function parameter in a Promise chain
+        .some((def) => isPathBetween(src, def.node.init, context, scope)),
+    );
+};

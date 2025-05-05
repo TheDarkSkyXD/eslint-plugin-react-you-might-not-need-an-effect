@@ -7,7 +7,7 @@ import {
   isStateRef,
   isFnRef,
   getUseStateNode,
-  isRefUsedInArgs,
+  isPathBetween,
   isDerivedRef,
 } from "./util.js";
 
@@ -54,8 +54,9 @@ export const rule = {
 
       const effectFnRefs = getEffectFnRefs(context, node);
       const depsRefs = getDepArrRefs(context, node);
+      const effectFn = node.arguments[0];
 
-      if (!effectFnRefs || !depsRefs) return;
+      if (!effectFnRefs || !depsRefs || !effectFn) return;
 
       const isInternalEffect = effectFnRefs
         .concat(depsRefs)
@@ -63,7 +64,7 @@ export const rule = {
           (ref) =>
             isStateRef(ref) ||
             isPropsRef(ref) ||
-            isDerivedRef(ref, context.sourceCode.getScope(node.arguments[0])),
+            isDerivedRef(ref, context.sourceCode.getScope(effectFn)),
         );
 
       if (isInternalEffect) {
@@ -90,9 +91,15 @@ export const rule = {
 
       fnRefs.forEach((ref) => {
         const callExpr = ref.identifier.parent;
-        // TODO: Include intermediate local variables along this derivation chain
-        const isDepUsedInArgs = depsRefs.some((depRef) =>
-          isRefUsedInArgs(depRef, callExpr.arguments, context),
+        const isDepUsedInArgs = callExpr.arguments.some((arg) =>
+          depsRefs.some((depRef) =>
+            isPathBetween(
+              depRef.identifier,
+              arg,
+              context,
+              context.sourceCode.getScope(effectFn),
+            ),
+          ),
         );
 
         if (isInternalEffect) {

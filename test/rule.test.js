@@ -71,7 +71,7 @@ ruleTester.run(name + "/rule", rule, {
       `,
     },
     {
-      name: "Fetching external state (network call) from state change",
+      name: "Fetching external state from state change",
       // Technically we could trigger the network call in `input.onChange`,
       // but that assumes we are okay with an uncontrolled input, which is often not the case.
       code: js`
@@ -259,31 +259,7 @@ ruleTester.run(name + "/rule", rule, {
       ],
     },
     {
-      name: "Deriving state from other state via intermediate variable",
-      code: js`
-        function Form() {
-          const [firstName, setFirstName] = useState('Taylor');
-          const [lastName, setLastName] = useState('Swift');
-
-          const [fullName, setFullName] = useState('');
-          useEffect(() => {
-            const name = firstName + ' ' + lastName;
-            setFullName(name) 
-          }, [firstName, lastName]);
-        }
-      `,
-      errors: [
-        {
-          messageId: "avoidInternalEffect",
-        },
-        {
-          messageId: "avoidDerivedState",
-          data: { state: "fullName" },
-        },
-      ],
-    },
-    {
-      name: "Deriving state from other state via two intermediate variables",
+      name: "Deriving state from other state intermediate variables",
       code: js`
         function Form() {
           const [firstName, setFirstName] = useState('Taylor');
@@ -331,7 +307,7 @@ ruleTester.run(name + "/rule", rule, {
     {
       // React docs recommend to first update state in render instead of an effect.
       // But then continue on to say that usually you can avoid the sync entirely by
-      // more wisely choosing your state. So we'll just always warn about derived state.
+      // more wisely choosing your state. So we'll just always warn about chained state.
       name: "Syncing prop changes to internal state",
       code: js`
         function List({ items }) {
@@ -348,7 +324,7 @@ ruleTester.run(name + "/rule", rule, {
           messageId: "avoidInternalEffect",
         },
         {
-          messageId: "avoidDerivedState",
+          messageId: "avoidChainingState",
         },
       ],
     },
