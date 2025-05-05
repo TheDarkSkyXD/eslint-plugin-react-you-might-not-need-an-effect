@@ -222,16 +222,31 @@ ruleTester.run(name + "/rule", rule, {
       `,
     },
     {
-      name: "Calling possibly unpure function in effect",
+      name: "Calling external function in effect",
       code: js`
         function TodoList({ todos, filter }) {
           const [newTodo, setNewTodo] = useState("");
 
           const [visibleTodos, setVisibleTodos] = useState([]);
           useEffect(() => {
-            // Semantically we can guess 'getFilteredTodos' is probably pure, but we can't be sure
+            // We can't be sure getFilteredTodos is pure, so we can't warn about this.
             setVisibleTodos(getFilteredTodos(todos, filter));
           }, [todos, filter]);
+        }
+      `,
+    },
+    {
+      name: "JSON.stringifying in deps",
+      code: js`
+        function Feed() {
+          const [posts, setPosts] = useState([]);
+          const [scrollPosition, setScrollPosition] = useState(0);
+
+          useEffect(() => {
+            setScrollPosition(0);
+            // We can't be sure JSON.stringify is pure, so we can't warn about this.
+            // TODO: Technically we could check against known pure functions.
+          }, [JSON.stringify(posts)]);
         }
       `,
     },

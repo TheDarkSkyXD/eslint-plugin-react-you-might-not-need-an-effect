@@ -75,20 +75,6 @@ ruleTester.run(name + "/syntax", rule, {
         }
       `,
     },
-    {
-      // Valid because we can't be sure the CallExpression has no side effects
-      name: "Wrapping internal state dep in CallExpression",
-      code: js`
-        function Feed() {
-          const [posts, setPosts] = useState([]);
-          const [scrollPosition, setScrollPosition] = useState();
-
-          useEffect(() => {
-            setScrollPosition(posts);
-          }, [JSON.stringify(posts)]);
-        }
-      `,
-    },
   ],
   invalid: [
     {
