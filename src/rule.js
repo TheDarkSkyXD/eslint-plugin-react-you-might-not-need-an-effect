@@ -8,7 +8,8 @@ import {
   isFnRef,
   getUseStateNode,
   isPathBetween,
-  isDerivedRef,
+  isLocalRef,
+  getEffectFn,
 } from "./util.js";
 
 export const name = "you-might-not-need-an-effect";
@@ -55,11 +56,11 @@ export const rule = {
         return;
       }
 
+      const effectFn = getEffectFn(node);
       const effectFnRefs = getEffectFnRefs(context, node);
       const depsRefs = getDepArrRefs(context, node);
-      const effectFn = node.arguments[0];
 
-      if (!effectFnRefs || !depsRefs || !effectFn) {
+      if (!effectFn || !effectFnRefs || !depsRefs) {
         return;
       }
 
@@ -69,7 +70,7 @@ export const rule = {
           (ref) =>
             isStateRef(ref) ||
             isPropsRef(ref) ||
-            isDerivedRef(ref, context.sourceCode.getScope(effectFn)),
+            isLocalRef(ref, context.sourceCode.getScope(effectFn)),
         );
 
       if (isInternalEffect) {

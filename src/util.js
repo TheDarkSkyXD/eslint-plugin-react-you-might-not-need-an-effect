@@ -60,12 +60,28 @@ export const isUseEffect = (node) => {
   );
 };
 
-export const getEffectFnRefs = (context, node) => {
+export const getEffectFn = (node) => {
   if (!isUseEffect(node) || node.arguments.length < 1) {
     return null;
   }
 
   const effectFn = node.arguments[0];
+  if (
+    effectFn.type !== "ArrowFunctionExpression" &&
+    effectFn.type !== "FunctionExpression"
+  ) {
+    return null;
+  }
+
+  return effectFn;
+};
+
+export const getEffectFnRefs = (context, node) => {
+  if (!isUseEffect(node) || node.arguments.length < 1) {
+    return null;
+  }
+
+  const effectFn = getEffectFn(node);
 
   const getRefs = (scope) =>
     scope.references.concat(
@@ -107,6 +123,7 @@ export const isStateRef = (ref) =>
   ref.resolved?.defs.some(
     (def) => def.type === "Variable" && isUseState(def.node),
   );
+
 export const isPropsRef = (ref) =>
   ref.resolved?.defs.some(
     (def) =>
@@ -117,7 +134,8 @@ export const isPropsRef = (ref) =>
           : def.node,
       ),
   );
-export const isDerivedRef = (ref, effectFnScope) => {
+
+export const isLocalRef = (ref, effectFnScope) => {
   return effectFnScope.variables.some(
     (variable) => variable.defs === ref.resolved?.defs,
   );
