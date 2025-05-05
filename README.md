@@ -18,9 +18,9 @@ Add the plugin to your ESLint configuration file.
 
 ```js
 {
-  "plugins": ["eslint-plugin-react-you-might-not-need-an-effect"],
+  "plugins": ["react-you-might-not-need-an-effect"],
   "rules": {
-    "eslint-plugin-react-you-might-not-need-an-effect/you-might-not-need-an-effect": "warn"
+    "react-you-might-not-need-an-effect/you-might-not-need-an-effect": "warn"
   }
 }
 ```
