@@ -7,16 +7,17 @@ const traverse = (context, node, visit, visited = new Set()) => {
   }
 
   visited.add(node);
-
   visit(node);
 
-  context.sourceCode.visitorKeys[node.type]
+  (context.sourceCode.visitorKeys[node.type] || [])
     .map((key) => node[key])
     // Some `visitorKeys` are optional, e.g. `IfStatement.alternate`.
     .filter((child) => child)
     // `child` can be an array, like `CallExpression.arguments`
     .flatMap((child) => (Array.isArray(child) ? child : [child]))
-    .forEach((child) => traverse(context, child, visit));
+    // Confirm it's a valid AST node (not sure why it wouldn't be?)
+    .filter((child) => typeof child.type === "string")
+    .forEach((child) => traverse(context, child, visit, visited));
 };
 
 const collectIdentifiers = (context, rootNode) => {

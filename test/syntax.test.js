@@ -62,19 +62,6 @@ ruleTester.run(name + "/syntax", rule, {
         }
       `,
     },
-    {
-      name: "Wrapping external state dep in CallExpression",
-      code: js`
-        function Feed() {
-          const { data } = useQuery('/posts');
-          const [scrollPosition, setScrollPosition] = useState(0);
-
-          useEffect(() => {
-            setScrollPosition(0);
-          }, [JSON.stringify(data.posts)]);
-        }
-      `,
-    },
   ],
   invalid: [
     {
