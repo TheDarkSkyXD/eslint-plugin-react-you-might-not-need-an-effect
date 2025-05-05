@@ -32,7 +32,7 @@ import youMightNotNeedAnEffect from "eslint-plugin-react-you-might-not-need-an-e
 
 export default [
   {
-    files: ["**/*.js"],
+    files: ["**/*.{js,jsx}"],
     plugins: {
       "react-you-might-not-need-an-effect": youMightNotNeedAnEffect,
     },
