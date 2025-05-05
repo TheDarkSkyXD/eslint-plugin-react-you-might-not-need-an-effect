@@ -12,15 +12,37 @@ npm install --save-dev eslint-plugin-react-you-might-not-need-an-effect
 
 ## 🔧 Usage
 
-Add the plugin to your ESLint configuration file:
+Add the plugin to your ESLint configuration file.
 
-```json
+### Legacy config (`.eslintrc`)
+
+```js
 {
   "plugins": ["eslint-plugin-react-you-might-not-need-an-effect"],
   "rules": {
     "eslint-plugin-react-you-might-not-need-an-effect/you-might-not-need-an-effect": "warn"
   }
 }
+```
+
+### Flat config (`eslint.config.js`)
+
+```js
+import youMightNotNeedAnEffect from "eslint-plugin-react-you-might-not-need-an-effect";
+
+export default [
+	{
+		files: ["**/*.js"],
+		plugins: {
+      "react-you-might-not-need-an-effect":
+        youMightNotNeedAnEffect,
+		},
+		rules: {
+      "react-you-might-not-need-an-effect/you-might-not-need-an-effect": "warn",
+		},
+	},
+];
+
 ```
 
 This plugin assumes that your effects receive correct dependencies. Thus the [`eslint-plugin-react-hooks`](https://www.npmjs.com/package/eslint-plugin-react-hooks)`/exhaustive-deps` rule is also recommended.
