@@ -162,11 +162,20 @@ export const isStateSetterCalledWithDefaultValue = (setterRef, context) => {
   );
 };
 
-// TODO: This causes infinite recursion in some cases.
-// Maybe it walks *outside* the scope of the effect function?
-export const isPathBetween = (src, dest, context, scope) => {
-  const identifiers = collectIdentifiers(context, dest);
+export const isPathBetween = (
+  src,
+  dest,
+  context,
+  scope,
+  visited = new Set(),
+) => {
+  if (!dest || typeof dest !== "object" || visited.has(dest)) {
+    return false;
+  }
 
+  visited.add(dest);
+
+  const identifiers = collectIdentifiers(context, dest);
   if (identifiers.some((identifier) => identifier.name === src.name)) {
     return true;
   }
@@ -177,6 +186,8 @@ export const isPathBetween = (src, dest, context, scope) => {
     .some((variable) =>
       variable.defs
         .filter((def) => def.type === "Variable") // Could be e.g. `Parameter` if it's a function parameter in a Promise chain
-        .some((def) => isPathBetween(src, def.node.init, context, scope)),
+        .some((def) =>
+          isPathBetween(src, def.node.init, context, scope, visited),
+        ),
     );
 };
