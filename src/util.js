@@ -4,16 +4,14 @@ import { findVariable } from "eslint-utils";
 const traverse = (context, node, visit) => {
   visit(node);
 
-  context.sourceCode.visitorKeys[node.type].forEach((key) => {
-    const child = node[key];
-    if (Array.isArray(child)) {
-      child.forEach((childNode) => {
-        traverse(context, childNode, visit);
-      });
-    } else {
-      traverse(context, child, visit);
-    }
-  });
+  context.sourceCode.visitorKeys[node.type]
+    .map((key) => node[key])
+    // Some `visitorKeys` are optional.
+    // e.g. `IfStatement.alternate`
+    .filter((child) => child && typeof child === "object")
+    // `child` can be an array, like `CallExpression.arguments`
+    .flatMap((child) => child)
+    .forEach((child) => traverse(context, child, visit));
 };
 
 const collectIdentifiers = (context, rootNode) => {
