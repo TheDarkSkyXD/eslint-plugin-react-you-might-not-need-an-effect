@@ -12,11 +12,12 @@ import {
 } from "./util.js";
 
 export const name = "you-might-not-need-an-effect";
+
 export const rule = {
   meta: {
     type: "suggestion",
     docs: {
-      description: "Warn against unnecessary useEffect.",
+      description: "Warn against unnecessary React useEffect hooks.",
       url: "https://react.dev/learn/you-might-not-need-an-effect",
     },
     schema: [],
