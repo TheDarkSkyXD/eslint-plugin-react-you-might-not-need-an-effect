@@ -86,6 +86,9 @@ export const getEffectFnRefs = (context, node) => {
   }
 
   const effectFn = getEffectFn(node);
+  if (!effectFn) {
+    return null;
+  }
 
   const getRefs = (scope) =>
     scope.references.concat(

@@ -250,6 +250,17 @@ ruleTester.run(name + "/rule", rule, {
         }
       `,
     },
+    {
+      name: "Passing non-anonymous function to effect",
+      code: js`
+        function Form({ onClose }) {
+          const [name, setName] = useState();
+          const [isOpen, setIsOpen] = useState(true);
+
+          useEffect(onClose, [isOpen]);
+        }
+      `,
+    },
   ],
   invalid: [
     {
