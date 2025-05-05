@@ -4,7 +4,7 @@ ESLint rule to warn against [unnecessary React `useEffect`s](https://react.dev/l
 
 ## 🚀 Installation
 
-This plugin requires ESLint v7.0.0 or later.
+This plugin requires ESLint >= v7.0.0 and Node >= 14.
 
 ```bash
 npm install --save-dev eslint-plugin-react-you-might-not-need-an-effect
