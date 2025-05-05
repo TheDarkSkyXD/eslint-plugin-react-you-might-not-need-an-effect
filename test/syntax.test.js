@@ -173,15 +173,21 @@ ruleTester.run(name + "/syntax", rule, {
             useEffect(() => {
               setDoubleCount({ value: count.value * 2 });
             }, [count]);
-
-            return (
-              <div>
-                <p>Count: {count.value}</p>
-                <p>Double Count: {doubleCount.value}</p>
-              </div>
-            );
           }
         `,
+      errors: 2,
+    },
+    {
+      name: "Optional chaining and nullish coalescing",
+      code: js`
+        function DoubleCounter({ count }) {
+          const [doubleCount, setDoubleCount] = useState(0);
+
+          useEffect(() => {
+            setDoubleCount((count?.value ?? 1) * 2);
+          }, [count?.value]);
+        }
+      `,
       errors: 2,
     },
     {
