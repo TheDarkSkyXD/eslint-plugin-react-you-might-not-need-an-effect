@@ -37,6 +37,7 @@ export const rule = {
         "Avoid chaining state changes. When possible, update all relevant state simultaneously.",
 
       // Props warnings
+      // TODO: Warning for an effect that only uses props? Seems common. e.g. calls a prop in response to a prop change. Should live in the parent instead.
       avoidPassingStateToParent:
         "Avoid making parent components depend on a child's intermediate state. If the parent needs live updates, consider lifting state up.",
       avoidResettingStateFromProps:
@@ -64,6 +65,7 @@ export const rule = {
         return;
       }
 
+      // TODO: Could include when we reference our own local functions that are themselves pure/internal.
       const isInternalEffect = effectFnRefs
         .concat(depsRefs)
         .every(
