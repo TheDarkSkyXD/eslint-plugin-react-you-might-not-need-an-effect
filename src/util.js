@@ -164,7 +164,7 @@ export const isStateRef = (ref) =>
     (def) => def.type === "Variable" && isUseState(def.node),
   );
 
-export const isPropsRef = (ref) =>
+export const isPropRef = (ref) =>
   ref.resolved?.defs.some(
     (def) =>
       def.type === "Parameter" &&

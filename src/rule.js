@@ -3,7 +3,7 @@ import {
   getEffectFnRefs,
   getDepArrRefs,
   isStateSetterCalledWithDefaultValue,
-  isPropsRef,
+  isPropRef,
   isStateRef,
   isFnRef,
   getUseStateNode,
@@ -69,7 +69,7 @@ export const rule = {
         .every(
           (ref) =>
             isStateRef(ref) ||
-            isPropsRef(ref) ||
+            isPropRef(ref) ||
             isLocalRef(ref, context.sourceCode.getScope(effectFn)),
         );
 
@@ -83,7 +83,7 @@ export const rule = {
       const stateSetterRefs = effectFnRefs
         .filter((ref) => isFnRef(ref))
         .filter((ref) => isStateRef(ref));
-      const isPropUsedInDeps = depsRefs.some((ref) => isPropsRef(ref));
+      const isPropUsedInDeps = depsRefs.some((ref) => isPropRef(ref));
       const isEveryStateSetterCalledWithDefaultValue =
         stateSetterRefs.length > 0 &&
         stateSetterRefs.every((ref) =>
@@ -138,7 +138,7 @@ export const rule = {
           }
 
           // I think this is the only !isInternalEffect case we can reasonably warn about
-          if (isPropsRef(ref) && isDepUsedInArgs) {
+          if (isPropRef(ref) && isDepUsedInArgs) {
             context.report({
               node: callExpr.callee,
               messageId: "avoidPassingStateToParent",
