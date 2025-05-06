@@ -30,6 +30,40 @@ const collectIdentifiers = (context, rootNode) => {
   return identifiers;
 };
 
+// TODO: Could I use this for `isStateRef` and `isPropsRef`?
+// To catch intermediate variables there too and simplify the interface.
+// I would need to collect the states and props separately to pass to this.
+// NOTE: Still returns true if there's an impure def on the path.
+export const isPathBetween = (
+  src,
+  dest,
+  context,
+  scope,
+  visited = new Set(),
+) => {
+  if (!dest || typeof dest !== "object" || visited.has(dest)) {
+    return false;
+  }
+
+  visited.add(dest);
+
+  const identifiers = collectIdentifiers(context, dest);
+  if (identifiers.some((identifier) => identifier.name === src.name)) {
+    return true;
+  }
+
+  return identifiers
+    .map((identifier) => findVariable(scope, identifier))
+    .filter((variable) => variable)
+    .some((variable) =>
+      variable.defs
+        .filter((def) => def.type === "Variable") // Could be e.g. `Parameter` if it's a function parameter in a Promise chain
+        .some((def) =>
+          isPathBetween(src, def.node.init, context, scope, visited),
+        ),
+    );
+};
+
 export const isReactFunctionalComponent = (node) => {
   const isFunctionComponent = node.type === "FunctionDeclaration";
   const isArrowFunctionComponent =
@@ -125,7 +159,6 @@ export const isFnRef = (ref) =>
   // ref.identifier.parent will also be CallExpression when the ref is an argument, which we don't want
   ref.identifier.parent.callee === ref.identifier;
 
-// When would defs.length be > 1...? Shadowed variables?
 export const isStateRef = (ref) =>
   ref.resolved?.defs.some(
     (def) => def.type === "Variable" && isUseState(def.node),
@@ -160,34 +193,4 @@ export const isStateSetterCalledWithDefaultValue = (setterRef, context) => {
     context.sourceCode.getText(callExpr.arguments[0]) ===
     context.sourceCode.getText(useStateDefaultValue)
   );
-};
-
-export const isPathBetween = (
-  src,
-  dest,
-  context,
-  scope,
-  visited = new Set(),
-) => {
-  if (!dest || typeof dest !== "object" || visited.has(dest)) {
-    return false;
-  }
-
-  visited.add(dest);
-
-  const identifiers = collectIdentifiers(context, dest);
-  if (identifiers.some((identifier) => identifier.name === src.name)) {
-    return true;
-  }
-
-  return identifiers
-    .map((identifier) => findVariable(scope, identifier))
-    .filter((variable) => variable)
-    .some((variable) =>
-      variable.defs
-        .filter((def) => def.type === "Variable") // Could be e.g. `Parameter` if it's a function parameter in a Promise chain
-        .some((def) =>
-          isPathBetween(src, def.node.init, context, scope, visited),
-        ),
-    );
 };
