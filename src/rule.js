@@ -36,8 +36,9 @@ export const rule = {
       avoidChainingState:
         "Avoid chaining state changes. When possible, update all relevant state simultaneously.",
 
-      // Props warnings
-      // TODO: Warning for an effect that only uses props? Seems common. e.g. calls a prop in response to a prop change. Should live in the parent instead.
+      // Prop warnings
+      avoidManagingParentBehavior:
+        "Avoid managing parent behavior. Instead, lift this logic up to the parent component.",
       avoidPassingStateToParent:
         "Avoid making parent components depend on a child's intermediate state. If the parent needs live updates, consider lifting state up.",
       avoidResettingStateFromProps:
@@ -95,6 +96,16 @@ export const rule = {
         context.report({
           node: node,
           messageId: "avoidResettingStateFromProps",
+        });
+      }
+
+      if (
+        effectFnRefs.every((ref) => isPropRef(ref)) &&
+        depsRefs.every((ref) => isPropRef(ref))
+      ) {
+        context.report({
+          node: node,
+          messageId: "avoidManagingParentBehavior",
         });
       }
 

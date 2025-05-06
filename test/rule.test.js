@@ -391,6 +391,27 @@ ruleTester.run(name + "/rule", rule, {
         },
       ],
     },
+    {
+      name: "Calling prop in response to prop change",
+      code: js`
+        function Form({ isOpen, events }) {
+
+          useEffect(() => {
+            if (!isOpen) {
+              events.onClose();
+            }
+          }, [isOpen]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidInternalEffect",
+        },
+        {
+          messageId: "avoidManagingParentBehavior",
+        },
+      ],
+    },
     //  TODO: How to detect this though? Not sure it's discernable from legit synchronization effects
     // {
     //   name: "Using state to handle an event",
