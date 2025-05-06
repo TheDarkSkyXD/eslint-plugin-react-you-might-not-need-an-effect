@@ -62,7 +62,12 @@ export const rule = {
       const effectFnRefs = getEffectFnRefs(context, node);
       const depsRefs = getDepArrRefs(context, node);
 
-      if (!effectFn || !effectFnRefs || !depsRefs) {
+      if (
+        !effectFn ||
+        !effectFnRefs ||
+        !depsRefs ||
+        effectFnRefs.length === 0
+      ) {
         return;
       }
 
@@ -100,7 +105,6 @@ export const rule = {
       }
 
       if (
-        effectFnRefs.length > 0 &&
         effectFnRefs.every((ref) => isPropRef(ref)) &&
         depsRefs.every((ref) => isPropRef(ref))
       ) {

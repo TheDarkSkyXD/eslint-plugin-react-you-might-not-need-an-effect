@@ -5,6 +5,14 @@ const js = String.raw;
 ruleTester.run(name + "/rule", rule, {
   valid: [
     {
+      name: "Empty effect",
+      code: js`
+        function Component() {
+          useEffect(() => {}, []);
+        }
+      `,
+    },
+    {
       name: "Computed state from other state",
       code: js`
         function Form() {
