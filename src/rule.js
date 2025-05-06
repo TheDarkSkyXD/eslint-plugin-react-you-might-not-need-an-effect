@@ -80,14 +80,15 @@ export const rule = {
         });
       }
 
-      const fnRefs = effectFnRefs.filter((ref) => isFnRef(ref));
-
+      const stateSetterRefs = effectFnRefs
+        .filter((ref) => isFnRef(ref))
+        .filter((ref) => isStateRef(ref));
       const isPropUsedInDeps = depsRefs.some((ref) => isPropsRef(ref));
       const isEveryStateSetterCalledWithDefaultValue =
-        fnRefs.filter((ref) => isStateRef(ref)).length > 0 &&
-        fnRefs
-          .filter((ref) => isStateRef(ref))
-          .every((ref) => isStateSetterCalledWithDefaultValue(ref, context));
+        stateSetterRefs.length > 0 &&
+        stateSetterRefs.every((ref) =>
+          isStateSetterCalledWithDefaultValue(ref, context),
+        );
       if (isPropUsedInDeps && isEveryStateSetterCalledWithDefaultValue) {
         context.report({
           node: node,
@@ -95,53 +96,55 @@ export const rule = {
         });
       }
 
-      fnRefs.forEach((ref) => {
-        const callExpr = ref.identifier.parent;
-        const isDepUsedInArgs = callExpr.arguments.some((arg) =>
-          depsRefs.some((depRef) =>
-            isPathBetween(
-              depRef.identifier,
-              arg,
-              context,
-              context.sourceCode.getScope(effectFn),
+      effectFnRefs
+        .filter((ref) => isFnRef(ref))
+        .forEach((ref) => {
+          const callExpr = ref.identifier.parent;
+          const isDepUsedInArgs = callExpr.arguments.some((arg) =>
+            depsRefs.some((depRef) =>
+              isPathBetween(
+                depRef.identifier,
+                arg,
+                context,
+                context.sourceCode.getScope(effectFn),
+              ),
             ),
-          ),
-        );
+          );
 
-        if (isInternalEffect) {
-          if (isStateRef(ref)) {
-            const useStateNode = getUseStateNode(ref);
-            if (isDepUsedInArgs) {
-              context.report({
-                node: callExpr.callee,
-                messageId: "avoidDerivedState",
-                data: { state: useStateNode.id.elements[0].name },
-              });
-            } else if (depsRefs.length > 0) {
-              // TODO: Is this a correct assumption by now?
-              // Should I flag this whenever the call expr argument is *only* the state?
-              // Like this seems more appropriate than "derived" state.
-              context.report({
-                node: callExpr.callee,
-                messageId: "avoidChainingState",
-              });
-            } else {
-              context.report({
-                node: callExpr.callee,
-                messageId: "avoidInitializingState",
-              });
+          if (isInternalEffect) {
+            if (isStateRef(ref)) {
+              const useStateNode = getUseStateNode(ref);
+              if (isDepUsedInArgs) {
+                context.report({
+                  node: callExpr.callee,
+                  messageId: "avoidDerivedState",
+                  data: { state: useStateNode.id.elements[0].name },
+                });
+              } else if (depsRefs.length > 0) {
+                // TODO: Is this a correct assumption by now?
+                // Should I flag this whenever the call expr argument is *only* the state?
+                // Like this seems more appropriate than "derived" state.
+                context.report({
+                  node: callExpr.callee,
+                  messageId: "avoidChainingState",
+                });
+              } else {
+                context.report({
+                  node: callExpr.callee,
+                  messageId: "avoidInitializingState",
+                });
+              }
             }
           }
-        }
 
-        // I think this is the only !isInternalEffect case we can reasonably warn about
-        if (isPropsRef(ref) && isDepUsedInArgs) {
-          context.report({
-            node: callExpr.callee,
-            messageId: "avoidPassingStateToParent",
-          });
-        }
-      });
+          // I think this is the only !isInternalEffect case we can reasonably warn about
+          if (isPropsRef(ref) && isDepUsedInArgs) {
+            context.report({
+              node: callExpr.callee,
+              messageId: "avoidPassingStateToParent",
+            });
+          }
+        });
     },
   }),
 };
