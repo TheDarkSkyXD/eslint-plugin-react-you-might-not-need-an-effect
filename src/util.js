@@ -125,7 +125,7 @@ export const isFnRef = (ref) =>
   // ref.identifier.parent will also be CallExpression when the ref is an argument, which we don't want
   ref.identifier.parent.callee === ref.identifier;
 
-// When would defs.length be > 0...? Shadowed variables?
+// When would defs.length be > 1...? Shadowed variables?
 export const isStateRef = (ref) =>
   ref.resolved?.defs.some(
     (def) => def.type === "Variable" && isUseState(def.node),
