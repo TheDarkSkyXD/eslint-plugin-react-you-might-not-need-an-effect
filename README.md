@@ -54,13 +54,16 @@ Warns when an effect is likely unnecessary, such as when it:
 - Derives or chains state updates
 - Initializes state
 - Resets all state when props change
-- Passes data to the parent component
+- Passes data to the parent
+- Manages parent behavior
 
-It does not detect when an effect:
+While the effect may be unnecessary, we cannot reliably warn when it:
 
-- Uses state to handle events
+- Uses internal state to handle events
+- Uses external state
+- Calls external functions
 
-Some cases are complex and nuanced, and difficult to reliably detect. This plugin attempts to minimize false positives and accepts inevitable false negatives. But please open an issue if you experience either.
+Some cases are complex and nuanced. This plugin attempts to minimize false positives and accepts inevitable false negatives. But please open an issue if you experience either!
 
 ## 📖 Learn More
 
