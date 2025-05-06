@@ -100,6 +100,7 @@ export const rule = {
       }
 
       if (
+        effectFnRefs.length > 0 &&
         effectFnRefs.every((ref) => isPropRef(ref)) &&
         depsRefs.every((ref) => isPropRef(ref))
       ) {
