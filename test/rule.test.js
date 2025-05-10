@@ -1,8 +1,8 @@
-import { ruleTester } from "./rule-tester.js";
+import { NormalizedWhitespaceJsxRuleTester } from "./rule-tester.js";
 import { name, rule } from "../src/rule.js";
 const js = String.raw;
 
-ruleTester.run(name + "/rule", rule, {
+new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
   valid: [
     {
       name: "Empty effect",

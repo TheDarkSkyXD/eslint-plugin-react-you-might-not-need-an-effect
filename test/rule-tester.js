@@ -6,9 +6,18 @@ import { RuleTester } from "eslint";
 // Not sure how hacky this is.
 // Seems like it might be standard practice for ESLint plugins?
 // Even the TS ESLint plugin mentions that it does not concern itself with formatting.
-class NormalizedWhitespaceRuleTester extends RuleTester {
+export class NormalizedWhitespaceJsxRuleTester extends RuleTester {
   constructor(options) {
-    super(options);
+    super({
+      ...options,
+      languageOptions: {
+        parserOptions: {
+          ecmaFeatures: {
+            jsx: true,
+          },
+        },
+      },
+    });
   }
 
   run(ruleName, rule, tests) {
@@ -35,13 +44,3 @@ class NormalizedWhitespaceRuleTester extends RuleTester {
 
 const normalizeWhitespace = (str) =>
   typeof str === "string" ? str.replace(/\s+/g, " ").trim() : str;
-
-export const ruleTester = new NormalizedWhitespaceRuleTester({
-  languageOptions: {
-    parserOptions: {
-      ecmaFeatures: {
-        jsx: true,
-      },
-    },
-  },
-});
