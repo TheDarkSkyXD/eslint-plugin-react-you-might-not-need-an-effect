@@ -318,6 +318,31 @@ ruleTester.run(name + "/rule", rule, {
       ],
     },
     {
+      name: "Deriving state from other state intermediate variables from outside effect",
+      code: js`
+        function Form() {
+          const [firstName, setFirstName] = useState('Taylor');
+          const [lastName, setLastName] = useState('Swift');
+          const name = firstName + ' ' + lastName;
+
+          const [fullName, setFullName] = useState('');
+          useEffect(() => {
+            const prefixedName = 'Dr. ' + name;
+            setFullName(prefixedName) 
+          }, [firstName, lastName]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidInternalEffect",
+        },
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
+        },
+      ],
+    },
+    {
       name: "Deriving state from props",
       code: js`
         function Form({ firstName, lastName }) {
@@ -501,7 +526,7 @@ ruleTester.run(name + "/rule", rule, {
       ],
     },
     {
-      name: "Deriving conditional state",
+      name: "Conditionally reacting to state to set other state",
       code: js`
         function Form() {
           const [error, setError] = useState();
@@ -547,6 +572,7 @@ ruleTester.run(name + "/rule", rule, {
       ],
     },
     {
+      // NOTE: Assumes the function is pure because it's called on state
       name: "Deriving state from other state via function",
       code: js`
         function DoubleList() {

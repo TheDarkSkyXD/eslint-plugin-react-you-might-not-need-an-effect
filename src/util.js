@@ -33,7 +33,8 @@ const collectIdentifiers = (context, rootNode) => {
 // TODO: Could I use this for `isStateRef` and `isPropsRef`?
 // To catch intermediate variables there too and simplify the interface.
 // I would need to collect the states and props separately to pass to this.
-// NOTE: Still returns true if there's an impure def on the path.
+// Or maybe not. Maybe I walk up the derivation path and *also* check if the def is a useState or prop.
+// NOTE:: Still returns true if there's an impure def on the path.
 export const isPathBetween = (
   src,
   dest,
@@ -175,6 +176,8 @@ export const isPropRef = (ref) =>
       ),
   );
 
+// TODO: If I adapt isPathBetween to detect state and prop derived refs,
+// that would cover this case (because the local variable would be on the derivation path)
 export const isLocalRef = (ref, effectFnScope) => {
   return effectFnScope.variables.some(
     (variable) => variable.defs === ref.resolved?.defs,
