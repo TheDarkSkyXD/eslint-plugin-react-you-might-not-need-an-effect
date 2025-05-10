@@ -23,6 +23,7 @@ export const rule = {
     },
     schema: [],
     // TODO: Could include more info in messages, like the relevant node
+    // TODO: Possible to detect and warn when `useSyncExternalStore` should be preferred?
     messages: {
       // Overall warning
       avoidInternalEffect:
