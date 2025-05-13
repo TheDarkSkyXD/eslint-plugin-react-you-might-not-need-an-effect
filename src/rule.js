@@ -133,6 +133,9 @@ export const rule = {
           if (isInternalEffect) {
             if (isStateRef(ref)) {
               const useStateNode = getUseStateNode(ref);
+              // TODO: We may be able to reliably detect this even when the effect isn't entirely internal?
+              // All that matters is the path to the setter's args is internal.
+              // Consider large effects that may combine technically separate effects.
               if (isDepUsedInArgs) {
                 context.report({
                   node: callExpr.callee,
