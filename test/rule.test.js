@@ -269,6 +269,7 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
         }
       `,
     },
+    // TODO: Test case for called inside cleanup function? Is that legit?
   ],
   invalid: [
     {
@@ -595,6 +596,7 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
       ],
     },
     {
+      // NOTE: Assumes the function is pure because it's called on state
       name: "Mutating state in effect",
       code: js`
         function DoubleList() {
