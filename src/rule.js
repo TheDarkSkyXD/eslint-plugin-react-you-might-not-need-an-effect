@@ -117,6 +117,8 @@ export const rule = {
 
       effectFnRefs
         .filter((ref) => isFnRef(ref))
+        // TODO: Eagerly filter out everything but state and prop refs.
+        // No point in analyzing their args (?).
         .forEach((ref) => {
           const callExpr = ref.identifier.parent;
           const isDepUsedInArgs = callExpr.arguments.some((arg) =>

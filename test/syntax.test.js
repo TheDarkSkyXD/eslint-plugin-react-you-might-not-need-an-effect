@@ -62,6 +62,31 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/syntax", rule, {
         }
       `,
     },
+    {
+      name: "Destructured array skips element in arrow function params",
+      code: js`
+        function FilteredPosts({ posts }) {
+          const [filteredPosts, setFilteredPosts] = useState([]);
+
+          useEffect(() => {
+            // Resulting AST node looks like:
+            // {
+            //   "type": "ArrayPattern",
+            //   "elements": [
+            //     null, <-- Must handle this!
+            //     {
+            //       "type": "Identifier",
+            //       "name": "second"
+            //     }
+            //   ]
+            // }
+            setFilteredPosts(
+              posts.filter(([, value]) => value !== "")
+            );
+          }, [posts]);
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -205,6 +230,20 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/syntax", rule, {
           `,
       }),
       errors: 4,
+    },
+    {
+      name: "Destructured array skips element in variable declaration",
+      code: js`
+        function SecondPost({ posts }) {
+          const [secondPost, setSecondPost] = useState();
+
+          useEffect(() => {
+            const [, second] = posts;
+            setSecondPost(second);
+          }, [posts]);
+        }
+      `,
+      errors: 2,
     },
   ],
 });

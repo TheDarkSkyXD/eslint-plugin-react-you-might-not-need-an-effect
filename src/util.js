@@ -12,13 +12,13 @@ const traverse = (context, node, visit, visited = new Set()) => {
   (context.sourceCode.visitorKeys[node.type] || [])
     .map((key) => node[key])
     // Some `visitorKeys` are optional, e.g. `IfStatement.alternate`.
-    .filter((child) => child)
-    // `child` can be an array, like `CallExpression.arguments`
+    .filter(Boolean)
+    // Can be an array, like `CallExpression.arguments`
     .flatMap((child) => (Array.isArray(child) ? child : [child]))
-    // Confirm it's a valid AST node
-    // TODO: Not sure why it wouldn't be? But it does happen.
-    // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/1
-    .filter((child) => typeof child?.type === "string")
+    // Can rarely be `null`, e.g. `ArrayPattern.elements[1]` when an element is skipped - `const [a, , b] = arr`
+    .filter(Boolean)
+    // Check it's a valid AST node
+    .filter((child) => typeof child.type === "string")
     .forEach((child) => traverse(context, child, visit, visited));
 };
 
