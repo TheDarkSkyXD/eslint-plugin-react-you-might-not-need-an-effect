@@ -15,8 +15,10 @@ const traverse = (context, node, visit, visited = new Set()) => {
     .filter((child) => child)
     // `child` can be an array, like `CallExpression.arguments`
     .flatMap((child) => (Array.isArray(child) ? child : [child]))
-    // Confirm it's a valid AST node (not sure why it wouldn't be?)
-    .filter((child) => typeof child.type === "string")
+    // Confirm it's a valid AST node
+    // TODO: Not sure why it wouldn't be? But it does happen.
+    // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/1
+    .filter((child) => typeof child?.type === "string")
     .forEach((child) => traverse(context, child, visit, visited));
 };
 
