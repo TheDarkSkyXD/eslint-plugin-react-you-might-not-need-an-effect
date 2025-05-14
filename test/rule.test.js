@@ -66,10 +66,7 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
       `,
     },
     {
-      // Sometimes the derived state could be computed during render, but not always.
-      // e.g. if something else also modifies the state.
-      // Is that a reliable difference? Can we still warn about it if this is the only call to the setter?
-      name: "Deriving state from library state changes that may not offer a callback",
+      name: "Deriving state from external state change that may not offer a callback, with multiple calls to setter",
       code: js`
         function Feed() {
           const { data: posts } = useQuery('/posts');
@@ -684,6 +681,21 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
           data: { state: "fullName" },
         },
       ],
+    },
+    {
+      name: "Deriving state from external state changes, with single call to setter",
+      code: js`
+        function Feed() {
+          const { data: posts } = useQuery('/posts');
+          const [selectedPost, setSelectedPost] = useState();
+
+          useEffect(() => {
+            // This is the only place that modifies the state,
+            // thus it could be computed during render
+            setSelectedPost(posts[0]);
+          }, [posts]);
+        }
+      `,
     },
   ],
 });
