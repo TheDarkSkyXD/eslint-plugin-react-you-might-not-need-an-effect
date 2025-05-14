@@ -139,6 +139,8 @@ export const rule = {
               // TODO: We may be able to reliably detect this even when the effect isn't entirely internal?
               // All that matters is the path to the setter's args is internal.
               // Consider large effects that may combine technically separate effects.
+              // However I think it's still legit if it's derived from external state,
+              // and the setter is called more than just in this effect.
               if (isDepUsedInArgs) {
                 context.report({
                   node: callExpr.callee,
