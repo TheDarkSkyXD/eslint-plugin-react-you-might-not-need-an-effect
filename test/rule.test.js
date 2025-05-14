@@ -496,6 +496,7 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
         {
           messageId: "avoidInternalEffect",
         },
+        // TODO: Surely there's a more specific error?
       ],
     },
     {
