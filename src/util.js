@@ -67,39 +67,28 @@ export const isPathBetween = (
     );
 };
 
-export const isReactFunctionalComponent = (node) => {
-  const isFunctionComponent = node.type === "FunctionDeclaration";
-  const isArrowFunctionComponent =
-    node.type === "VariableDeclarator" &&
-    node.init.type === "ArrowFunctionExpression";
-  return (
-    (isFunctionComponent || isArrowFunctionComponent) &&
-    node.id.type === "Identifier" &&
-    node.id.name[0].toUpperCase() === node.id.name[0]
-  );
-};
+export const isReactFunctionalComponent = (node) =>
+  (node.type === "FunctionDeclaration" ||
+    (node.type === "VariableDeclarator" &&
+      node.init.type === "ArrowFunctionExpression")) &&
+  node.id.type === "Identifier" &&
+  node.id.name[0].toUpperCase() === node.id.name[0];
 
-export const isUseState = (node) => {
-  return (
-    node.init &&
-    node.init.type === "CallExpression" &&
-    node.init.callee.name === "useState" &&
-    node.id.type === "ArrayPattern" &&
-    node.id.elements.length === 2 &&
-    node.id.elements.every((el) => el.type === "Identifier")
-  );
-};
+export const isUseState = (node) =>
+  node.init &&
+  node.init.type === "CallExpression" &&
+  node.init.callee.name === "useState" &&
+  node.id.type === "ArrayPattern" &&
+  node.id.elements.length === 2 &&
+  node.id.elements.every((el) => el.type === "Identifier");
 
-export const isUseEffect = (node) => {
-  return (
-    (node.type === "CallExpression" &&
-      node.callee.type === "Identifier" &&
-      node.callee.name === "useEffect") ||
-    (node.callee.type === "MemberExpression" &&
-      node.callee.object.name === "React" &&
-      node.callee.property.name === "useEffect")
-  );
-};
+export const isUseEffect = (node) =>
+  (node.type === "CallExpression" &&
+    node.callee.type === "Identifier" &&
+    node.callee.name === "useEffect") ||
+  (node.callee.type === "MemberExpression" &&
+    node.callee.object.name === "React" &&
+    node.callee.property.name === "useEffect");
 
 export const getEffectFn = (node) => {
   if (!isUseEffect(node) || node.arguments.length < 1) {
