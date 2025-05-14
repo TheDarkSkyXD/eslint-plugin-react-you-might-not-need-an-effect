@@ -66,6 +66,32 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
       `,
     },
     {
+      // Sometimes the derived state could be computed during render, but not always.
+      // e.g. if something else also modifies the state.
+      // Is that a reliable difference? Can we still warn about it if this is the only call to the setter?
+      name: "Deriving state from library state changes that may not offer a callback",
+      code: js`
+        function Feed() {
+          const { data: posts } = useQuery('/posts');
+          const [selectedPost, setSelectedPost] = useState();
+
+          useEffect(() => {
+            setSelectedPost(posts[0]);
+          }, [posts]);
+
+          return (
+            <div>
+              {posts.map((post) => (
+                <div key={post.id} onClick={() => setSelectedPost(post)}>
+                  {post.title}
+                </div>
+              ))}
+            </div>
+          )
+        }
+      `,
+    },
+    {
       name: "Fetching external state on mount",
       code: js`
         function Form() {
@@ -267,24 +293,6 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
           const [isOpen, setIsOpen] = useState(true);
 
           useEffect(onClose, [isOpen]);
-        }
-      `,
-    },
-    {
-      // TODO: Hmmm... is this generally valid?
-      // This contrived example could be computed during render.
-      // But maybe not always the case.
-      name: "Combining internal and external state",
-      code: js`
-        function Posts() {
-          const existingPosts = useQuery('/posts');
-          const [newPost, setNewPost] = useState();
-          const [posts, setPosts] = useState();
-
-          useEffect(() => {
-            const allPosts = [...existingPosts, newPost];
-            setPosts(allPosts);
-          }, [existingPosts, newPost]);
         }
       `,
     },
