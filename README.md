@@ -6,8 +6,16 @@ ESLint plugin to catch [unnecessary React `useEffect`s](https://react.dev/learn/
 
 This plugin requires ESLint >= v7.0.0 and Node >= 14.
 
+**NPM**:
+
 ```bash
 npm install --save-dev eslint-plugin-react-you-might-not-need-an-effect
+```
+
+**Yarn**:
+
+```bash
+yarn add -D eslint-plugin-react-you-might-not-need-an-effect
 ```
 
 ## 🔧 Usage
