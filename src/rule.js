@@ -99,6 +99,7 @@ export const rule = {
           isStateSetterCalledWithDefaultValue(ref, context),
         );
       if (isPropUsedInDeps && isEveryStateSetterCalledWithDefaultValue) {
+        // TODO: Needs to check for useStates that aren't referenced in the effect
         context.report({
           node: node,
           messageId: "avoidResettingStateFromProps",
@@ -144,6 +145,7 @@ export const rule = {
                   messageId: "avoidDerivedState",
                   data: { state: useStateNode.id.elements[0].name },
                 });
+                // TODO: If we implement this above, this must check that all deps are internal (right now that's implied)
               } else if (depsRefs.length > 0) {
                 // TODO: Is this a correct assumption by now?
                 // Should I flag this whenever the call expr argument is *only* the state?
