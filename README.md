@@ -56,7 +56,7 @@ This plugin assumes that your effects receive correct dependencies. Thus the [`e
 
 ## 🔎 Rule: `you-might-not-need-an-effect`
 
-Warns when an effect is likely unnecessary, such as when it:
+Determines when an effect is likely unnecessary, such as when it:
 
 - Only uses internal state or props
 - Derives or chains state updates
@@ -65,13 +65,15 @@ Warns when an effect is likely unnecessary, such as when it:
 - Passes data to the parent
 - Manages parent behavior
 
-While the effect may be unnecessary, we cannot reliably warn when it:
+When possible, also suggests the more idiomatic pattern.
+
+While the effect may be unnecessary, we cannot reliably determine that when it:
 
 - Uses internal state to handle events
 - Uses external state
 - Calls external functions
 
-Some cases are complex and nuanced. This plugin attempts to minimize false positives and accepts inevitable false negatives. But please open an issue if you experience either!
+This plugin attempts to minimize false positives and accepts inevitable false negatives. But the ways to (mis)use an effect are practically endless, so please open an issue if you experience either in the real world!
 
 ## 📖 Learn More
 
