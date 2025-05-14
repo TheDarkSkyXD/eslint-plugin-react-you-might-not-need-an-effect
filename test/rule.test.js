@@ -2,6 +2,7 @@ import { NormalizedWhitespaceJsxRuleTester } from "./rule-tester.js";
 import { name, rule } from "../src/rule.js";
 const js = String.raw;
 
+// TODO: Figure out grouping for tests for readability
 new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
   valid: [
     {
@@ -269,6 +270,24 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
         }
       `,
     },
+    {
+      // TODO: Hmmm... is this generally valid?
+      // This contrived example could be computed during render.
+      // But maybe not always the case.
+      name: "Combining internal and external state",
+      code: js`
+        function Posts() {
+          const existingPosts = useQuery('/posts');
+          const [newPost, setNewPost] = useState();
+          const [posts, setPosts] = useState();
+
+          useEffect(() => {
+            const allPosts = [...existingPosts, newPost];
+            setPosts(allPosts);
+          }, [existingPosts, newPost]);
+        }
+      `,
+    },
     // TODO: Test case for called inside cleanup function? Is that legit?
   ],
   invalid: [
@@ -294,7 +313,7 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
       ],
     },
     {
-      name: "Deriving state from other state intermediate variables",
+      name: "Deriving state from other state intermediate variables with literal",
       code: js`
         function Form() {
           const [firstName, setFirstName] = useState('Taylor');
@@ -361,30 +380,6 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
         {
           messageId: "avoidDerivedState",
           data: { state: "fullName" },
-        },
-      ],
-    },
-    {
-      // React docs recommend to first update state in render instead of an effect.
-      // But then continue on to say that usually you can avoid the sync entirely by
-      // more wisely choosing your state. So we'll just always warn about chained state.
-      name: "Syncing prop changes to internal state",
-      code: js`
-        function List({ items }) {
-          const [isReverse, setIsReverse] = useState(false);
-          const [selection, setSelection] = useState(items[0]);
-
-          useEffect(() => {
-            setSelection(null);
-          }, [items]);
-        }
-      `,
-      errors: [
-        {
-          messageId: "avoidInternalEffect",
-        },
-        {
-          messageId: "avoidChainingState",
         },
       ],
     },
@@ -499,6 +494,51 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
       ],
     },
     {
+      // React docs recommend to first update state in render instead of an effect.
+      // But then continue on to say that usually you can avoid the sync entirely by
+      // more wisely choosing your state. So we'll just always warn about chained state.
+      name: "Syncing prop changes to internal state",
+      code: js`
+        function List({ items }) {
+          const [isReverse, setIsReverse] = useState(false);
+          const [selection, setSelection] = useState(items[0]);
+
+          useEffect(() => {
+            setSelection(null);
+          }, [items]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidInternalEffect",
+        },
+        {
+          messageId: "avoidChainingState",
+        },
+      ],
+    },
+    {
+      name: "Resetting some state when a prop changes",
+      code: js`
+        function ProfilePage({ userId }) {
+          const [user, setUser] = useState(null);
+          const [comment, setComment] = useState('type something');
+
+          useEffect(() => {
+            setUser(null);
+          }, [userId]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidInternalEffect",
+        },
+        {
+          messageId: "avoidChainingState",
+        },
+      ],
+    },
+    {
       name: "Resetting all state when a prop changes",
       code: js`
         function ProfilePage({ userId }) {
@@ -550,6 +590,7 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
       ],
     },
     {
+      // NOTE: Assumes the function is pure because it's called on state
       name: "Deriving state from props via function",
       code: js`
         function DoubleList({ list }) {
@@ -611,6 +652,28 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
       errors: [
         {
           messageId: "avoidInternalEffect",
+        },
+      ],
+    },
+    {
+      name: "Derived state in larger, otherwise legit effect",
+      code: js`
+        function Form() {
+          const [firstName, setFirstName] = useState('Taylor');
+          const [lastName, setLastName] = useState('Swift');
+
+          const [fullName, setFullName] = useState('');
+          useEffect(() => {
+            const name = firstName + ' ' + lastName;
+            setFullName(name);
+            console.log(name);
+          }, [firstName, lastName]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
         },
       ],
     },

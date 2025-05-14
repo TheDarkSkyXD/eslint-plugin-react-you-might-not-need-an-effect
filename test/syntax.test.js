@@ -2,6 +2,7 @@ import { NormalizedWhitespaceJsxRuleTester } from "./rule-tester.js";
 import { name, rule } from "../src/rule.js";
 const js = String.raw;
 
+// TODO: Should maybe do away with this... it helps writing but not readable
 const code = ({
   componentDeclaration = js`const DoubleCounter = () =>`,
   effectBody = js`setDoubleCount(count * 2)`,
