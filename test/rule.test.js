@@ -697,6 +697,12 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
           }, [posts]);
         }
       `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "selectedPost" },
+        },
+      ],
     },
   ],
 });

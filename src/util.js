@@ -22,7 +22,7 @@ const traverse = (context, node, visit, visited = new Set()) => {
     .forEach((child) => traverse(context, child, visit, visited));
 };
 
-const collectIdentifiers = (context, rootNode) => {
+const getDownstreamIdentifiers = (context, rootNode) => {
   const identifiers = [];
   traverse(context, rootNode, (node) => {
     if (node.type === "Identifier") {
@@ -32,39 +32,32 @@ const collectIdentifiers = (context, rootNode) => {
   return identifiers;
 };
 
-// TODO: Could I use this for `isStateRef` and `isPropsRef`?
-// To catch intermediate variables there too and simplify the interface.
-// I would need to collect the states and props separately to pass to this.
-// Or maybe not. Maybe I walk up the derivation path and *also* check if the def is a useState or prop.
-// NOTE:: Still returns true if there's an impure def on the path.
-export const isPathBetween = (
-  src,
-  dest,
+export const getUpstreamVariables = (
+  node,
   context,
   scope,
   visited = new Set(),
 ) => {
-  if (!dest || typeof dest !== "object" || visited.has(dest)) {
-    return false;
+  if (!node || typeof node !== "object" || visited.has(node)) {
+    return [];
   }
 
-  visited.add(dest);
+  visited.add(node);
 
-  const identifiers = collectIdentifiers(context, dest);
-  if (identifiers.some((identifier) => identifier.name === src.name)) {
-    return true;
-  }
-
-  return identifiers
-    .map((identifier) => findVariable(scope, identifier))
-    .filter((variable) => variable)
-    .some((variable) =>
-      variable.defs
-        .filter((def) => def.type === "Variable") // Could be e.g. `Parameter` if it's a function parameter in a Promise chain
-        .some((def) =>
-          isPathBetween(src, def.node.init, context, scope, visited),
-        ),
-    );
+  return (
+    getDownstreamIdentifiers(context, node)
+      .map((identifier) => findVariable(scope, identifier))
+      // Implicit base case: Uses variable(s) declared outside this scope
+      .filter(Boolean)
+      .flatMap((variable) =>
+        variable.defs
+          .filter((def) => def.type === "Variable") // Could be e.g. `Parameter` if it's a function parameter in a Promise chain
+          .flatMap((def) =>
+            getUpstreamVariables(def.node.init, context, scope, visited),
+          )
+          .concat(variable),
+      )
+  );
 };
 
 export const isReactFunctionalComponent = (node) =>
@@ -135,7 +128,7 @@ export function getDepArrRefs(context, node) {
     return null;
   }
 
-  const identifiers = collectIdentifiers(context, depsArr);
+  const identifiers = getDownstreamIdentifiers(context, depsArr);
 
   const scope = context.sourceCode.getScope(node);
   return identifiers

@@ -7,7 +7,7 @@ import {
   isStateRef,
   isFnRef,
   getUseStateNode,
-  isPathBetween,
+  getUpstreamVariables,
   isLocalRef,
   getEffectFn,
 } from "./util.js";
@@ -122,13 +122,24 @@ export const rule = {
         // No point in analyzing their args (?).
         .forEach((ref) => {
           const callExpr = ref.identifier.parent;
-          const isDepUsedInArgs = callExpr.arguments.some((arg) =>
-            depsRefs.some((depRef) =>
-              isPathBetween(
-                depRef.identifier,
-                arg,
-                context,
-                context.sourceCode.getScope(effectFn),
+          // TODO: Seems these should be `every`, not `some`?
+          // But then we need to skip intermediate variables
+          // and only consider terminal/leaf ones.
+          // (Beware of [].every() === true)
+          // For now this shortcoming is protected by the isInternalEffect check though.
+          const isDepInArgs = callExpr.arguments.some((arg) =>
+            getUpstreamVariables(
+              arg,
+              context,
+              context.sourceCode.getScope(effectFn),
+            ).some((variable) =>
+              // TODO: I think we should check that the variable is state or props?
+              // Currently this will be true even if the state is derived from external state, which can be valid.
+              // But it's protected by the isInternalEffect check.
+              // Does it matter whether it's in the deps array?
+              // I guess for the "passing data to parent" case, we can warn even when state is external, so this is correct.
+              depsRefs.some(
+                (depRef) => depRef.identifier.name === variable.name,
               ),
             ),
           );
@@ -141,7 +152,7 @@ export const rule = {
               // Consider large effects that may combine technically separate effects.
               // However I think it's still legit if it's derived from external state,
               // and the setter is called more than just in this effect.
-              if (isDepUsedInArgs) {
+              if (isDepInArgs) {
                 context.report({
                   node: callExpr.callee,
                   messageId: "avoidDerivedState",
@@ -166,7 +177,7 @@ export const rule = {
           }
 
           // I think this is the only !isInternalEffect case we can reasonably warn about
-          if (isPropRef(ref) && isDepUsedInArgs) {
+          if (isPropRef(ref) && isDepInArgs) {
             context.report({
               node: callExpr.callee,
               messageId: "avoidPassingStateToParent",
