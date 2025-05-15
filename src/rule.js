@@ -112,17 +112,8 @@ export const rule = {
         .filter((ref) => isFnRef(ref) && (isStateRef(ref) || isPropRef(ref)))
         .forEach((ref) => {
           const callExpr = ref.identifier.parent;
-          // TODO: Seems these should be `every`, not `some`?
-          // But then we need to skip intermediate variables
-          // and only consider terminal/leaf ones.
-          // (Beware of [].every() === true)
-          // For now this shortcoming is protected by the isInternalEffect check though.
           const isDepInArgs = callExpr.arguments.some((arg) =>
             getUpstreamVariables(context, arg).some((variable) =>
-              // TODO: I think we should check that the variable is state or props?
-              // Currently this will be true even if the state is derived from external state, which can be valid.
-              // But it's protected by the isInternalEffect check.
-              // Does it matter whether it's in the deps array?
               depsRefs.some(
                 (depRef) => depRef.identifier.name === variable.name,
               ),
@@ -131,14 +122,11 @@ export const rule = {
 
           if (isInternalEffect) {
             if (isStateRef(ref)) {
-              console.log("ref", ref);
-              // Either this is the only call to the state setter, or the args are all internal
               const useStateNode = getUseStateNode(ref);
-              // TODO: We may be able to reliably detect this even when the effect isn't entirely internal?
-              // All that matters is the path to the setter's args is internal.
-              // Consider large effects that may combine technically separate effects.
-              // However I think it's still legit if it's derived from external state,
-              // and the setter is called more than just in this effect.
+              // TODO: Should be: Either this is the only call to the state setter, or the args are all internal (including intermediates).
+              // Needs to be outside `isInternalEffect` check for the former.
+              // Does it matter whether the args are in the deps array?
+              // I guess so, to differentiate between derived and chain state updates.
               if (isDepInArgs) {
                 context.report({
                   node: callExpr.callee,
