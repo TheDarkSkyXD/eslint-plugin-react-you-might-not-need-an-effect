@@ -106,10 +106,7 @@ export const rule = {
         });
       }
 
-      if (
-        effectFnRefs.every((ref) => isPropRef(ref)) &&
-        depsRefs.every((ref) => isPropRef(ref))
-      ) {
+      if (effectFnRefs.concat(depsRefs).every((ref) => isPropRef(ref))) {
         context.report({
           node: node,
           messageId: "avoidManagingParentBehavior",
@@ -117,9 +114,9 @@ export const rule = {
       }
 
       effectFnRefs
-        .filter((ref) => isFnRef(ref))
-        // TODO: Eagerly filter out everything but state and prop refs.
-        // No point in analyzing their args (?).
+        // Eagerly filter out everything but state setters and prop callbacks;
+        // We can't reliably analyze external functions.
+        .filter((ref) => isFnRef(ref) && (isStateRef(ref) || isPropRef(ref)))
         .forEach((ref) => {
           const callExpr = ref.identifier.parent;
           // TODO: Seems these should be `every`, not `some`?
