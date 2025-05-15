@@ -737,5 +737,53 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
         },
       ],
     },
+    {
+      name: "Deriving state with state setter callback",
+      code: js`
+        function CountAccumulator({ count }) {
+          const [total, setTotal] = useState(count);
+
+          useEffect(() => {
+            setTotal((prev) => prev + count);
+          }, [count]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidInternalEffect",
+        },
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "total" },
+        },
+      ],
+    },
+    {
+      name: "Partially updating complex state object with derived state",
+      code: js`
+        function Form({ firstName, lastName }) {
+          const [formData, setFormData] = useState({
+            title: 'Dr. ',
+            fullName: '',
+          });
+
+          useEffect(() => {
+            setFormData({
+              ...prev,
+              fullName: firstName + ' ' + lastName,
+            });
+          }, [firstName, lastName]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidInternalEffect",
+        },
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "formData" },
+        },
+      ],
+    },
   ],
 });
