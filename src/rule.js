@@ -1,3 +1,4 @@
+import { isFnRef, getUpstreamVariables } from "./util/ast.js";
 import {
   isUseEffect,
   getEffectFnRefs,
@@ -5,11 +6,8 @@ import {
   isStateSetterCalledWithDefaultValue,
   isPropRef,
   isStateRef,
-  isFnRef,
   getUseStateNode,
-  getUpstreamVariables,
-  getEffectFn,
-} from "./util.js";
+} from "./util/react.js";
 
 export const name = "you-might-not-need-an-effect";
 
