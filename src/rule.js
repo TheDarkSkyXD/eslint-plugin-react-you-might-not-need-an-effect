@@ -174,8 +174,13 @@ export const rule = {
             }
           }
 
-          // I think this is the only !isInternalEffect case we can reasonably warn about
-          if (isPropRef(ref) && isDepInArgs) {
+          // I'm pretty sure we can flag this regardless of the arguments...
+          // Even if they are external state, we shouldn't pass them to the parent.
+          // Because we are either:
+          // 1. Passing live state updates to the parent
+          // 2. Using state as an event handler to pass final state to the parent
+          // Both are bad. However I'm not yet sure how we could differentiate #2 to give a better warning.
+          if (isPropRef(ref) && callExpr.arguments.length > 0) {
             context.report({
               node: callExpr.callee,
               messageId: "avoidPassingStateToParent",

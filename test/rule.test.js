@@ -53,7 +53,7 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
       `,
     },
     {
-      name: "Reacting to library state changes that may not offer a callback",
+      name: "Reacting to external state change that may not offer a callback",
       code: js`
         function Feed() {
           const { data: posts } = useQuery('/posts');
@@ -409,7 +409,7 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
       ],
     },
     {
-      name: "Passing external state to parent",
+      name: "Passing external live state to parent",
       code: js`
         const Child = ({ onFetched }) => {
           const data = useSomeAPI();
@@ -421,6 +421,39 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
       `,
       errors: [
         {
+          messageId: "avoidPassingStateToParent",
+        },
+      ],
+    },
+    {
+      name: "Passing external final state to parent",
+      code: js`
+        function Form({ onSubmit }) {
+          const [name, setName] = useState();
+          const [dataToSubmit, setDataToSubmit] = useState();
+
+          useEffect(() => {
+            onSubmit(dataToSubmit);
+          }, [dataToSubmit]);
+
+          return (
+            <div>
+              <input
+                name="name"
+                type="text"
+                onChange={(e) => setName(e.target.value)}
+              />
+              <button onClick={() => setDataToSubmit({ name })}>Submit</button>
+            </div>
+          )
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidInternalEffect",
+        },
+        {
+          // Ideally we warn about using state as an event handler, but not sure how to differentiate that.
           messageId: "avoidPassingStateToParent",
         },
       ],
@@ -692,7 +725,7 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
 
           useEffect(() => {
             // This is the only place that modifies the state,
-            // thus it could be computed during render
+            // thus they will always be in sync and it could be computed during render
             setSelectedPost(posts[0]);
           }, [posts]);
         }
