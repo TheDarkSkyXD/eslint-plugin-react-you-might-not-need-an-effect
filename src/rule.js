@@ -59,16 +59,10 @@ export const rule = {
         return;
       }
 
-      const effectFn = getEffectFn(node);
       const effectFnRefs = getEffectFnRefs(context, node);
       const depsRefs = getDepArrRefs(context, node);
 
-      if (
-        !effectFn ||
-        !effectFnRefs ||
-        !depsRefs ||
-        effectFnRefs.length === 0
-      ) {
+      if (!effectFnRefs || !depsRefs || effectFnRefs.length === 0) {
         return;
       }
 
@@ -79,7 +73,7 @@ export const rule = {
           (ref) =>
             isStateRef(ref) ||
             isPropRef(ref) ||
-            isLocalRef(ref, context.sourceCode.getScope(effectFn)),
+            isLocalRef(ref, context.sourceCode.getScope(getEffectFn(node))),
         );
 
       if (isInternalEffect) {
