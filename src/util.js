@@ -10,6 +10,9 @@ const traverse = (context, node, visit, visited = new Set()) => {
   visit(node);
 
   (context.sourceCode.visitorKeys[node.type] || [])
+    // Don't traverse CallExpression arguments - the function may be unpure, thus its arguments are irrelevant.
+    // Ideally we'd move it out of this general-purpose function, but alternative checks haven't been successful.
+    .filter((key) => !(node.type === "CallExpression" && key === "arguments"))
     .map((key) => node[key])
     // Some `visitorKeys` are optional, e.g. `IfStatement.alternate`.
     .filter(Boolean)
@@ -39,22 +42,17 @@ export const getUpstreamVariables = (context, node, visited = new Set()) => {
 
   visited.add(node);
 
-  return (
-    getDownstreamIdentifiers(context, node)
-      .map((identifier) =>
-        findVariable(context.sourceCode.getScope(node), identifier),
-      )
-      // Implicit base case: Uses variable(s) declared outside this scope
-      .filter(Boolean)
-      .flatMap((variable) =>
-        variable.defs
-          .filter((def) => def.type === "Variable") // Could be e.g. `Parameter` if it's a function parameter in a Promise chain
-          .flatMap((def) =>
-            getUpstreamVariables(context, def.node.init, visited),
-          )
-          .concat(variable),
-      )
-  );
+  return getDownstreamIdentifiers(context, node)
+    .map((identifier) =>
+      findVariable(context.sourceCode.getScope(node), identifier),
+    )
+    .filter(Boolean) // Implicit base case: Uses variable(s) declared outside this scope
+    .flatMap((variable) =>
+      variable.defs
+        .filter((def) => def.type === "Variable") // Could be e.g. `Parameter` if it's a function parameter in a Promise chain
+        .flatMap((def) => getUpstreamVariables(context, def.node.init, visited))
+        .concat(variable),
+    );
 };
 
 export const isReactFunctionalComponent = (node) =>
@@ -141,20 +139,26 @@ export const isFnRef = (ref) =>
   // ref.identifier.parent will also be CallExpression when the ref is an argument, which we don't want
   ref.identifier.parent.callee === ref.identifier;
 
-export const isStateRef = (ref) =>
-  ref.resolved?.defs.some(
-    (def) => def.type === "Variable" && isUseState(def.node),
+export const isStateRef = (context, ref) =>
+  getUpstreamVariables(context, ref.identifier).some((variable) =>
+    // TODO: Should be just the latest definition? Is that how that works?
+    // WARNING: Global variables (like `JSON`) have an empty `defs`. Thus important to use `notEmptyEvery`.
+    variable.defs.notEmptyEvery(
+      (def) => def.type === "Variable" && isUseState(def.node),
+    ),
   );
 
-export const isPropRef = (ref) =>
-  ref.resolved?.defs.some(
-    (def) =>
-      def.type === "Parameter" &&
-      isReactFunctionalComponent(
-        def.node.type === "ArrowFunctionExpression"
-          ? def.node.parent
-          : def.node,
-      ),
+export const isPropRef = (context, ref) =>
+  getUpstreamVariables(context, ref.identifier).some((variable) =>
+    variable.defs.notEmptyEvery(
+      (def) =>
+        def.type === "Parameter" &&
+        isReactFunctionalComponent(
+          def.node.type === "ArrowFunctionExpression"
+            ? def.node.parent
+            : def.node,
+        ),
+    ),
   );
 
 export const getUseStateNode = (stateRef) =>

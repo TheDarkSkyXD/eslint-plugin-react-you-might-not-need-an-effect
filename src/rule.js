@@ -68,7 +68,7 @@ export const rule = {
       // TODO: Could include when we reference our own local functions that are themselves pure/internal.
       const isInternalEffect = effectFnRefs
         .concat(depsRefs)
-        .every((ref) => isStateRef(ref) || isPropRef(ref));
+        .every((ref) => isStateRef(context, ref) || isPropRef(context, ref));
 
       if (isInternalEffect) {
         context.report({
@@ -79,8 +79,8 @@ export const rule = {
 
       const stateSetterRefs = effectFnRefs
         .filter((ref) => isFnRef(ref))
-        .filter((ref) => isStateRef(ref));
-      const isPropUsedInDeps = depsRefs.some((ref) => isPropRef(ref));
+        .filter((ref) => isStateRef(context, ref));
+      const isPropUsedInDeps = depsRefs.some((ref) => isPropRef(context, ref));
       const isEveryStateSetterCalledWithDefaultValue =
         stateSetterRefs.notEmptyEvery((ref) =>
           isStateSetterCalledWithDefaultValue(ref, context),
@@ -93,7 +93,9 @@ export const rule = {
         });
       }
 
-      if (effectFnRefs.concat(depsRefs).every((ref) => isPropRef(ref))) {
+      if (
+        effectFnRefs.concat(depsRefs).every((ref) => isPropRef(context, ref))
+      ) {
         context.report({
           node: node,
           messageId: "avoidManagingParentBehavior",
@@ -103,7 +105,11 @@ export const rule = {
       effectFnRefs
         // Eagerly filter out everything but state setters and prop callbacks;
         // We can't reliably analyze external functions.
-        .filter((ref) => isFnRef(ref) && (isStateRef(ref) || isPropRef(ref)))
+        .filter(
+          (ref) =>
+            isFnRef(ref) &&
+            (isStateRef(context, ref) || isPropRef(context, ref)),
+        )
         .forEach((ref) => {
           const callExpr = ref.identifier.parent;
           const isDepInArgs = callExpr.arguments.some((arg) =>
@@ -115,7 +121,7 @@ export const rule = {
           );
 
           if (isInternalEffect) {
-            if (isStateRef(ref)) {
+            if (isStateRef(context, ref)) {
               const useStateNode = getUseStateNode(ref);
               // TODO: Should be: Either this is the only call to the state setter, or the args are all internal (including intermediates).
               // Needs to be outside `isInternalEffect` check for the former.
@@ -129,7 +135,7 @@ export const rule = {
                 });
               } else if (
                 depsRefs.notEmptyEvery(
-                  (ref) => isStateRef(ref) || isPropRef(ref),
+                  (ref) => isStateRef(context, ref) || isPropRef(context, ref),
                 )
               ) {
                 // TODO: Is this a correct assumption by now?
@@ -159,7 +165,7 @@ export const rule = {
           // But when it's a prop, it's internal.
           // I guess it could still be valid when the dep is external state? Or in that case,
           // the issue is the state should be lifted to the parent?
-          if (isPropRef(ref) && callExpr.arguments.length > 0) {
+          if (isPropRef(context, ref) && callExpr.arguments.length > 0) {
             context.report({
               node: callExpr.callee,
               messageId: "avoidPassingStateToParent",

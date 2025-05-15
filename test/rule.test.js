@@ -255,14 +255,14 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
       `,
     },
     {
-      name: "Calling external function in effect",
+      name: "Deriving state with external function",
       code: js`
         function TodoList({ todos, filter }) {
           const [newTodo, setNewTodo] = useState("");
-
           const [visibleTodos, setVisibleTodos] = useState([]);
+
           useEffect(() => {
-            // We can't be sure getFilteredTodos is pure, so we can't warn about this.
+            // We can't be sure getFilteredTodos is pure, so we can't warn about this
             setVisibleTodos(getFilteredTodos(todos, filter));
           }, [todos, filter]);
         }
@@ -279,6 +279,9 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
             setScrollPosition(0);
             // We can't be sure JSON.stringify is pure, so we can't warn about this.
             // TODO: Technically we could check against known pure functions.
+            // TODO: Gets filtered out because findVariable returns null because it's a built-in global.
+            // Need to retain it.
+            // Maybe convert getUpstreamVariables to return identifiers, so we can still be aware of its existence?
           }, [JSON.stringify(posts)]);
         }
       `,
@@ -347,12 +350,11 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
         function Form() {
           const [firstName, setFirstName] = useState('Taylor');
           const [lastName, setLastName] = useState('Swift');
-
           const [fullName, setFullName] = useState('');
+
           useEffect(() => {
             const name = firstName + ' ' + lastName;
-            const prefixedName = 'Dr. ' + name;
-            setFullName(prefixedName) 
+            setFullName(name) 
           }, [firstName, lastName]);
         }
       `,
@@ -372,13 +374,12 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
         function Form() {
           const [firstName, setFirstName] = useState('Taylor');
           const [lastName, setLastName] = useState('Swift');
+          const [fullName, setFullName] = useState('');
           const name = firstName + ' ' + lastName;
 
-          const [fullName, setFullName] = useState('');
           useEffect(() => {
-            const prefixedName = 'Dr. ' + name;
-            setFullName(prefixedName) 
-          }, [firstName, lastName]);
+            setFullName(name) 
+          }, [name]);
         }
       `,
       errors: [
@@ -413,6 +414,7 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
       ],
     },
     {
+      // TODO: Test with intermediate state too
       name: "Passing internal state to parent",
       code: js`
         const Child = ({ onFetched }) => {
@@ -420,6 +422,28 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
 
           useEffect(() => {
             onFetched(data);
+          }, [onFetched, data]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidInternalEffect",
+        },
+        {
+          messageId: "avoidPassingStateToParent",
+        },
+      ],
+    },
+    {
+      name: "Passing internal state to parent via derived prop callback",
+      code: js`
+        const Child = ({ onFetched }) => {
+          const [data, setData] = useState();
+          // No idea why someone would do this, but hey we can catch it
+          const onFetchedWrapper = onFetched
+
+          useEffect(() => {
+            onFetchedWrapper(data);
           }, [onFetched, data]);
         }
       `,
@@ -564,12 +588,21 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
       name: "Syncing prop changes to internal state",
       code: js`
         function List({ items }) {
-          const [isReverse, setIsReverse] = useState(false);
-          const [selection, setSelection] = useState(items[0]);
+          const [selection, setSelection] = useState();
 
           useEffect(() => {
             setSelection(null);
           }, [items]);
+
+          return (
+            <div>
+              {items.map((item) => (
+                <div key={item.id} onClick={() => setSelection(item)}>
+                  {item.name}
+                </div>
+              ))}
+            </div>
+          )
         }
       `,
       errors: [
@@ -827,6 +860,28 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
         {
           messageId: "avoidDerivedState",
           data: { state: "formData" },
+        },
+      ],
+    },
+    {
+      name: "Using prop in state initializer",
+      code: js`
+        function List({ items }) {
+          // Verify that 'setSelection' is not considered a prop ref
+          // just because 'items' is on its definition path.
+          const [selection, setSelection] = useState(items[0]);
+
+          useEffect(() => {
+            setSelection(null);
+          }, [items]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidInternalEffect",
+        },
+        {
+          messageId: "avoidChainingState",
         },
       ],
     },
