@@ -53,7 +53,7 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
       `,
     },
     {
-      name: "Reacting to external state change that may not offer a callback",
+      name: "Updating state from external state change",
       code: js`
         function Feed() {
           const { data: posts } = useQuery('/posts');
@@ -66,7 +66,7 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
       `,
     },
     {
-      name: "Deriving state from external state change that may not offer a callback, with multiple calls to setter",
+      name: "Deriving state from external state change, with multiple calls to setter",
       code: js`
         function Feed() {
           const { data: posts } = useQuery('/posts');
@@ -294,6 +294,29 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
         }
       `,
     },
+    {
+      name: "Deriving state from intermediate external state with multiple calls to setter",
+      code: js`
+        function Form() {
+          const name = useQuery('/name');
+          const [fullName, setFullName] = useState('');
+
+          useEffect(() => {
+            const prefixedName = 'Dr. ' + name;
+            setFullName(prefixedName) 
+          }, [name]);
+
+          return (
+            <input
+              name="fullName"
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+            />
+          )
+        }
+      `,
+    },
     // TODO: Test case for called inside cleanup function? Is that legit?
   ],
   invalid: [
@@ -319,7 +342,7 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
       ],
     },
     {
-      name: "Deriving state from other state intermediate variables with literal",
+      name: "Deriving state from intermediate internal state",
       code: js`
         function Form() {
           const [firstName, setFirstName] = useState('Taylor');
@@ -344,7 +367,7 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
       ],
     },
     {
-      name: "Deriving state from other state intermediate variables from outside effect",
+      name: "Deriving state from intermediate internal state outside effect",
       code: js`
         function Form() {
           const [firstName, setFirstName] = useState('Taylor');
@@ -719,7 +742,7 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
       ],
     },
     {
-      name: "Deriving state from external state changes, with single call to setter",
+      name: "Deriving state from external state, with single call to setter",
       code: js`
         function Feed() {
           const { data: posts } = useQuery('/posts');
@@ -736,6 +759,26 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
         {
           messageId: "avoidDerivedState",
           data: { state: "selectedPost" },
+        },
+      ],
+    },
+    {
+      name: "Deriving state from intermediate external state with single call to setter",
+      code: js`
+        function Form() {
+          const name = useQuery('/name');
+          const [fullName, setFullName] = useState('');
+
+          useEffect(() => {
+            const prefixedName = 'Dr. ' + name;
+            setFullName(prefixedName) 
+          }, [name]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
         },
       ],
     },
