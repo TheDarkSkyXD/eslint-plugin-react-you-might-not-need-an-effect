@@ -124,7 +124,6 @@ export const rule = {
               // Currently this will be true even if the state is derived from external state, which can be valid.
               // But it's protected by the isInternalEffect check.
               // Does it matter whether it's in the deps array?
-              // I guess for the "passing data to parent" case, we can warn even when state is external, so this is correct.
               depsRefs.some(
                 (depRef) => depRef.identifier.name === variable.name,
               ),
@@ -171,6 +170,11 @@ export const rule = {
           // 1. Passing live state updates to the parent
           // 2. Using state as an event handler to pass final state to the parent
           // Both are bad. However I'm not yet sure how we could differentiate #2 to give a better warning.
+          // TODO: Thus can we safely assume that state is used as an event handler when the ref is a prop?
+          // Normally we can't warn about that because we don't know what the event handler does externally.
+          // But when it's a prop, it's internal.
+          // I guess it could still be valid when the dep is external state? Or in that case,
+          // the issue is the state should be lifted to the parent?
           if (isPropRef(ref) && callExpr.arguments.length > 0) {
             context.report({
               node: callExpr.callee,
