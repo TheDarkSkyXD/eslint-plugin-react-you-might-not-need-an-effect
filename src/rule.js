@@ -8,7 +8,6 @@ import {
   isFnRef,
   getUseStateNode,
   getUpstreamVariables,
-  isLocalRef,
   getEffectFn,
 } from "./util.js";
 
@@ -69,12 +68,7 @@ export const rule = {
       // TODO: Could include when we reference our own local functions that are themselves pure/internal.
       const isInternalEffect = effectFnRefs
         .concat(depsRefs)
-        .every(
-          (ref) =>
-            isStateRef(ref) ||
-            isPropRef(ref) ||
-            isLocalRef(ref, context.sourceCode.getScope(getEffectFn(node))),
-        );
+        .every((ref) => isStateRef(ref) || isPropRef(ref));
 
       if (isInternalEffect) {
         context.report({

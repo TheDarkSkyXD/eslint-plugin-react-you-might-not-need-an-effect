@@ -157,14 +157,6 @@ export const isPropRef = (ref) =>
       ),
   );
 
-// TODO: If I adapt isPathBetween to detect state and prop derived refs,
-// that would cover this case (because the local variable would be on the derivation path)
-export const isLocalRef = (ref, effectFnScope) => {
-  return effectFnScope.variables.some(
-    (variable) => variable.defs === ref.resolved?.defs,
-  );
-};
-
 export const getUseStateNode = (stateRef) =>
   stateRef.resolved.defs.find(
     (def) => def.type === "Variable" && isUseState(def.node),
