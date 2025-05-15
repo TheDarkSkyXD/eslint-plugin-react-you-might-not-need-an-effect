@@ -178,3 +178,9 @@ export const isStateSetterCalledWithDefaultValue = (setterRef, context) => {
     context.sourceCode.getText(useStateDefaultValue)
   );
 };
+
+Object.defineProperty(Array.prototype, "notEmptyEvery", {
+  value: function (predicate) {
+    return this.length > 0 && this.every(predicate);
+  },
+});

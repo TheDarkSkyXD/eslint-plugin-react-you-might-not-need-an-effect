@@ -88,8 +88,7 @@ export const rule = {
         .filter((ref) => isStateRef(ref));
       const isPropUsedInDeps = depsRefs.some((ref) => isPropRef(ref));
       const isEveryStateSetterCalledWithDefaultValue =
-        stateSetterRefs.length > 0 &&
-        stateSetterRefs.every((ref) =>
+        stateSetterRefs.notEmptyEvery((ref) =>
           isStateSetterCalledWithDefaultValue(ref, context),
         );
       if (isPropUsedInDeps && isEveryStateSetterCalledWithDefaultValue) {
@@ -132,6 +131,8 @@ export const rule = {
 
           if (isInternalEffect) {
             if (isStateRef(ref)) {
+              console.log("ref", ref);
+              // Either this is the only call to the state setter, or the args are all internal
               const useStateNode = getUseStateNode(ref);
               // TODO: We may be able to reliably detect this even when the effect isn't entirely internal?
               // All that matters is the path to the setter's args is internal.
@@ -145,8 +146,9 @@ export const rule = {
                   data: { state: useStateNode.id.elements[0].name },
                 });
               } else if (
-                depsRefs.length > 0 &&
-                depsRefs.every((ref) => isStateRef(ref) || isPropRef(ref))
+                depsRefs.notEmptyEvery(
+                  (ref) => isStateRef(ref) || isPropRef(ref),
+                )
               ) {
                 // TODO: Is this a correct assumption by now?
                 // Should I flag this whenever the call expr argument is *only* the state?
