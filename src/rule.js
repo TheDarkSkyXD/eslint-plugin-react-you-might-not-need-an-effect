@@ -128,11 +128,7 @@ export const rule = {
           // (Beware of [].every() === true)
           // For now this shortcoming is protected by the isInternalEffect check though.
           const isDepInArgs = callExpr.arguments.some((arg) =>
-            getUpstreamVariables(
-              arg,
-              context,
-              context.sourceCode.getScope(effectFn),
-            ).some((variable) =>
+            getUpstreamVariables(context, arg).some((variable) =>
               // TODO: I think we should check that the variable is state or props?
               // Currently this will be true even if the state is derived from external state, which can be valid.
               // But it's protected by the isInternalEffect check.

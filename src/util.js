@@ -32,12 +32,7 @@ const getDownstreamIdentifiers = (context, rootNode) => {
   return identifiers;
 };
 
-export const getUpstreamVariables = (
-  node,
-  context,
-  scope,
-  visited = new Set(),
-) => {
+export const getUpstreamVariables = (context, node, visited = new Set()) => {
   if (!node || typeof node !== "object" || visited.has(node)) {
     return [];
   }
@@ -46,14 +41,16 @@ export const getUpstreamVariables = (
 
   return (
     getDownstreamIdentifiers(context, node)
-      .map((identifier) => findVariable(scope, identifier))
+      .map((identifier) =>
+        findVariable(context.sourceCode.getScope(node), identifier),
+      )
       // Implicit base case: Uses variable(s) declared outside this scope
       .filter(Boolean)
       .flatMap((variable) =>
         variable.defs
           .filter((def) => def.type === "Variable") // Could be e.g. `Parameter` if it's a function parameter in a Promise chain
           .flatMap((def) =>
-            getUpstreamVariables(def.node.init, context, scope, visited),
+            getUpstreamVariables(context, def.node.init, visited),
           )
           .concat(variable),
       )
