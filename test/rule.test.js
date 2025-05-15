@@ -103,9 +103,10 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
       `,
     },
     {
-      name: "Fetching external state from state change",
+      name: "Syncing external state",
       // Technically we could trigger the network call in `input.onChange`,
-      // but that assumes we are okay with an uncontrolled input, which is often not the case.
+      // but the use of an effect to sync state is arguably more readable and a valid use.
+      // Especially when we already store the input's controlled state.
       code: js`
         function Search() {
           const [query, setQuery] = useState();
@@ -479,7 +480,8 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
         },
       ],
     },
-    //  TODO: How to detect this though? Not sure it's discernable from legit synchronization effects
+    //  TODO: How to detect this though? Not sure it's discernable from legit synchronization effects.
+    //  Maybe when the setter is only called in this one place? Meaning we could instead inline the effect.
     // {
     //   name: "Using state to handle an event",
     //   code: js`
