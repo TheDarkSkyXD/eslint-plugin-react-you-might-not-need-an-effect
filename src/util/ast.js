@@ -1,7 +1,6 @@
 import { findVariable } from "eslint-utils";
 
-// Lightweight AST traversal
-const traverse = (context, node, visit, visited = new Set()) => {
+export const traverse = (context, node, visit, visited = new Set()) => {
   if (visited.has(node)) {
     return;
   }
@@ -46,7 +45,7 @@ export const getUpstreamVariables = (context, node, visited = new Set()) => {
     .map((identifier) =>
       findVariable(context.sourceCode.getScope(node), identifier),
     )
-    .filter(Boolean) // Implicit base case: Uses variable(s) declared outside this scope
+    .filter(Boolean) // Implicit base case: Uses variable(s) declared outside this scope TODO: Does that affect tests that use undefined functions?
     .flatMap((variable) =>
       variable.defs
         .filter((def) => def.type === "Variable") // Could be e.g. `Parameter` if it's a function parameter in a Promise chain
@@ -57,9 +56,12 @@ export const getUpstreamVariables = (context, node, visited = new Set()) => {
 
 export const isFnRef = (ref) =>
   ref.identifier.parent.type === "CallExpression" &&
-  // ref.identifier.parent will also be CallExpression when the ref is an argument, which we don't want
+  // ref.identifier.parent will also be CallExpression when the ref is a direct argument, which we don't want
   ref.identifier.parent.callee === ref.identifier;
 
+// `every` returning `true` for an empty array is often not what we want.
+// False positives if we're not careful.
+// We could use `!some`, but meh readability.
 Object.defineProperty(Array.prototype, "notEmptyEvery", {
   value: function (predicate) {
     return this.length > 0 && this.every(predicate);

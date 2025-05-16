@@ -1,5 +1,10 @@
 import { findVariable } from "eslint-utils";
-import { getDownstreamIdentifiers, getUpstreamVariables } from "./ast.js";
+import {
+  traverse,
+  getDownstreamIdentifiers,
+  getUpstreamVariables,
+  isFnRef,
+} from "./ast.js";
 
 export const isReactFunctionalComponent = (node) =>
   (node.type === "FunctionDeclaration" ||
@@ -107,11 +112,43 @@ export const getUseStateNode = (stateRef) =>
     (def) => def.type === "Variable" && isUseState(def.node),
   )?.node;
 
-export const isStateSetterCalledWithDefaultValue = (setterRef, context) => {
+export const isPropsUsedToResetState = (
+  context,
+  effectFnRefs,
+  depsRefs,
+  useEffectNode,
+) => {
+  const stateSetterRefs = effectFnRefs
+    .filter((ref) => isFnRef(ref))
+    .filter((ref) => isStateRef(context, ref));
+
+  return (
+    depsRefs.some((ref) => isPropRef(context, ref)) &&
+    stateSetterRefs.notEmptyEvery((ref) =>
+      isStateSetterCalledWithDefaultValue(ref, context),
+    ) &&
+    stateSetterRefs.length ===
+      countUseStates(context, useEffectNode.parent.parent)
+  );
+};
+
+const isStateSetterCalledWithDefaultValue = (setterRef, context) => {
   const callExpr = setterRef.identifier.parent;
   const useStateDefaultValue = getUseStateNode(setterRef).init.arguments?.[0];
   return (
     context.sourceCode.getText(callExpr.arguments[0]) ===
     context.sourceCode.getText(useStateDefaultValue)
   );
+};
+
+const countUseStates = (context, componentNode) => {
+  let count = 0;
+
+  traverse(context, componentNode, (node) => {
+    if (isUseState(node)) {
+      count++;
+    }
+  });
+
+  return count;
 };

@@ -3,10 +3,10 @@ import {
   isUseEffect,
   getEffectFnRefs,
   getDepArrRefs,
-  isStateSetterCalledWithDefaultValue,
   isPropRef,
   isStateRef,
   getUseStateNode,
+  isPropsUsedToResetState as isPropsUsedToResetAllState,
 } from "./util/react.js";
 
 export const name = "you-might-not-need-an-effect";
@@ -75,16 +75,7 @@ export const rule = {
         });
       }
 
-      const stateSetterRefs = effectFnRefs
-        .filter((ref) => isFnRef(ref))
-        .filter((ref) => isStateRef(context, ref));
-      const isPropUsedInDeps = depsRefs.some((ref) => isPropRef(context, ref));
-      const isEveryStateSetterCalledWithDefaultValue =
-        stateSetterRefs.notEmptyEvery((ref) =>
-          isStateSetterCalledWithDefaultValue(ref, context),
-        );
-      if (isPropUsedInDeps && isEveryStateSetterCalledWithDefaultValue) {
-        // TODO: Needs to check for useStates that aren't referenced in the effect
+      if (isPropsUsedToResetAllState(context, effectFnRefs, depsRefs, node)) {
         context.report({
           node: node,
           messageId: "avoidResettingStateFromProps",
