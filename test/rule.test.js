@@ -858,7 +858,7 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
       ],
     },
     {
-      name: "Deriving state with state setter callback",
+      name: "Deriving state with setter callback",
       code: js`
         function CountAccumulator({ count }) {
           const [total, setTotal] = useState(count);
@@ -883,16 +883,72 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
       code: js`
         function Form({ firstName, lastName }) {
           const [formData, setFormData] = useState({
-            title: 'Dr. ',
+            title: 'Dr.',
             fullName: '',
           });
 
           useEffect(() => {
             setFormData({
-              ...prev,
+              ...formData,
               fullName: firstName + ' ' + lastName,
             });
+          }, [firstName, lastName, formData]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidInternalEffect",
+        },
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "formData" },
+        },
+      ],
+    },
+    {
+      name: "Partially updating complex state object with setter callback and derived state",
+      code: js`
+        function Form({ firstName, lastName }) {
+          const [formData, setFormData] = useState({
+            title: 'Dr.',
+            fullName: '',
+          });
+
+          useEffect(() => {
+            setFormData((prev) => ({
+              ...prev,
+              fullName: firstName + ' ' + lastName,
+            }));
           }, [firstName, lastName]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidInternalEffect",
+        },
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "formData" },
+        },
+      ],
+    },
+    {
+      name: "Partially updating complex state object with intermediate setter and derived state",
+      code: js`
+        function Form({ firstName, lastName }) {
+          const [formData, setFormData] = useState({
+            title: 'Dr.',
+            fullName: '',
+          });
+
+          const setFullName = (fullName) => setFormData({ ...formData, fullName });
+
+          useEffect(() => {
+            setFormData({
+              ...formData,
+              fullName: firstName + ' ' + lastName,
+            });
+          }, [firstName, lastName, formData]);
         }
       `,
       errors: [
