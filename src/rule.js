@@ -118,7 +118,7 @@ export const rule = {
               // I guess so, to differentiate between derived and chain state updates.
               if (isDepInArgs) {
                 context.report({
-                  node: callExpr.callee,
+                  node: callExpr,
                   messageId: "avoidDerivedState",
                   data: { state: useStateNode.id.elements[0].name },
                 });
@@ -131,12 +131,12 @@ export const rule = {
                 // Should I flag this whenever the call expr argument is *only* the state?
                 // Like this seems more appropriate than "derived" state.
                 context.report({
-                  node: callExpr.callee,
+                  node: callExpr,
                   messageId: "avoidChainingState",
                 });
               } else {
                 context.report({
-                  node: callExpr.callee,
+                  node: callExpr,
                   messageId: "avoidInitializingState",
                 });
               }
@@ -156,7 +156,7 @@ export const rule = {
           // the issue is the state should be lifted to the parent?
           if (isPropRef(context, ref) && callExpr.arguments.length > 0) {
             context.report({
-              node: callExpr.callee,
+              node: callExpr,
               messageId: "avoidPassingStateToParent",
             });
           }
