@@ -1,4 +1,4 @@
-# ESLint - You Might Not Need An Effect
+# ESLint - React - You Might Not Need An Effect
 
 ESLint plugin to catch [unnecessary React `useEffect`s](https://react.dev/learn/you-might-not-need-an-effect) to make your code easier to follow, faster to run, and less error-prone. Highly recommended for new React developers as you learn its mental model, and even experienced developers may be surprised.
 
@@ -17,6 +17,8 @@ npm install --save-dev eslint-plugin-react-you-might-not-need-an-effect
 ```bash
 yarn add -D eslint-plugin-react-you-might-not-need-an-effect
 ```
+
+Detection works better when your effects receive correct dependencies. Thus the [`eslint-plugin-react-hooks`](https://www.npmjs.com/package/eslint-plugin-react-hooks)`/exhaustive-deps` rule is also recommended.
 
 ## 🔧 Usage
 
@@ -49,10 +51,7 @@ export default [
     },
   },
 ];
-
 ```
-
-This plugin assumes that your effects receive correct dependencies. Thus the [`eslint-plugin-react-hooks`](https://www.npmjs.com/package/eslint-plugin-react-hooks)`/exhaustive-deps` rule is also recommended.
 
 ## 🔎 Rule: `you-might-not-need-an-effect`
 
@@ -70,10 +69,9 @@ When possible, also suggests the more idiomatic pattern.
 While the effect may be unnecessary, we cannot reliably determine that when it:
 
 - Uses internal state to handle events
-- Uses external state
 - Calls external functions
 
-This plugin attempts to minimize false positives and accepts inevitable false negatives. But the ways to (mis)use an effect are practically endless, so please open an issue if you experience either in the real world!
+This plugin minimizes false positives and accepts inevitable false negatives. But the ways to (mis)use an effect are practically endless, so please open an issue if you experience either in the real world!
 
 ## 📖 Learn More
 
