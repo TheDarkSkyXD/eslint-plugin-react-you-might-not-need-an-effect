@@ -110,7 +110,7 @@ export const isPropRef = (context, ref) =>
 export const getUseStateNode = (stateRef) =>
   stateRef.resolved.defs.find(
     (def) => def.type === "Variable" && isUseState(def.node),
-  )?.node;
+  ).node;
 
 export const isPropsUsedToResetAllState = (
   context,
@@ -134,7 +134,9 @@ export const isPropsUsedToResetAllState = (
 
 const isStateSetterCalledWithDefaultValue = (context, setterRef) => {
   const callExpr = setterRef.identifier.parent;
-  const useStateDefaultValue = getUseStateNode(setterRef).init.arguments?.[0];
+  // TODO: Temp fix; `getUseStateNode` should never return undefined when called properly (I think?).
+  // Prevent crashes for now, but may cause false negatives.
+  const useStateDefaultValue = getUseStateNode(setterRef)?.init.arguments?.[0];
   return (
     context.sourceCode.getText(callExpr.arguments[0]) ===
     context.sourceCode.getText(useStateDefaultValue)

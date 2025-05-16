@@ -116,7 +116,9 @@ export const rule = {
               // Needs to be outside `isInternalEffect` check for the former.
               // Does it matter whether the args are in the deps array?
               // I guess so, to differentiate between derived and chain state updates.
-              if (isDepInArgs) {
+              // TODO: Temp fix; `getUseStateNode` should never return undefined when called properly (I think?).
+              // Prevent crashes for now, but may cause false negatives.
+              if (isDepInArgs && useStateNode) {
                 context.report({
                   node: callExpr,
                   messageId: "avoidDerivedState",

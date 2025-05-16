@@ -320,6 +320,48 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
         }
       `,
     },
+    {
+      name: "Variable name shadows state name",
+      code: js`
+        function CountrySelect({ translation }) {
+          const [countries, setCountries] = useState();
+
+          useEffect(() => {
+            // Verify that the shadowing variable is not considered a state ref
+            const countries = getCountries(translation);
+            setCountries(countries);
+          },
+            // Important to the test: Leads us to check useState initializers,
+            // so we can verify that we don't try to find a useState for the shadowing variable
+            [translation]
+          );
+        }
+      `,
+    },
+    {
+      name: "Parameter name shadows state name",
+      code: js`
+        function CountrySelect({ translation }) {
+          const [countries, setCountries] = useState();
+
+          useEffect(() => {
+            let cancel = false;
+            getCountries(translation)
+              // Verify that the shadowing variable is not considered a state ref
+              .then((countries) => (cancel ? null : setCountries(countries)))
+              .catch(console.warn);
+
+            return () => {
+              cancel = true;
+            };
+          },
+            // Important to the test: Leads us to check useState initializers,
+            // so we can verify that we don't try to find a useState for the shadowing variable
+            [translation]
+          );
+        }
+      `,
+    },
     // TODO: Test case for called inside cleanup function? Is that legit?
   ],
   invalid: [
