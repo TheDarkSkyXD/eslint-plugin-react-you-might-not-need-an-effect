@@ -112,7 +112,7 @@ export const getUseStateNode = (stateRef) =>
     (def) => def.type === "Variable" && isUseState(def.node),
   )?.node;
 
-export const isPropsUsedToResetState = (
+export const isPropsUsedToResetAllState = (
   context,
   effectFnRefs,
   depsRefs,

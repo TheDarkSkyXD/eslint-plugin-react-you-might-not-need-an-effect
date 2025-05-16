@@ -6,7 +6,7 @@ import {
   isPropRef,
   isStateRef,
   getUseStateNode,
-  isPropsUsedToResetState as isPropsUsedToResetAllState,
+  isPropsUsedToResetAllState,
 } from "./util/react.js";
 
 export const name = "you-might-not-need-an-effect";
