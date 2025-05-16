@@ -362,6 +362,35 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
         }
       `,
     },
+    {
+      // Taken from https://github.com/linhnguyen-gt/react-native-phone-number-input/blob/b5e6dc652fa8a03609efb72607dc6866f5556ca3/src/countryPickerModal/CountryPicker.tsx
+      name: "Partially updating complex state object with intermediate setters and external state",
+      code: js`
+        function CountrySelect({ withEmoji }) {
+          const { translation, getCountries } = useContext();
+
+          const [state, setState] = useState({
+            countries: [],
+            selectedCountry: null,
+          });
+          const setCountries = (countries) => setState({ ...state, countries });
+
+          useEffect(() => {
+            let cancel = false;
+            getCountries(translation)
+              .then((countries) => (cancel ? null : setCountries(countries)))
+              .catch(console.warn);
+
+            return () => {
+              cancel = true;
+            };
+          },
+            // Important to the test: Leads us to find useStates to check their initializers
+            [translation, withEmoji]
+          );
+        }
+      `,
+    },
     // TODO: Test case for called inside cleanup function? Is that legit?
   ],
   invalid: [
