@@ -125,14 +125,14 @@ export const isPropsUsedToResetAllState = (
   return (
     depsRefs.some((ref) => isPropRef(context, ref)) &&
     stateSetterRefs.notEmptyEvery((ref) =>
-      isStateSetterCalledWithDefaultValue(ref, context),
+      isStateSetterCalledWithDefaultValue(context, ref),
     ) &&
     stateSetterRefs.length ===
       countUseStates(context, useEffectNode.parent.parent)
   );
 };
 
-const isStateSetterCalledWithDefaultValue = (setterRef, context) => {
+const isStateSetterCalledWithDefaultValue = (context, setterRef) => {
   const callExpr = setterRef.identifier.parent;
   const useStateDefaultValue = getUseStateNode(setterRef).init.arguments?.[0];
   return (
