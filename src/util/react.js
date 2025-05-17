@@ -86,13 +86,7 @@ export function getDepArrRefs(context, node) {
 }
 
 export const isStateRef = (context, ref) =>
-  getUpstreamVariables(context, ref.identifier).some((variable) =>
-    // TODO: Should be just the latest definition? Is that how that works?
-    // WARNING: Global variables (like `JSON`) have an empty `defs`. Thus important to use `notEmptyEvery`.
-    variable.defs.notEmptyEvery(
-      (def) => def.type === "Variable" && isUseState(def.node),
-    ),
-  );
+  getUseStateNode(context, ref) !== undefined;
 
 export const isPropRef = (context, ref) =>
   getUpstreamVariables(context, ref.identifier).some((variable) =>
@@ -108,11 +102,17 @@ export const isPropRef = (context, ref) =>
   );
 
 export const getUseStateNode = (context, stateRef) => {
-  return getUpstreamVariables(context, stateRef.identifier).find((variable) =>
-    variable.defs.find(
-      (def) => def.type === "Variable" && isUseState(def.node),
-    ),
-  ).node;
+  const variable = getUpstreamVariables(context, stateRef.identifier).find(
+    (variable) =>
+      // WARNING: Global variables (like `JSON`) have an empty `defs`. Thus important to use `notEmptyEvery`.
+      variable.defs.notEmptyEvery(
+        (def) => def.type === "Variable" && isUseState(def.node),
+      ),
+  );
+
+  return variable?.defs.find(
+    (def) => def.type === "Variable" && isUseState(def.node),
+  )?.node;
 };
 
 export const isPropsUsedToResetAllState = (
