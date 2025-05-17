@@ -102,18 +102,15 @@ export const isPropRef = (context, ref) =>
   );
 
 export const getUseStateNode = (context, stateRef) => {
-  const variable = getUpstreamVariables(context, stateRef.identifier).find(
-    (variable) =>
-      // WARNING: Global variables (like `JSON`) have an empty `defs`; fortunately `[].some() === false`.
+  return getUpstreamVariables(context, stateRef.identifier)
+    .find((variable) =>
+      // WARNING: Global variables (like `JSON` in `JSON.stringify()`) have an empty `defs`; fortunately `[].some() === false`.
       // Also, I'm not sure so far when `defs.length > 1`... haven't seen it with shadowed variables or even redeclared variables with `var`.
       variable.defs.some(
         (def) => def.type === "Variable" && isUseState(def.node),
       ),
-  );
-
-  return variable?.defs.find(
-    (def) => def.type === "Variable" && isUseState(def.node),
-  )?.node;
+    )
+    ?.defs.find((def) => def.type === "Variable" && isUseState(def.node))?.node;
 };
 
 export const isPropsUsedToResetAllState = (
