@@ -35,7 +35,7 @@ export const getDownstreamIdentifiers = (context, rootNode) => {
 };
 
 export const getUpstreamVariables = (context, node, visited = new Set()) => {
-  if (!node || typeof node !== "object" || visited.has(node)) {
+  if (visited.has(node)) {
     return [];
   }
 
@@ -48,7 +48,7 @@ export const getUpstreamVariables = (context, node, visited = new Set()) => {
     .filter(Boolean) // Implicit base case: Uses variable(s) declared outside this scope TODO: Does that affect tests that use undefined functions?
     .flatMap((variable) =>
       variable.defs
-        .filter((def) => def.type === "Variable") // Could be e.g. `Parameter` if it's a function parameter in a Promise chain
+        .filter((def) => !!def.node.init) // Happens when the variable is declared without an initializer, e.g. `let foo;`
         .flatMap((def) => getUpstreamVariables(context, def.node.init, visited))
         .concat(variable),
     );
