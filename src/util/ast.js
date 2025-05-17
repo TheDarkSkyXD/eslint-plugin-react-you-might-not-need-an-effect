@@ -58,12 +58,3 @@ export const isFnRef = (ref) =>
   ref.identifier.parent.type === "CallExpression" &&
   // ref.identifier.parent will also be CallExpression when the ref is a direct argument, which we don't want
   ref.identifier.parent.callee === ref.identifier;
-
-// `every` returning `true` for an empty array is often not what we want.
-// False positives if we're not careful.
-// We could use `!some`, but meh readability.
-Object.defineProperty(Array.prototype, "notEmptyEvery", {
-  value: function (predicate) {
-    return this.length > 0 && this.every(predicate);
-  },
-});

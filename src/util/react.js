@@ -90,7 +90,7 @@ export const isStateRef = (context, ref) =>
 
 export const isPropRef = (context, ref) =>
   getUpstreamVariables(context, ref.identifier).some((variable) =>
-    variable.defs.notEmptyEvery(
+    variable.defs.some(
       (def) =>
         def.type === "Parameter" &&
         isReactFunctionalComponent(
@@ -104,8 +104,9 @@ export const isPropRef = (context, ref) =>
 export const getUseStateNode = (context, stateRef) => {
   const variable = getUpstreamVariables(context, stateRef.identifier).find(
     (variable) =>
-      // WARNING: Global variables (like `JSON`) have an empty `defs`. Thus important to use `notEmptyEvery`.
-      variable.defs.notEmptyEvery(
+      // WARNING: Global variables (like `JSON`) have an empty `defs`; fortunately `[].some() === false`.
+      // Also, I'm not sure so far when `defs.length > 1`... haven't seen it with shadowed variables or even redeclared variables with `var`.
+      variable.defs.some(
         (def) => def.type === "Variable" && isUseState(def.node),
       ),
   );
@@ -127,7 +128,7 @@ export const isPropsUsedToResetAllState = (
 
   return (
     depsRefs.some((ref) => isPropRef(context, ref)) &&
-    stateSetterRefs.notEmptyEvery((ref) =>
+    stateSetterRefs.some((ref) =>
       isStateSetterCalledWithDefaultValue(context, ref),
     ) &&
     stateSetterRefs.length ===

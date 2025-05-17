@@ -123,7 +123,7 @@ export const rule = {
                   data: { state: useStateNode.id.elements[0].name },
                 });
               } else if (
-                depsRefs.notEmptyEvery(
+                depsRefs.some(
                   (ref) => isStateRef(context, ref) || isPropRef(context, ref),
                 )
               ) {
