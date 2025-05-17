@@ -3,7 +3,6 @@ import {
   traverse,
   getDownstreamIdentifiers,
   getUpstreamVariables,
-  isFnRef,
 } from "./ast.js";
 
 export const isReactFunctionalComponent = (node) =>
@@ -84,6 +83,11 @@ export function getDepArrRefs(context, node) {
       variable.references.filter((ref) => ref.identifier === node),
     );
 }
+
+export const isFnRef = (ref) =>
+  ref.identifier.parent.type === "CallExpression" &&
+  // ref.identifier.parent will also be CallExpression when the ref is a direct argument, which we don't want
+  ref.identifier.parent.callee === ref.identifier;
 
 export const isStateRef = (context, ref) =>
   getUseStateNode(context, ref) !== undefined;

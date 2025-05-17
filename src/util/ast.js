@@ -53,8 +53,3 @@ export const getUpstreamVariables = (context, node, visited = new Set()) => {
         .concat(variable),
     );
 };
-
-export const isFnRef = (ref) =>
-  ref.identifier.parent.type === "CallExpression" &&
-  // ref.identifier.parent will also be CallExpression when the ref is a direct argument, which we don't want
-  ref.identifier.parent.callee === ref.identifier;
