@@ -691,15 +691,20 @@ new MyRuleTester().run(name + "/rule", rule, {
         function ProfilePage({ userId }) {
           const [user, setUser] = useState(null);
           const [comment, setComment] = useState('type something');
+          // const [catName, setCatName] = useState('Sparky');
 
           useEffect(() => {
             setUser(null);
+            setComment('meow')
           }, [userId]);
         }
       `,
       errors: [
         {
           messageId: "avoidInternalEffect",
+        },
+        {
+          messageId: "avoidChainingState",
         },
         {
           messageId: "avoidChainingState",

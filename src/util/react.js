@@ -125,7 +125,8 @@ export const isPropsUsedToResetAllState = (
 
   return (
     depsRefs.some((ref) => isPropRef(context, ref)) &&
-    stateSetterRefs.some((ref) =>
+    stateSetterRefs.length > 0 &&
+    stateSetterRefs.every((ref) =>
       isStateSetterCalledWithDefaultValue(context, ref),
     ) &&
     stateSetterRefs.length ===
