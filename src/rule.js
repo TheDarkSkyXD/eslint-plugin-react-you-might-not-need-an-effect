@@ -15,7 +15,7 @@ export const rule = {
   meta: {
     type: "suggestion",
     docs: {
-      description: "Warn against unnecessary React useEffect hooks.",
+      description: "Catch unnecessary React useEffect hooks.",
       url: "https://react.dev/learn/you-might-not-need-an-effect",
     },
     schema: [],
