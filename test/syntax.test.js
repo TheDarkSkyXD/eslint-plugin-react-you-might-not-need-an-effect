@@ -1,6 +1,5 @@
-import { MyRuleTester } from "./rule-tester.js";
-import { name, rule } from "../src/rule.js";
-const js = String.raw;
+import { MyRuleTester, js } from "./rule-tester.js";
+import { messageIds } from "../src/messages.js";
 
 // TODO: Should maybe do away with this... it helps writing but not readable
 const code = ({
@@ -26,8 +25,65 @@ const code = ({
 // Syntax variations that are semantically equivalent
 // TODO: Could dynamically generate variations: https://mochajs.org/#dynamically-generating-tests
 // Could be overkill; they shouldn't affect each other (supposedly, but I guess that's the point of tests!)
-new MyRuleTester().run(name + "/syntax", rule, {
+new MyRuleTester().run("/syntax", {
   valid: [
+    {
+      name: "Empty effect",
+      code: js`
+        function Component() {
+          useEffect(() => {}, []);
+        }
+      `,
+    },
+    {
+      name: "Two components with overlapping names",
+      // Not a super realistic example
+      code: js`
+        function ComponentOne() {
+          const [data, setData] = useState();
+        }
+
+        function ComponentTwo() {
+          const setData = (data) => {
+            console.log(data);
+          }
+
+          useEffect(() => {
+            setData('hello');
+          }, []);
+        }
+      `,
+    },
+    {
+      // We don't follow functions right now
+      name: "Passing non-anonymous function to effect",
+      code: js`
+        function Form({ onClose }) {
+          const [name, setName] = useState();
+          const [isOpen, setIsOpen] = useState(true);
+
+          useEffect(onClose, [isOpen]);
+        }
+      `,
+    },
+    {
+      name: "Variable name shadows state name",
+      code: js`
+        function CountrySelect({ translation }) {
+          const [countries, setCountries] = useState();
+
+          useEffect(() => {
+            // Verify that the shadowing variable is not considered a state ref
+            const countries = getCountries(translation);
+            setCountries(countries);
+          },
+            // Important to the test: Leads us to check useState initializers,
+            // so we can verify that we don't try to find a useState for the shadowing variable
+            [translation]
+          );
+        }
+      `,
+    },
     {
       name: "Member call expression side effect without args",
       code: code({
@@ -245,6 +301,29 @@ new MyRuleTester().run(name + "/syntax", rule, {
         }
       `,
       errors: 2,
+    },
+    {
+      name: "Using prop in state initializer",
+      code: js`
+        function List({ items }) {
+          // Verify that 'setSelection' is not considered a prop ref
+          // just because 'items' is on its definition path.
+          // If it did, it'd flag 'avoidManagingParentBehavior'.
+          const [selection, setSelection] = useState(items[0]);
+
+          useEffect(() => {
+            setSelection(null);
+          }, [items]);
+        }
+      `,
+      errors: [
+        {
+          messageId: messageIds.avoidInternalEffect,
+        },
+        {
+          messageId: messageIds.avoidChainingState,
+        },
+      ],
     },
   ],
 });
