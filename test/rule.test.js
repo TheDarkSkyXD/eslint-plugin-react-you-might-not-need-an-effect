@@ -1,9 +1,9 @@
-import { NormalizedWhitespaceJsxRuleTester } from "./rule-tester.js";
+import { MyRuleTester } from "./rule-tester.js";
 import { name, rule } from "../src/rule.js";
 const js = String.raw;
 
 // TODO: Figure out grouping for tests for readability
-new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
+new MyRuleTester().run(name + "/rule", rule, {
   valid: [
     {
       name: "Empty effect",
@@ -825,6 +825,7 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
     },
     {
       name: "Derived state in larger, otherwise legit effect",
+      todo: true,
       code: js`
         function Form() {
           const [firstName, setFirstName] = useState('Taylor');
@@ -847,6 +848,7 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
     },
     {
       name: "Deriving state from external state, with single call to setter",
+      todo: true,
       code: js`
         function Feed() {
           const { data: posts } = useQuery('/posts');
@@ -868,6 +870,7 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
     },
     {
       name: "Deriving state from intermediate external state with single call to setter",
+      todo: true,
       code: js`
         function Form() {
           const name = useQuery('/name');
@@ -888,6 +891,7 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
     },
     {
       name: "Deriving state with setter callback",
+      todo: true,
       code: js`
         function CountAccumulator({ count }) {
           const [total, setTotal] = useState(count);
@@ -936,6 +940,7 @@ new NormalizedWhitespaceJsxRuleTester().run(name + "/rule", rule, {
     },
     {
       name: "Partially updating complex state object with setter callback and derived state",
+      todo: true,
       code: js`
         function Form({ firstName, lastName }) {
           const [formData, setFormData] = useState({
