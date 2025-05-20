@@ -72,7 +72,9 @@ While the effect may be unnecessary, we cannot reliably determine that when it:
 - Calls external functions
 - Uses internal state to handle events
 
-This plugin minimizes false positives and accepts inevitable false negatives - see the [tests](./test) for valid and invalid uses. But the ways to (mis)use an effect are practically endless, so please open an issue if you experience anything unexpected in the real world!
+## ⚠️ Limitations
+
+This plugin aims to minimize false positives and accepts that some false negatives are inevitable — see the [tests](./test) for (in)valid examples. But the ways to (mis)use an effect are practically endless; if you encounter unexpected behavior or edge cases in real-world usage, please [open an issue](https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/new) with details about your scenario. Your feedback helps improve the plugin for everyone!
 
 ## 📖 Learn More
 
