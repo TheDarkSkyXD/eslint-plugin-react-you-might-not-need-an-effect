@@ -303,5 +303,28 @@ new MyRuleTester().run("/syntax", {
       `,
       errors: 2,
     },
+    {
+      name: "Value-less useState",
+      code: js`
+        function AttemptCounter() {
+          const [, setAttempts] = useState(0);
+          const [count, setCount] = useState(0);
+
+          useEffect(() => {
+            setAttempts((prev) => {
+              return prev++;
+            });
+          }, [count]);
+        }
+      `,
+      errors: [
+        {
+          messageId: messageIds.avoidInternalEffect,
+        },
+        {
+          messageId: messageIds.avoidChainingState,
+        },
+      ],
+    },
   ],
 });

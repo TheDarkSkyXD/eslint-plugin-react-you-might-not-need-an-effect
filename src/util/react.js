@@ -18,7 +18,11 @@ export const isUseState = (node) =>
   node.init.callee.name === "useState" &&
   node.id.type === "ArrayPattern" &&
   node.id.elements.length === 2 &&
-  node.id.elements.every((el) => el.type === "Identifier");
+  node.id.elements.every((el) => {
+    // Apparently skipping the state element is a valid use.
+    // I suppose technically the state can still be read via setter callback.
+    return !el || el.type === "Identifier";
+  });
 
 export const isUseEffect = (node) =>
   (node.type === "CallExpression" &&
