@@ -1,11 +1,11 @@
 import { MyRuleTester, js } from "./rule-tester.js";
 import { messageIds } from "../src/messages.js";
 
-new MyRuleTester().run("/passing-state-to-parent", {
+new MyRuleTester().run("/parent-child-coupling", {
   // TODO: Test with intermediate state too
   invalid: [
     {
-      name: "Internal state",
+      name: "Pass internal live state",
       code: js`
         const Child = ({ onFetched }) => {
           const [data, setData] = useState();
@@ -20,12 +20,12 @@ new MyRuleTester().run("/passing-state-to-parent", {
           messageId: messageIds.avoidInternalEffect,
         },
         {
-          messageId: messageIds.avoidPassingStateToParent,
+          messageId: messageIds.avoidParentChildCoupling,
         },
       ],
     },
     {
-      name: "Internal state via derived prop",
+      name: "Pass internal live state via derived prop",
       code: js`
         const Child = ({ onFetched }) => {
           const [data, setData] = useState();
@@ -42,12 +42,12 @@ new MyRuleTester().run("/passing-state-to-parent", {
           messageId: messageIds.avoidInternalEffect,
         },
         {
-          messageId: messageIds.avoidPassingStateToParent,
+          messageId: messageIds.avoidParentChildCoupling,
         },
       ],
     },
     {
-      name: "No argument in response to internal state change",
+      name: "No-arg prop callback in response to internal state change",
       code: js`
         function Form({ onClose }) {
           const [name, setName] = useState();
@@ -66,14 +66,13 @@ new MyRuleTester().run("/passing-state-to-parent", {
         {
           messageId: messageIds.avoidInternalEffect,
         },
-        // TODO: Is `avoidPassingStateToParent` still appropriate here? Similar issue.
-        // Maybe we could rename the message to make sense here too.
-        // Or maybe `avoidManagingParentBehavior`?
-        // Maybe I can combine them into `avoidManagingParent`?
+        {
+          messageId: messageIds.avoidParentChildCoupling,
+        },
       ],
     },
     {
-      name: "External state live",
+      name: "Pass live external state",
       code: js`
         const Child = ({ onFetched }) => {
           const data = useSomeAPI();
@@ -85,12 +84,12 @@ new MyRuleTester().run("/passing-state-to-parent", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidPassingStateToParent,
+          messageId: messageIds.avoidParentChildCoupling,
         },
       ],
     },
     {
-      name: "External state final",
+      name: "Pass final external state",
       code: js`
         function Form({ onSubmit }) {
           const [name, setName] = useState();
@@ -117,19 +116,21 @@ new MyRuleTester().run("/passing-state-to-parent", {
           messageId: messageIds.avoidInternalEffect,
         },
         {
-          // Ideally we catch using state as an event handler,
+          // TODO: Ideally we catch using state as an event handler,
           // but not sure how to differentiate that
-          messageId: messageIds.avoidPassingStateToParent,
+          messageId: messageIds.avoidParentChildCoupling,
         },
       ],
     },
     {
-      name: "Calling prop in response to prop change",
+      name: "Call prop in response to prop change",
       code: js`
         function Form({ isOpen, events }) {
 
           useEffect(() => {
             if (!isOpen) {
+              // NOTE: Also verifies that we consider 'events' in 'events.onClose' to be a fn ref
+              // (It's a MemberExpression under a CallExpression)
               events.onClose();
             }
           }, [isOpen]);
@@ -140,7 +141,43 @@ new MyRuleTester().run("/passing-state-to-parent", {
           messageId: messageIds.avoidInternalEffect,
         },
         {
-          messageId: messageIds.avoidManagingParentBehavior,
+          messageId: messageIds.avoidParentChildCoupling,
+        },
+      ],
+    },
+    {
+      name: "Derive state from prop function",
+      code: js`
+        function FilteredPosts({ posts }) {
+          const [filteredPosts, setFilteredPosts] = useState([]);
+
+          useEffect(() => {
+            // Resulting AST node looks like:
+            // {
+            //   "type": "ArrayPattern",
+            //   "elements": [
+            //     null, <-- Must handle this!
+            //     {
+            //       "type": "Identifier",
+            //       "name": "second"
+            //     }
+            //   ]
+            // }
+            setFilteredPosts(
+              posts.filter((post) => post.body !== "")
+            );
+          }, [posts]);
+        }
+      `,
+      errors: [
+        {
+          messageId: messageIds.avoidInternalEffect,
+        },
+        {
+          messageId: messageIds.avoidDerivedState,
+        },
+        {
+          messageId: messageIds.avoidParentChildCoupling,
         },
       ],
     },

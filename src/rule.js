@@ -6,9 +6,10 @@ import {
   isPropsUsedToResetAllState,
   isStateRef,
   isUseEffect,
-  getEffectFnRefs,
-  getDepArrRefs,
+  getEffectBodyRefs,
+  getDependencyRefs,
   getUseStateNode,
+  getCallExpr,
 } from "./util/react.js";
 
 export const name = "you-might-not-need-an-effect";
@@ -32,15 +33,17 @@ export const rule = {
         return;
       }
 
-      const effectFnRefs = getEffectFnRefs(context, node);
-      const depsRefs = getDepArrRefs(context, node);
+      const effectFnRefs = getEffectBodyRefs(context, node);
+      const depsRefs = getDependencyRefs(context, node);
 
       if (!effectFnRefs || !depsRefs || effectFnRefs.length === 0) {
         return;
       }
 
-      // TODO: Could include when we reference our own local functions that are themselves pure/internal.
       const isInternalEffect = effectFnRefs
+        // Only functions because they actually have effects.
+        // Notably this also filters out refs that are local parameters, like `items` in `list.filter((item) => ...)`.
+        .filter((ref) => isFnRef(ref))
         .concat(depsRefs)
         .every((ref) => isStateRef(context, ref) || isPropRef(context, ref));
 
@@ -58,27 +61,15 @@ export const rule = {
         });
       }
 
-      if (
-        effectFnRefs.concat(depsRefs).every((ref) => isPropRef(context, ref))
-      ) {
-        // TODO: Generalize this to not need the entire effect?
-        // Basically combine it with `avoidPassingStateToParent`.
-        context.report({
-          node: node,
-          messageId: messageIds.avoidManagingParentBehavior,
-        });
-      }
-
       effectFnRefs
-        // Eagerly filter out everything but state setters and prop callbacks;
-        // We can't reliably analyze external functions.
+        // Analyze only state setters and prop callbacks
         .filter(
           (ref) =>
             isFnRef(ref) &&
             (isStateRef(context, ref) || isPropRef(context, ref)),
         )
         .forEach((ref) => {
-          const callExpr = ref.identifier.parent;
+          const callExpr = getCallExpr(ref);
           const isDepInArgs = callExpr.arguments.some((arg) =>
             getUpstreamVariables(context, arg).some((variable) =>
               depsRefs.some(
@@ -93,7 +84,7 @@ export const rule = {
               // TODO: Should be: Either this is the only call to the state setter, or the args are all internal (including intermediates).
               // Needs to be outside `isInternalEffect` check for the former.
               // Does it matter whether the args are in the deps array?
-              // I guess so, to differentiate between derived and chain state updates.
+              // I guess so, to differentiate between derived and chain state updates?
               if (isDepInArgs) {
                 context.report({
                   node: callExpr,
@@ -121,21 +112,23 @@ export const rule = {
             }
           }
 
-          // I'm pretty sure we can flag this regardless of the arguments...
-          // Even if they are external state, we shouldn't pass them to the parent.
+          // I'm pretty sure we can flag this regardless of the arguments, including none...
+          //
           // Because we are either:
           // 1. Passing live state updates to the parent
           // 2. Using state as an event handler to pass final state to the parent
+          //
           // Both are bad. However I'm not yet sure how we could differentiate #2 to give a better warning.
-          // TODO: Thus can we safely assume that state is used as an event handler when the ref is a prop?
+          //
+          // TODO: Can we thus safely assume that state is used as an event handler when the ref is a prop?
           // Normally we can't warn about that because we don't know what the event handler does externally.
           // But when it's a prop, it's internal.
           // I guess it could still be valid when the dep is external state? Or in that case,
           // the issue is the state should be lifted to the parent?
-          if (isPropRef(context, ref) && callExpr.arguments.length > 0) {
+          if (isPropRef(context, ref)) {
             context.report({
               node: callExpr,
-              messageId: messageIds.avoidPassingStateToParent,
+              messageId: messageIds.avoidParentChildCoupling,
             });
           }
         });

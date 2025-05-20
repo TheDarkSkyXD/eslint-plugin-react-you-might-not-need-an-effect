@@ -44,7 +44,8 @@ export const getEffectFn = (node) => {
   return effectFn;
 };
 
-export const getEffectFnRefs = (context, node) => {
+// NOTE: When `MemberExpression` (even nested ones), a `Reference` is only the root object, not the function.
+export const getEffectBodyRefs = (context, node) => {
   if (!isUseEffect(node) || node.arguments.length < 1) {
     return null;
   }
@@ -63,7 +64,14 @@ export const getEffectFnRefs = (context, node) => {
 };
 
 // Dependency array doesn't have its own scope, so collecting refs is trickier
-export function getDepArrRefs(context, node) {
+// NOTE: Despite different implementation from `getEffectBodyRefs`,
+// I believe it behaves the same due to filtering by `findVariable`.
+// TODO: Share implementation though?
+// Basically use this impl for both, instead of scope.references for other?
+// Hmm maybe not; not traversing CallExpr.arguments could be a problem for that use.
+// e.g. when a prop is passed to a state setter.
+// Or maybe that's fine? We'll still analyze the state setter, where we then explicitly check its arguments.
+export function getDependencyRefs(context, node) {
   if (!isUseEffect(node) || node.arguments.length < 2) {
     return null;
   }
@@ -73,21 +81,19 @@ export function getDepArrRefs(context, node) {
     return null;
   }
 
-  const identifiers = getDownstreamIdentifiers(context, depsArr);
-
-  const scope = context.sourceCode.getScope(node);
-  return identifiers
-    .map((node) => [node, findVariable(scope, node)])
+  return getDownstreamIdentifiers(context, depsArr)
+    .map((node) => [
+      node,
+      findVariable(context.sourceCode.getScope(node), node),
+    ])
     .filter(([_node, variable]) => variable)
     .flatMap(([node, variable]) =>
+      // TODO: Is the filter necessary?
       variable.references.filter((ref) => ref.identifier === node),
     );
 }
 
-export const isFnRef = (ref) =>
-  ref.identifier.parent.type === "CallExpression" &&
-  // ref.identifier.parent will also be CallExpression when the ref is a direct argument, which we don't want
-  ref.identifier.parent.callee === ref.identifier;
+export const isFnRef = (ref) => getCallExpr(ref) !== undefined;
 
 export const isStateRef = (context, ref) =>
   getUseStateNode(context, ref) !== undefined;
@@ -105,10 +111,30 @@ export const isPropRef = (context, ref) =>
     ),
   );
 
-export const getUseStateNode = (context, stateRef) => {
-  return getUpstreamVariables(context, stateRef.identifier)
+export const getCallExpr = (ref, current = ref.identifier.parent) => {
+  if (current.type === "CallExpression") {
+    // We've reached the top - confirm that the ref is the (eventual) callee, as opposed to an argument.
+    let node = ref.identifier;
+    while (node.parent.type === "MemberExpression") {
+      node = node.parent;
+    }
+
+    if (current.callee === node) {
+      return current;
+    }
+  }
+
+  if (current.type === "MemberExpression") {
+    return getCallExpr(ref, current.parent);
+  }
+
+  return undefined;
+};
+
+export const getUseStateNode = (context, ref) => {
+  return getUpstreamVariables(context, ref.identifier)
     .find((variable) =>
-      // WARNING: Global variables (like `JSON` in `JSON.stringify()`) have an empty `defs`; fortunately `[].some() === false`.
+      // NOTE: Global variables (like `JSON` in `JSON.stringify()`) have an empty `defs`; fortunately `[].some() === false`.
       // Also, I'm not sure so far when `defs.length > 1`... haven't seen it with shadowed variables or even redeclared variables with `var`.
       variable.defs.some(
         (def) => def.type === "Variable" && isUseState(def.node),

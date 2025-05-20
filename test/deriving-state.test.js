@@ -1,6 +1,7 @@
 import { MyRuleTester, js } from "./rule-tester.js";
 import { messageIds } from "../src/messages.js";
 
+// TODO: All these need the state setter in the deps
 new MyRuleTester().run("/deriving-state", {
   valid: [
     {
@@ -161,6 +162,90 @@ new MyRuleTester().run("/deriving-state", {
         }
       `,
     },
+    {
+      name: "From external state via member function",
+      code: js`
+        function Counter() {
+          const countGetter = useSomeAPI();
+          const [count, setCount] = useState(0);
+
+          useEffect(() => {
+            const newCount = countGetter.getCount();
+            setCount(newCount);
+          }, [countGetter, setCount]);
+        }
+      `,
+    },
+    {
+      name: "From unpure function declared inside effect",
+      code: js`
+        function DoubleCounter() {
+          const [count, setCount] = useState(0);
+          const [doubleCount, setDoubleCount] = useState(0);
+
+          useEffect(() => {
+            function calculate(meow) {
+              return getMeow() * 2;
+            }
+            setDoubleCount(calculate());
+          }, [count]);
+        }
+      `,
+    },
+    {
+      name: "From unpure function declared outside effect",
+      code: js`
+        function DoubleCounter() {
+          const [count, setCount] = useState(0);
+          const [doubleCount, setDoubleCount] = useState(0);
+
+          function calculate(meow) {
+            // TODO: Issue is we don't see 'getMeow' when looking at the effect body.
+            // We'd have to follow the function reference and examine its definition.
+            return getMeow() * 2;
+          }
+
+          useEffect(() => {
+            setDoubleCount(calculate());
+          }, [count]);
+        }
+      `,
+    },
+    {
+      // TODO: Similarly, would have to follow the function reference to see if it's pure
+      name: "From pure function declared inside effect",
+      code: js`
+        function DoubleCounter() {
+          const [count, setCount] = useState(0);
+          const [doubleCount, setDoubleCount] = useState(0);
+
+          useEffect(() => {
+            function calculateDoubleCount(count) {
+              return count * 2;
+            }
+            setDoubleCount(calculateDoubleCount(count));
+          }, [count]);
+        }
+      `,
+    },
+    {
+      // TODO: Similarly, would have to follow the function reference to see if it's pure
+      name: "From pure function declared outside effect",
+      code: js`
+        function DoubleCounter() {
+          const [count, setCount] = useState(0);
+          const [doubleCount, setDoubleCount] = useState(0);
+
+          function calculateDoubleCount(count) {
+            return count * 2;
+          }
+
+          useEffect(() => {
+            setDoubleCount(calculateDoubleCount(count));
+          }, [count]);
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -276,15 +361,12 @@ new MyRuleTester().run("/deriving-state", {
       ],
     },
     {
-      // Assumes the function is pure because it's called on internal state
       name: "From props via member function",
       code: js`
         function DoubleList({ list }) {
           const [doubleList, setDoubleList] = useState([]);
 
           useEffect(() => {
-            // list.concat is a call expression, but it's
-            // considered a prop call, thus still internal
             setDoubleList(list.concat(list));
           }, [list]);
         }
@@ -297,10 +379,13 @@ new MyRuleTester().run("/deriving-state", {
           messageId: messageIds.avoidDerivedState,
           data: { state: "doubleList" },
         },
+        {
+          // NOTE: We consider `list.concat` to essentially be a prop callback
+          messageId: messageIds.avoidParentChildCoupling,
+        },
       ],
     },
     {
-      // Assumes the function is pure because it's called on state
       name: "From internal state via member function",
       code: js`
         function DoubleList() {
@@ -320,10 +405,14 @@ new MyRuleTester().run("/deriving-state", {
           messageId: messageIds.avoidDerivedState,
           data: { state: "doubleList" },
         },
+        {
+          // NOTE: We consider `list.concat` to essentially be a state setter call
+          messageId: messageIds.avoidDerivedState,
+          data: { state: "list" },
+        },
       ],
     },
     {
-      // Assumes the function is pure because it's called on state
       name: "Mutate internal state",
       code: js`
         function DoubleList() {
@@ -331,7 +420,6 @@ new MyRuleTester().run("/deriving-state", {
           const [doubleList, setDoubleList] = useState([]);
 
           useEffect(() => {
-            // TODO: I think it doesn't warn about derived state because doubleList is not a function call, so we filter it out
             doubleList.push(...list);
           }, [list]);
         }
@@ -339,6 +427,11 @@ new MyRuleTester().run("/deriving-state", {
       errors: [
         {
           messageId: messageIds.avoidInternalEffect,
+        },
+        {
+          // NOTE: We consider `doubleList.push` to essentially be a state setter call
+          messageId: messageIds.avoidDerivedState,
+          data: { state: "doubleList" },
         },
       ],
     },
@@ -389,7 +482,6 @@ new MyRuleTester().run("/deriving-state", {
     },
     {
       name: "From internal state with callback setter",
-      todo: true,
       code: js`
         function CountAccumulator({ count }) {
           const [total, setTotal] = useState(count);
@@ -438,7 +530,6 @@ new MyRuleTester().run("/deriving-state", {
     },
     {
       name: "Partially update complex state from props with callback setter",
-      todo: true,
       code: js`
         function Form({ firstName, lastName }) {
           const [formData, setFormData] = useState({
