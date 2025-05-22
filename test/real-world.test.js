@@ -175,6 +175,8 @@ new MyRuleTester().run("/real-world", {
               return loadSignInWithKlarna(
                   klarnaAppId,
                   klarnaEnvironment,
+                // FIX: I think it's something to do with this...
+                // It's a state ref, AND a call expression, but NOT a state setter call
                   countryCode?.toUpperCase(),
                   currentLocale,
               );
