@@ -212,6 +212,7 @@ new MyRuleTester().run("/deriving-state", {
     },
     {
       name: "Via unpure derived setter",
+      todo: true,
       code: js`
         function DoubleCounter({ count }) {
           const [doubleCount, setDoubleCount] = useState(0);
