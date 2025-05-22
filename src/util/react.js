@@ -99,6 +99,11 @@ export function getDependencyRefs(context, node) {
 
 export const isFnRef = (ref) => getCallExpr(ref) !== undefined;
 
+// FIX: Returns true for functions defined outside the effect that set state but also call external functions.
+// I think that's fine, because it does reference state eventually.
+// But separately we need to check whether a reference chain is pure.
+// Normally I think `isInternalEffect` protects against this, but it misses
+// when the effect references a function of the aforementioned nature.
 export const isStateRef = (context, ref) =>
   getUseStateNode(context, ref) !== undefined;
 

@@ -40,6 +40,7 @@ export const rule = {
         return;
       }
 
+      // FIX: Needs to confirm *every* variable on a ref chain is internal, not just *some* of them.
       const isInternalEffect = effectFnRefs
         // Only functions because they actually have effects.
         // Notably this also filters out refs that are local parameters, like `items` in `list.filter((item) => ...)`.

@@ -177,60 +177,8 @@ new MyRuleTester().run("/deriving-state", {
       `,
     },
     {
-      name: "From unpure function declared inside effect",
-      code: js`
-        function DoubleCounter() {
-          const [count, setCount] = useState(0);
-          const [doubleCount, setDoubleCount] = useState(0);
-
-          useEffect(() => {
-            function calculate(meow) {
-              return getMeow() * 2;
-            }
-            setDoubleCount(calculate());
-          }, [count]);
-        }
-      `,
-    },
-    {
-      name: "From unpure function declared outside effect",
-      code: js`
-        function DoubleCounter() {
-          const [count, setCount] = useState(0);
-          const [doubleCount, setDoubleCount] = useState(0);
-
-          function calculate(meow) {
-            // TODO: Issue is we don't see 'getMeow' when looking at the effect body.
-            // We'd have to follow the function reference and examine its definition.
-            return getMeow() * 2;
-          }
-
-          useEffect(() => {
-            setDoubleCount(calculate());
-          }, [count]);
-        }
-      `,
-    },
-    {
-      // TODO: Similarly, would have to follow the function reference to see if it's pure
-      name: "From pure function declared inside effect",
-      code: js`
-        function DoubleCounter() {
-          const [count, setCount] = useState(0);
-          const [doubleCount, setDoubleCount] = useState(0);
-
-          useEffect(() => {
-            function calculateDoubleCount(count) {
-              return count * 2;
-            }
-            setDoubleCount(calculateDoubleCount(count));
-          }, [count]);
-        }
-      `,
-    },
-    {
-      // TODO: Similarly, would have to follow the function reference to see if it's pure
-      name: "From pure function declared outside effect",
+      // TODO: Follow function refs
+      name: "Via pure local function",
       code: js`
         function DoubleCounter() {
           const [count, setCount] = useState(0);
@@ -246,6 +194,66 @@ new MyRuleTester().run("/deriving-state", {
         }
       `,
     },
+    {
+      name: "Via unpure local function",
+      code: js`
+        function Counter() {
+          const [count, setCount] = useState(0);
+
+          function calculate(count) {
+            return count * fetch('/multipler');
+          }
+
+          useEffect(() => {
+            setCount(calculate(count));
+          }, [count]);
+        }
+      `,
+    },
+    {
+      name: "Via unpure derived setter",
+      code: js`
+        function DoubleCounter({ count }) {
+          const [doubleCount, setDoubleCount] = useState(0);
+
+          const derivedSetter = (count) => {
+            // FIX: Needs to consider this function as unpure/external because it calls an external function.
+            const multipler = fetch('/multipler');
+            setDoubleCount(count); 
+          }
+
+          useEffect(() => {
+            derivedSetter(count);
+          }, [count]);
+        }
+      `,
+    },
+    {
+      name: "Via pure global function",
+      code: js`
+        function Counter({ count }) {
+          const [countJson, setCountJson] = useState();
+
+          useEffect(() => {
+            setCountJson(JSON.stringify(count));
+          }, [count]);
+        }
+      `,
+    },
+    {
+      name: "Via unpure global function",
+      code: js`
+        function Counter({ count }) {
+          const [multipliedCount, setMultipliedCount] = useState();
+
+          useEffect(() => {
+            const multipler = fetch('/multipler');
+            setMultipliedCount(count * multipler);
+          }, [count]);
+        }
+      `,
+    },
+    // TODO: Above function tests but with `useCallback`
   ],
   invalid: [
     {
@@ -481,7 +489,7 @@ new MyRuleTester().run("/deriving-state", {
       ],
     },
     {
-      name: "From internal state with callback setter",
+      name: "From internal state via callback setter",
       code: js`
         function CountAccumulator({ count }) {
           const [total, setTotal] = useState(count);
@@ -498,6 +506,29 @@ new MyRuleTester().run("/deriving-state", {
         {
           messageId: messageIds.avoidDerivedState,
           data: { state: "total" },
+        },
+      ],
+    },
+    {
+      name: "From internal state via pure derived setter",
+      code: js`
+        function DoubleCounter({ count }) {
+          const [doubleCount, setDoubleCount] = useState(0);
+
+          const derivedSetter = (count) => setDoubleCount(count * 2);
+
+          useEffect(() => {
+            derivedSetter(count);
+          }, [count]);
+        }
+      `,
+      errors: [
+        {
+          messageId: messageIds.avoidInternalEffect,
+        },
+        {
+          messageId: messageIds.avoidDerivedState,
+          data: { state: "doubleCount" },
         },
       ],
     },
@@ -529,7 +560,7 @@ new MyRuleTester().run("/deriving-state", {
       ],
     },
     {
-      name: "Partially update complex state from props with callback setter",
+      name: "Partially update complex state from props via callback setter",
       code: js`
         function Form({ firstName, lastName }) {
           const [formData, setFormData] = useState({
@@ -556,7 +587,7 @@ new MyRuleTester().run("/deriving-state", {
       ],
     },
     {
-      name: "Partially update complex state from props with derived setter",
+      name: "Partially update complex state from props via derived setter",
       code: js`
         function Form({ firstName, lastName }) {
           const [formData, setFormData] = useState({

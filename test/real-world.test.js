@@ -155,5 +155,37 @@ new MyRuleTester().run("/real-world", {
         }
       `,
     },
+    {
+      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/7
+      name: "Klarna",
+      code: js`
+        function Klarna() {
+          const [countryCode, setCountryCode] = useState();
+          const [result, setResult] = useState();
+          const loadSignInWithKlarna = (klarnaAppId, klarnaEnvironment, countryCode, currentLocale) => {
+            const klarnaResult = doSomething();
+            setResult(klarnaResult);
+          };
+          const [klarnaEnabled, setKlarnaEnabled] = useState();
+
+          useEffect(() => {
+            if (klarnaEnabled) {
+              return loadSignInWithKlarna(
+                  klarnaAppId,
+                  klarnaEnvironment,
+                  countryCode?.toUpperCase(),
+                  currentLocale,
+              );
+            }
+          }, [
+            countryCode,
+            klarnaAppId,
+            klarnaEnabled,
+            klarnaEnvironment,
+            currentLocale,
+          ]);
+        }
+      `,
+    },
   ],
 });
