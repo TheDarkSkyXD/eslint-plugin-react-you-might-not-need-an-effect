@@ -97,9 +97,6 @@ export const rule = {
                   (ref) => isStateRef(context, ref) || isPropRef(context, ref),
                 )
               ) {
-                // TODO: Is this a correct assumption by now?
-                // Should I flag this whenever the call expr argument is *only* the state?
-                // Like this seems more appropriate than "derived" state.
                 context.report({
                   node: callExpr,
                   messageId: messageIds.avoidChainingState,
