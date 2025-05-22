@@ -4,6 +4,54 @@ import { messageIds } from "../src/messages.js";
 new MyRuleTester().run("/resetting-state-from-props", {
   invalid: [
     {
+      // Valid wrt this flag
+      name: "Set state when a prop changes, but not to its default value",
+      code: js`
+        function List({ items }) {
+          const [selection, setSelection] = useState();
+
+          useEffect(() => {
+            setSelection(items[0]);
+          }, [items]);
+        }
+      `,
+      errors: [
+        {
+          messageId: messageIds.avoidInternalEffect,
+        },
+        {
+          messageId: messageIds.avoidDerivedState,
+        },
+      ],
+    },
+    {
+      // Valid wrt this flag
+      name: "Reset some state when a prop changes",
+      code: js`
+        function ProfilePage({ userId }) {
+          const [user, setUser] = useState(null);
+          const [comment, setComment] = useState('type something');
+          const [catName, setCatName] = useState('Sparky');
+
+          useEffect(() => {
+            setUser(null);
+            setComment('meow')
+          }, [userId]);
+        }
+      `,
+      errors: [
+        {
+          messageId: messageIds.avoidInternalEffect,
+        },
+        {
+          messageId: messageIds.avoidChainingState,
+        },
+        {
+          messageId: messageIds.avoidChainingState,
+        },
+      ],
+    },
+    {
       name: "Reset all state when a prop changes",
       code: js`
         function ProfilePage({ userId }) {
@@ -34,18 +82,15 @@ new MyRuleTester().run("/resetting-state-from-props", {
       ],
     },
     {
-      // Valid from the perspective of this particular flag
-      name: "Resetting some state when a prop changes",
+      // These are equivalent because state initializes to `undefined` when it has no argument
+      name: "Undefined state initializer compared to state setter with literal undefined",
       code: js`
-        function ProfilePage({ userId }) {
-          const [user, setUser] = useState(null);
-          const [comment, setComment] = useState('type something');
-          const [catName, setCatName] = useState('Sparky');
+        function List({ items }) {
+          const [selectedItem, setSelectedItem] = useState();
 
           useEffect(() => {
-            setUser(null);
-            setComment('meow')
-          }, [userId]);
+            setSelectedItem(undefined);
+          }, [items]);
         }
       `,
       errors: [
@@ -53,7 +98,27 @@ new MyRuleTester().run("/resetting-state-from-props", {
           messageId: messageIds.avoidInternalEffect,
         },
         {
+          messageId: messageIds.avoidResettingStateFromProps,
+        },
+        {
           messageId: messageIds.avoidChainingState,
+        },
+      ],
+    },
+    {
+      name: "Undefined state initializer compared to state setter with literal null",
+      code: js`
+        function List({ items }) {
+          const [selectedItem, setSelectedItem] = useState();
+
+          useEffect(() => {
+            setSelectedItem(null);
+          }, [items]);
+        }
+      `,
+      errors: [
+        {
+          messageId: messageIds.avoidInternalEffect,
         },
         {
           messageId: messageIds.avoidChainingState,

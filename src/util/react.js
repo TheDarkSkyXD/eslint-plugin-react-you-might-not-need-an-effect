@@ -160,21 +160,40 @@ export const isPropsUsedToResetAllState = (
   return (
     depsRefs.some((ref) => isPropRef(context, ref)) &&
     stateSetterRefs.length > 0 &&
-    stateSetterRefs.every((ref) =>
-      isStateSetterCalledWithDefaultValue(context, ref),
-    ) &&
+    stateSetterRefs.every((ref) => isSetStateToInitialValue(context, ref)) &&
     stateSetterRefs.length ===
       countUseStates(context, findContainingComponentNode(useEffectNode))
   );
 };
 
-const isStateSetterCalledWithDefaultValue = (context, setterRef) => {
-  const callExpr = setterRef.identifier.parent;
-  const useStateDefaultValue = getUseStateNode(context, setterRef).init
-    .arguments?.[0];
+const isSetStateToInitialValue = (context, setterRef) => {
+  const setStateToValue = getCallExpr(setterRef).arguments[0];
+  const stateInitialValue = getUseStateNode(context, setterRef).init
+    .arguments[0];
+
+  // `useState()` (with no args) defaults to `undefined`,
+  // so ommitting the arg is equivalent to passing `undefined`.
+  // Technically this would false positive if they shadowed
+  // `undefined` in only one of the scopes (only possible via `var`),
+  // but I hope no one would do that.
+  const isUndefined = (node) => node === undefined || node.name === "undefined";
+  if (isUndefined(setStateToValue) && isUndefined(stateInitialValue)) {
+    return true;
+  }
+
+  // `sourceCode.getText()` returns the entire file when passed null/undefined - let's short circuit that
+  if (setStateToValue === null && stateInitialValue === null) {
+    return true;
+  } else if (
+    (setStateToValue && !stateInitialValue) ||
+    (!setStateToValue && stateInitialValue)
+  ) {
+    return false;
+  }
+
   return (
-    context.sourceCode.getText(callExpr.arguments[0]) ===
-    context.sourceCode.getText(useStateDefaultValue)
+    context.sourceCode.getText(setStateToValue) ===
+    context.sourceCode.getText(stateInitialValue)
   );
 };
 
