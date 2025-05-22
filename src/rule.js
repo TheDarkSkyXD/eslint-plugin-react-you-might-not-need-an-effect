@@ -104,7 +104,7 @@ export const rule = {
                   node: callExpr,
                   messageId: messageIds.avoidChainingState,
                 });
-              } else {
+              } else if (depsRefs.length === 0) {
                 context.report({
                   node: callExpr,
                   messageId: messageIds.avoidInitializingState,
