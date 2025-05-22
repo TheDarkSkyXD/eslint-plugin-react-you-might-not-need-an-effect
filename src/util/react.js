@@ -164,7 +164,7 @@ export const isPropsUsedToResetAllState = (
       isStateSetterCalledWithDefaultValue(context, ref),
     ) &&
     stateSetterRefs.length ===
-      countUseStates(context, useEffectNode.parent.parent)
+      countUseStates(context, findContainingComponentNode(useEffectNode))
   );
 };
 
@@ -188,4 +188,14 @@ const countUseStates = (context, componentNode) => {
   });
 
   return count;
+};
+
+const findContainingComponentNode = (node) => {
+  if (!node) {
+    return undefined;
+  } else if (isReactFunctionalComponent(node)) {
+    return node;
+  }
+
+  return findContainingComponentNode(node.parent);
 };
