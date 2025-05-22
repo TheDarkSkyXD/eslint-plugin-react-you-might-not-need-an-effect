@@ -159,14 +159,16 @@ new MyRuleTester().run("/real-world", {
       // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/7
       name: "Klarna",
       code: js`
-        function Klarna() {
-          const [countryCode, setCountryCode] = useState();
+        function Klarna({ klarnaAppId }) {
+          const [countryCode] = useState(qs.parse('countryCode=meow'));
           const [result, setResult] = useState();
+          const klarnaEnabled = useSelector('idk') && shouldKlarnaBeEnabled(countryCode);
+          const currentLocale = getCurrentLocale(useGetCurrentLanguage());
+
           const loadSignInWithKlarna = (klarnaAppId, klarnaEnvironment, countryCode, currentLocale) => {
             const klarnaResult = doSomething();
             setResult(klarnaResult);
           };
-          const [klarnaEnabled, setKlarnaEnabled] = useState();
 
           useEffect(() => {
             if (klarnaEnabled) {
