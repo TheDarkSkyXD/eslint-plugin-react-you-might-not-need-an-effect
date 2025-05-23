@@ -82,6 +82,7 @@ export const rule = {
           if (isInternalEffect) {
             if (isStateRef(context, ref)) {
               const useStateNode = getUseStateNode(context, ref);
+              const stateName = useStateNode.id.elements[0].name;
               // TODO: Should be: Either this is the only call to the state setter, or the args are all internal (including intermediates).
               // Needs to be outside `isInternalEffect` check for the former.
               // Does it matter whether the args are in the deps array?
@@ -90,7 +91,7 @@ export const rule = {
                 context.report({
                   node: callExpr,
                   messageId: messageIds.avoidDerivedState,
-                  data: { state: useStateNode.id.elements[0].name },
+                  data: { state: stateName },
                 });
               } else if (
                 depsRefs.some(
@@ -105,6 +106,7 @@ export const rule = {
                 context.report({
                   node: callExpr,
                   messageId: messageIds.avoidInitializingState,
+                  data: { state: stateName },
                 });
               }
             }

@@ -19,7 +19,7 @@ export const messages = {
   [messageIds.avoidDerivedState]:
     'Avoid storing derived state. Compute "{{state}}" directly during render, optionally with `useMemo` if it\'s expensive.',
   [messageIds.avoidInitializingState]:
-    "Avoid initializing state in an effect. Instead, pass the initial value to `useState`.",
+    'Avoid initializing state in an effect. Instead, pass "{{state}}"\'s initial value to its `useState`.',
   [messageIds.avoidChainingState]:
     "Avoid chaining state changes. When possible, update all relevant state simultaneously.",
   [messageIds.avoidParentChildCoupling]:
