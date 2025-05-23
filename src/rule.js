@@ -14,8 +14,6 @@ import {
 
 export const name = "you-might-not-need-an-effect";
 
-// TODO: Possible to detect when `useSyncExternalStore` should be preferred?
-
 export const rule = {
   meta: {
     type: "suggestion",

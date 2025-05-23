@@ -10,6 +10,8 @@ export const messageIds = {
   // Because if we have a setter then we have a callback.
   // But, I think that would also warn about valid uses that synchronize internal state to external state.
   // avoidEventHandler: "avoidEventHandler",
+// TODO: Possible to detect when `useSyncExternalStore` should be preferred?
+
 };
 
 // TODO: Could include more info in messages, like the relevant node
