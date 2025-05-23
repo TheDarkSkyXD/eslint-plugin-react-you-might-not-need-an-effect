@@ -27,10 +27,12 @@ export const isUseState = (node) =>
 export const isUseEffect = (node) =>
   (node.type === "CallExpression" &&
     node.callee.type === "Identifier" &&
-    node.callee.name === "useEffect") ||
+    (node.callee.name === "useEffect" ||
+      node.callee.name === "useLayoutEffect")) ||
   (node.callee.type === "MemberExpression" &&
     node.callee.object.name === "React" &&
-    node.callee.property.name === "useEffect");
+    (node.callee.property.name === "useEffect" ||
+      node.callee.property.name === "useLayoutEffect"));
 
 export const getEffectFn = (node) => {
   if (!isUseEffect(node) || node.arguments.length < 1) {

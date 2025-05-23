@@ -198,6 +198,20 @@ new MyRuleTester().run("/syntax", {
       errors: 2,
     },
     {
+      name: "useLayoutEffect",
+      code: js`
+          function DoubleCounter() {
+            const [count, setCount] = useState(0);
+            const [doubleCount, setDoubleCount] = useState(0);
+
+            useLayoutEffect(() => {
+              setDoubleCount(count * 2);
+            }, [count]);
+          }
+        `,
+      errors: 2,
+    },
+    {
       name: "Non-destructured props",
       code: code({
         componentDeclaration: js`function DoubleCounter(props)`,
