@@ -72,14 +72,6 @@ new MyRuleTester().run("/resetting-state-from-props", {
           messageId: messageIds.avoidResettingStateFromProps,
           data: { prop: "userId" },
         },
-        // TODO: Maybe early return to skip these flags?
-        // Kinda confusing for user
-        {
-          messageId: messageIds.avoidChainingState,
-        },
-        {
-          messageId: messageIds.avoidChainingState,
-        },
       ],
     },
     {
@@ -104,14 +96,6 @@ new MyRuleTester().run("/resetting-state-from-props", {
           messageId: messageIds.avoidResettingStateFromProps,
           data: { prop: "userId" },
         },
-        // TODO: Maybe early return to skip these flags?
-        // Kinda confusing for user
-        {
-          messageId: messageIds.avoidChainingState,
-        },
-        {
-          messageId: messageIds.avoidChainingState,
-        },
       ],
     },
     {
@@ -134,11 +118,6 @@ new MyRuleTester().run("/resetting-state-from-props", {
           // TODO: Ideally would be "user.id"
           data: { prop: "user" },
         },
-        // TODO: Maybe early return to skip these flags?
-        // Kinda confusing for user
-        {
-          messageId: messageIds.avoidChainingState,
-        },
       ],
     },
     {
@@ -160,9 +139,6 @@ new MyRuleTester().run("/resetting-state-from-props", {
           messageId: messageIds.avoidResettingStateFromProps,
           data: { prop: "userId" },
         },
-        {
-          messageId: messageIds.avoidChainingState,
-        },
       ],
     },
     {
@@ -183,9 +159,6 @@ new MyRuleTester().run("/resetting-state-from-props", {
         },
         {
           messageId: messageIds.avoidResettingStateFromProps,
-        },
-        {
-          messageId: messageIds.avoidChainingState,
         },
       ],
     },

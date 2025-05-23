@@ -68,6 +68,10 @@ export const rule = {
           messageId: messageIds.avoidResettingStateFromProps,
           data: { prop: propName },
         });
+
+        // Don't flag anything else (particularly avoidChainingState will trigger).
+        // Just confusing, and this should be fixed first.
+        return;
       }
 
       effectFnRefs
