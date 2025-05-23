@@ -2,7 +2,6 @@ import { MyRuleTester, js } from "./rule-tester.js";
 import { messageIds } from "../src/messages.js";
 
 new MyRuleTester().run("/parent-child-coupling", {
-  // TODO: Test with intermediate state too
   invalid: [
     {
       // Valid wrt this flag
@@ -36,6 +35,27 @@ new MyRuleTester().run("/parent-child-coupling", {
 
           useEffect(() => {
             onFetched(data);
+          }, [onFetched, data]);
+        }
+      `,
+      errors: [
+        {
+          messageId: messageIds.avoidInternalEffect,
+        },
+        {
+          messageId: messageIds.avoidParentChildCoupling,
+        },
+      ],
+    },
+    {
+      name: "Pass derived internal live state",
+      code: js`
+        const Child = ({ onFetched }) => {
+          const [data, setData] = useState();
+
+          useEffect(() => {
+            const firstElement = data[0];
+            onFetched(firstElement);
           }, [onFetched, data]);
         }
       `,
@@ -104,6 +124,24 @@ new MyRuleTester().run("/parent-child-coupling", {
           useEffect(() => {
             onFetched(data);
           }, [onFetched, data]);
+        }
+      `,
+      errors: [
+        {
+          messageId: messageIds.avoidParentChildCoupling,
+        },
+      ],
+    },
+    {
+      name: "Pass derived live external state",
+      code: js`
+        const Child = ({ onFetched }) => {
+          const data = useSomeAPI();
+          const firstElement = data[0];
+
+          useEffect(() => {
+            onFetched(firstElement);
+          }, [onFetched, firstElement]);
         }
       `,
       errors: [
