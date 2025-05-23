@@ -340,5 +340,27 @@ new MyRuleTester().run("/syntax", {
         },
       ],
     },
+    {
+      name: "Setter-less useState",
+      code: js`
+        function AttemptCounter() {
+          const [attempts, setAttempts] = useState(0);
+          const [count] = useState(0);
+
+          useEffect(() => {
+            setAttempts(count);
+          }, [count]);
+        }
+      `,
+      errors: [
+        {
+          messageId: messageIds.avoidInternalEffect
+        },
+        {
+          messageId: messageIds.avoidDerivedState,
+          data: { state: "attempts" }
+        }
+      ]
+    }
   ],
 });

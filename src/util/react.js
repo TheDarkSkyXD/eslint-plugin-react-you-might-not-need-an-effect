@@ -17,7 +17,8 @@ export const isUseState = (node) =>
   node.init.type === "CallExpression" &&
   node.init.callee.name === "useState" &&
   node.id.type === "ArrayPattern" &&
-  node.id.elements.length === 2 && // TODO: Should this allow 1...? i.e. just the state value.
+  // Not sure its usecase, but may just have the setter
+  (node.id.elements.length === 1 || node.id.elements.length === 2) &&
   node.id.elements.every((el) => {
     // Apparently skipping the state element is a valid use.
     // I suppose technically the state can still be read via setter callback.
