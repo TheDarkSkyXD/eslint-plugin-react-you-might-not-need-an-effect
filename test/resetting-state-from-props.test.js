@@ -70,12 +70,72 @@ new MyRuleTester().run("/resetting-state-from-props", {
         },
         {
           messageId: messageIds.avoidResettingStateFromProps,
+          data: { prop: "userId" },
         },
         // TODO: Maybe early return to skip these flags?
         // Kinda confusing for user
         {
           messageId: messageIds.avoidChainingState,
         },
+        {
+          messageId: messageIds.avoidChainingState,
+        },
+      ],
+    },
+    {
+      name: "Reset all state to shared var when a prop changes",
+      code: js`
+        function ProfilePage({ userId }) {
+          const initialState = 'meow meow'
+          const [user, setUser] = useState(null);
+          const [comment, setComment] = useState(initialState);
+
+          useEffect(() => {
+            setUser(null);
+            setComment(initialState);
+          }, [userId]);
+        }
+      `,
+      errors: [
+        {
+          messageId: messageIds.avoidInternalEffect,
+        },
+        {
+          messageId: messageIds.avoidResettingStateFromProps,
+          data: { prop: "userId" },
+        },
+        // TODO: Maybe early return to skip these flags?
+        // Kinda confusing for user
+        {
+          messageId: messageIds.avoidChainingState,
+        },
+        {
+          messageId: messageIds.avoidChainingState,
+        },
+      ],
+    },
+    {
+      name: "Reset all state when a prop member changes",
+      code: js`
+        function ProfilePage({ user }) {
+          const [comment, setComment] = useState('type something');
+
+          useEffect(() => {
+            setComment('type something');
+          }, [user.id]);
+        }
+      `,
+      errors: [
+        {
+          messageId: messageIds.avoidInternalEffect,
+        },
+        {
+          messageId: messageIds.avoidResettingStateFromProps,
+          // TODO: Ideally would be "user.id"
+          data: { prop: "user" },
+        },
+        // TODO: Maybe early return to skip these flags?
+        // Kinda confusing for user
         {
           messageId: messageIds.avoidChainingState,
         },
@@ -106,6 +166,7 @@ new MyRuleTester().run("/resetting-state-from-props", {
       ],
     },
     {
+      // Valid wrt this flag - undefined !== null
       name: "Undefined state initializer compared to state setter with literal null",
       code: js`
         function List({ items }) {

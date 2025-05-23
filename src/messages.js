@@ -25,7 +25,7 @@ export const messages = {
   [messageIds.avoidParentChildCoupling]:
     "Avoid coupling parent behavior or state to a child component. Instead, lift shared logic or state up to the parent.",
   [messageIds.avoidResettingStateFromProps]:
-    "Avoid resetting state from props. If the prop is a key, pass it as `key` instead so React will reset the component.",
+    'Avoid resetting state from props. If "{{prop}}" is a key, pass it as `key` instead so React will reset the component.',
   // [messages.avoidEventHandler]:
   //   "Avoid using state as an event handler. Instead, call the event handler directly.",
 };

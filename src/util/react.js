@@ -153,7 +153,7 @@ export const getUseStateNode = (context, ref) => {
     ?.defs.find((def) => def.type === "Variable" && isUseState(def.node))?.node;
 };
 
-export const isPropsUsedToResetAllState = (
+export const findPropUsedToResetAllState = (
   context,
   effectFnRefs,
   depsRefs,
@@ -165,13 +165,15 @@ export const isPropsUsedToResetAllState = (
     .filter((ref) => isFnRef(ref))
     .filter((ref) => isStateRef(context, ref));
 
-  return (
-    depsRefs.some((ref) => isPropRef(context, ref)) &&
+  const isAllStateReset =
     stateSetterRefs.length > 0 &&
     stateSetterRefs.every((ref) => isSetStateToInitialValue(context, ref)) &&
     stateSetterRefs.length ===
-      countUseStates(context, findContainingComponentNode(useEffectNode))
-  );
+      countUseStates(context, findContainingComponentNode(useEffectNode));
+
+  return isAllStateReset
+    ? depsRefs.find((ref) => isPropRef(context, ref))
+    : undefined;
 };
 
 const isSetStateToInitialValue = (context, setterRef) => {

@@ -3,7 +3,7 @@ import { getUpstreamVariables } from "./util/ast.js";
 import {
   isFnRef,
   isPropRef,
-  isPropsUsedToResetAllState,
+  findPropUsedToResetAllState,
   isStateRef,
   isUseEffect,
   getEffectBodyRefs,
@@ -55,10 +55,18 @@ export const rule = {
         });
       }
 
-      if (isPropsUsedToResetAllState(context, effectFnRefs, depsRefs, node)) {
+      const propUsedToResetAllState = findPropUsedToResetAllState(
+        context,
+        effectFnRefs,
+        depsRefs,
+        node,
+      );
+      if (propUsedToResetAllState) {
+        const propName = propUsedToResetAllState.identifier.name;
         context.report({
           node: node,
           messageId: messageIds.avoidResettingStateFromProps,
+          data: { prop: propName },
         });
       }
 
@@ -82,7 +90,7 @@ export const rule = {
           if (isInternalEffect) {
             if (isStateRef(context, ref)) {
               const useStateNode = getUseStateNode(context, ref);
-              const stateName = useStateNode.id.elements[0].name;
+              const stateName = useStateNode.id.elements[0]?.name; // TODO: Fallback to setter name? For value-less useState.
               // TODO: Should be: Either this is the only call to the state setter, or the args are all internal (including intermediates).
               // Needs to be outside `isInternalEffect` check for the former.
               // Does it matter whether the args are in the deps array?
