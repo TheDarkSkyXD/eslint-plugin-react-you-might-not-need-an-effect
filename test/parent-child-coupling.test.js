@@ -5,6 +5,30 @@ new MyRuleTester().run("/parent-child-coupling", {
   // TODO: Test with intermediate state too
   invalid: [
     {
+      // Valid wrt this flag
+      name: "Using prop in state initializer",
+      code: js`
+        function List({ items }) {
+          // Verify that 'setSelection' is not considered a prop ref
+          // just because 'items' is on its definition path.
+          // If it did, it'd flag 'avoidParentChildCoupling'.
+          const [selection, setSelection] = useState(items[0]);
+
+          useEffect(() => {
+            setSelection(null);
+          }, [items]);
+        }
+      `,
+      errors: [
+        {
+          messageId: messageIds.avoidInternalEffect,
+        },
+        {
+          messageId: messageIds.avoidChainingState,
+        },
+      ],
+    },
+    {
       name: "Pass internal live state",
       code: js`
         const Child = ({ onFetched }) => {
