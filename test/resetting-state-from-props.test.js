@@ -142,6 +142,30 @@ new MyRuleTester().run("/resetting-state-from-props", {
       ],
     },
     {
+      name: "Reset all state when one of two props change",
+      code: js`
+        function ProfilePage({ userId, friends }) {
+          const [comment, setComment] = useState('type something');
+
+          useEffect(() => {
+            setComment('type something');
+          }, [userId, friends]);
+        }
+      `,
+      errors: [
+        {
+          messageId: messageIds.avoidInternalEffect,
+        },
+        {
+          messageId: messageIds.avoidResettingStateFromProps,
+          data: { prop: "userId" },
+        },
+        {
+          messageId: messageIds.avoidChainingState,
+        },
+      ],
+    },
+    {
       // These are equivalent because state initializes to `undefined` when it has no argument
       name: "Undefined state initializer compared to state setter with literal undefined",
       code: js`
