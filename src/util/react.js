@@ -75,6 +75,7 @@ export const getEffectBodyRefs = (context, node) => {
 // Hmm maybe not; not traversing CallExpr.arguments could be a problem for that use.
 // e.g. when a prop is passed to a state setter.
 // Or maybe that's fine? We'll still analyze the state setter, where we then explicitly check its arguments.
+// But may interfere with detecting internal effect.
 export function getDependencyRefs(context, node) {
   if (!isUseEffect(node) || node.arguments.length < 2) {
     return null;
@@ -158,6 +159,8 @@ export const isPropsUsedToResetAllState = (
   depsRefs,
   useEffectNode,
 ) => {
+  // TODO: Technically this includes state with call expressions, like countryCode.toUpperCase().
+  // A true `isStateSetter` would check that the identifier name matches the useState's second element.
   const stateSetterRefs = effectFnRefs
     .filter((ref) => isFnRef(ref))
     .filter((ref) => isStateRef(context, ref));
