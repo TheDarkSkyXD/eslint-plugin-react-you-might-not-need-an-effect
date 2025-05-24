@@ -55,7 +55,7 @@ new MyRuleTester().run("/syntax", {
       `,
     },
     {
-      // TODO: We don't follow functions right now
+      // TODO: We don't follow functions passed directly to the effect right now
       name: "Passing non-anonymous function to effect",
       code: js`
         function Form({ onClose }) {
@@ -354,13 +354,13 @@ new MyRuleTester().run("/syntax", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidInternalEffect
+          messageId: messageIds.avoidInternalEffect,
         },
         {
           messageId: messageIds.avoidDerivedState,
-          data: { state: "attempts" }
-        }
-      ]
-    }
+          data: { state: "attempts" },
+        },
+      ],
+    },
   ],
 });

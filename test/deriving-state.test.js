@@ -177,7 +177,6 @@ new MyRuleTester().run("/deriving-state", {
       `,
     },
     {
-      // TODO: Follow function refs
       name: "Via pure local function",
       code: js`
         function DoubleCounter() {
@@ -251,6 +250,36 @@ new MyRuleTester().run("/deriving-state", {
             const multipler = fetch('/multipler');
             setMultipliedCount(count * multipler);
           }, [count]);
+        }
+      `,
+    },
+    {
+      name: "From internal and external state",
+      code: js`
+        function Component() {
+          const [name, setName] = useState();
+          const [prefixedName, setPrefixedName] = useState();
+          const prefix = getPrefixFor(name);
+
+          useEffect(() => {
+            setPrefixedName(prefix + name);
+          }, [name, prefix])
+        }
+      `,
+    },
+    {
+      name: "From derived internal and external state",
+      code: js`
+        function Component() {
+          const [name, setName] = useState();
+          const [prefixedName, setPrefixedName] = useState();
+          const prefix = getPrefixFor(name);
+          // FIX: I think it's because we use 'find/some', not 'every', when walking up derivation chain.
+          const newValue = prefix + name;
+
+          useEffect(() => {
+            setPrefixedName(newValue);
+          }, [newValue])
         }
       `,
     },
