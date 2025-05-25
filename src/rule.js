@@ -39,7 +39,6 @@ export const rule = {
 
       const effectFnRefs = getEffectFnRefs(context, node);
       const depsRefs = getDownstreamRefs(context, depsArr);
-      console.log("effectFnRefs", effectFnRefs);
 
       if (!effectFnRefs || effectFnRefs.length === 0 || !depsRefs) {
         return;

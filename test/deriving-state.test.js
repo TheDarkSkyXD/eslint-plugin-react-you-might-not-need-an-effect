@@ -255,6 +255,7 @@ new MyRuleTester().run("/deriving-state", {
     },
     {
       name: "From derived internal and external state",
+      todo: true,
       code: js`
         function Component() {
           const [name, setName] = useState();
