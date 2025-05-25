@@ -93,7 +93,10 @@ export const rule = {
           if (isInternalEffect) {
             if (isStateRef(context, ref)) {
               const useStateNode = getUseStateNode(context, ref);
-              const stateName = useStateNode.id.elements[0]?.name; // TODO: Fallback to setter name? For value-less useState.
+              const stateName = (
+                useStateNode.id.elements[0] ?? useStateNode.id.elements[1]
+              )?.name;
+
               // TODO: Can also warn if this is the only call to the setter...
               // Does it matter whether the args are in the deps array?
               // I guess so, to differentiate between derived and chain state updates?

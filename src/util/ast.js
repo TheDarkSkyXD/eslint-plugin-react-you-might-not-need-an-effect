@@ -41,17 +41,24 @@ export const getUpstreamVariables = (context, node, visited = new Set()) => {
 
   visited.add(node);
 
-  return getDownstreamIdentifiers(context, node)
-    .map((identifier) =>
-      findVariable(context.sourceCode.getScope(node), identifier),
-    )
-    .filter(Boolean) // Implicit base case: Uses variable(s) declared outside this scope TODO: Does that affect tests that use undefined functions?
-    .flatMap((variable) =>
-      variable.defs
-        .filter((def) => !!def.node.init) // Happens when the variable is declared without an initializer, e.g. `let foo;`
-        .flatMap((def) => getUpstreamVariables(context, def.node.init, visited))
-        .concat(variable),
-    );
+  return (
+    getDownstreamIdentifiers(context, node)
+      .map((identifier) =>
+        findVariable(context.sourceCode.getScope(node), identifier),
+      )
+      // Implicit base case: Uses variable(s) declared outside this scope
+      // TODO: I think that affects tests with technically undefined functions...
+      // Even some global functions return `undefined`, like `fetch`
+      .filter(Boolean)
+      .flatMap((variable) =>
+        variable.defs
+          .filter((def) => !!def.node.init) // Happens when the variable is declared without an initializer, e.g. `let foo;`
+          .flatMap((def) =>
+            getUpstreamVariables(context, def.node.init, visited),
+          )
+          .concat(variable),
+      )
+  );
 };
 
 export const getDownstreamRefs = (context, node) =>

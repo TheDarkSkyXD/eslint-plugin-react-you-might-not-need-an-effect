@@ -326,7 +326,7 @@ new MyRuleTester().run("/syntax", {
 
           useEffect(() => {
             setAttempts((prev) => {
-              return prev++;
+              return prev + count;
             });
           }, [count]);
         }
@@ -336,7 +336,10 @@ new MyRuleTester().run("/syntax", {
           messageId: messageIds.avoidInternalEffect,
         },
         {
-          messageId: messageIds.avoidChainingState,
+          // TODO: Should this actually be chaining state?
+          // Because the correct pattern would be updating attempts and count simultaneously.
+          messageId: messageIds.avoidDerivedState,
+          data: { state: "setAttempts" },
         },
       ],
     },
