@@ -13,6 +13,7 @@ export const isReactFunctionalComponent = (node) =>
   node.id.name[0].toUpperCase() === node.id.name[0];
 
 export const isUseState = (node) =>
+  node.type === "VariableDeclarator" &&
   node.init &&
   node.init.type === "CallExpression" &&
   node.init.callee.name === "useState" &&
@@ -111,11 +112,9 @@ export const getUseStateNode = (context, ref) => {
     .find((variable) =>
       // NOTE: Global variables (like `JSON` in `JSON.stringify()`) have an empty `defs`; fortunately `[].some() === false`.
       // Also, I'm not sure so far when `defs.length > 1`... haven't seen it with shadowed variables or even redeclared variables with `var`.
-      variable.defs.some(
-        (def) => def.type === "Variable" && isUseState(def.node),
-      ),
+      variable.defs.some((def) => isUseState(def.node)),
     )
-    ?.defs.find((def) => def.type === "Variable" && isUseState(def.node))?.node;
+    ?.defs.find((def) => isUseState(def.node))?.node;
 };
 
 export const findPropUsedToResetAllState = (
