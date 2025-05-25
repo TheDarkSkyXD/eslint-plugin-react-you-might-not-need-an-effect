@@ -38,6 +38,8 @@ export const rule = {
       }
 
       // FIX: Needs to confirm *every* variable on a ref chain is internal, not just *some* of them.
+      // TODO: Or just remove? It's never reported in isolation afaik.
+      // And presumably once the user fixes the more specific issue, they'll see the effect is empty and delete it.
       const isInternalEffect = effectFnRefs
         // Only functions because they actually have effects.
         // Notably this also filters out refs that are local parameters, like `items` in `list.filter((item) => ...)`.
@@ -88,12 +90,12 @@ export const rule = {
             ),
           );
 
+          // TODO: Instead of the entire effect, we can check that just the state setter's args are not external.
           if (isInternalEffect) {
             if (isStateRef(context, ref)) {
               const useStateNode = getUseStateNode(context, ref);
               const stateName = useStateNode.id.elements[0]?.name; // TODO: Fallback to setter name? For value-less useState.
-              // TODO: Should be: Either this is the only call to the state setter, or the args are all internal (including intermediates).
-              // Needs to be outside `isInternalEffect` check for the former.
+              // TODO: Can also warn if this is the only call to the setter...
               // Does it matter whether the args are in the deps array?
               // I guess so, to differentiate between derived and chain state updates?
               if (isDepInArgs) {
