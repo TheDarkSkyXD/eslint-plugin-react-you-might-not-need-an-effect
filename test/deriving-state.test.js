@@ -110,7 +110,7 @@ new MyRuleTester().run("/deriving-state", {
     {
       name: "Subscribe to external state",
       code: js`
-        function Status() {
+        function Status({ topic }) {
           const [status, setStatus] = useState();
 
           useEffect(() => {
