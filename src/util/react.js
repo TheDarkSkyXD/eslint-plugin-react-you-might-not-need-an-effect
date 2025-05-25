@@ -37,7 +37,7 @@ export const isUseEffect = (node) =>
 
 export const getEffectFn = (node) => {
   if (!isUseEffect(node) || node.arguments.length < 1) {
-    return null;
+    return undefined;
   }
 
   const effectFn = node.arguments[0];
@@ -45,14 +45,17 @@ export const getEffectFn = (node) => {
     effectFn.type !== "ArrowFunctionExpression" &&
     effectFn.type !== "FunctionExpression"
   ) {
-    return null;
+    return undefined;
   }
 
   return effectFn;
 };
 
-// NOTE: When `MemberExpression` (even nested ones), a `Reference` is only the root object, not the function.
-export const getEffectBodyRefs = (context, node) => {
+// I tried to mimick the implementation for deps, but it seems to
+// not return things with no local variable... like my tests that use
+// undefined functions lol, or even `fetch`... But it finds `JSON`?
+// `traverse` avoiding CallExpression arguments also affects using it here.
+export const getEffectFnRefs = (context, node) => {
   if (!isUseEffect(node) || node.arguments.length < 1) {
     return null;
   }
@@ -70,35 +73,17 @@ export const getEffectBodyRefs = (context, node) => {
   return getRefs(context.sourceCode.getScope(effectFn));
 };
 
-// Dependency array doesn't have its own scope, so collecting refs is trickier
-// NOTE: Despite different implementation from `getEffectBodyRefs`,
-// I believe it behaves the same due to filtering by `findVariable`.
-// TODO: Share implementation though?
-// Basically use this impl for both, instead of scope.references for other?
-// Hmm maybe not; not traversing CallExpr.arguments could be a problem for that use.
-// e.g. when a prop is passed to a state setter.
-// Or maybe that's fine? We'll still analyze the state setter, where we then explicitly check its arguments.
-// But may interfere with detecting internal effect.
-export function getDependencyRefs(context, node) {
+export function getDependenciesArr(node) {
   if (!isUseEffect(node) || node.arguments.length < 2) {
-    return null;
+    return undefined;
   }
 
   const depsArr = node.arguments[1];
   if (depsArr.type !== "ArrayExpression") {
-    return null;
+    return undefined;
   }
 
-  return getDownstreamIdentifiers(context, depsArr)
-    .map((node) => [
-      node,
-      findVariable(context.sourceCode.getScope(node), node),
-    ])
-    .filter(([_node, variable]) => variable)
-    .flatMap(([node, variable]) =>
-      // TODO: Is the filter necessary?
-      variable.references.filter((ref) => ref.identifier === node),
-    );
+  return depsArr;
 }
 
 export const isFnRef = (ref) => getCallExpr(ref) !== undefined;
@@ -123,6 +108,18 @@ export const isPropRef = (context, ref) =>
         ),
     ),
   );
+
+export const getRef = (context, identifier) =>
+  findVariable(
+    context.sourceCode.getScope(identifier),
+    identifier,
+  )?.references.find((ref) => ref.identifier === identifier);
+
+// NOTE: When `MemberExpression` (even nested ones), a `Reference` is only the root object, not the function.
+export const getDownstreamRefs = (context, node) =>
+  getDownstreamIdentifiers(context, node)
+    .map((identifier) => getRef(context, identifier))
+    .filter(Boolean);
 
 export const getCallExpr = (ref, current = ref.identifier.parent) => {
   if (current.type === "CallExpression") {

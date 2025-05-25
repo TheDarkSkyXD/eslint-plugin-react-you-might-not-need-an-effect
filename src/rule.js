@@ -6,10 +6,12 @@ import {
   findPropUsedToResetAllState,
   isStateRef,
   isUseEffect,
-  getEffectBodyRefs,
-  getDependencyRefs,
+  getEffectFn,
+  getDependenciesArr,
   getUseStateNode,
   getCallExpr,
+  getDownstreamRefs,
+  getEffectFnRefs,
 } from "./util/react.js";
 
 export const name = "you-might-not-need-an-effect";
@@ -30,10 +32,16 @@ export const rule = {
         return;
       }
 
-      const effectFnRefs = getEffectBodyRefs(context, node);
-      const depsRefs = getDependencyRefs(context, node);
+      const depsArr = getDependenciesArr(node);
+      if (!depsArr) {
+        return;
+      }
 
-      if (!effectFnRefs || !depsRefs || effectFnRefs.length === 0) {
+      const effectFnRefs = getEffectFnRefs(context, node);
+      const depsRefs = getDownstreamRefs(context, depsArr);
+      console.log("effectFnRefs", effectFnRefs);
+
+      if (!effectFnRefs || effectFnRefs.length === 0 || !depsRefs) {
         return;
       }
 

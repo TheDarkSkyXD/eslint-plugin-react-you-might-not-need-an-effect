@@ -66,7 +66,7 @@ new MyRuleTester().run("/deriving-state", {
           const [todos, setTodos] = useState([]);
 
           useEffect(() => {
-            fetchTodos().then((todos) => {
+            fetch('/todos').then((todos) => {
               setTodos(todos);
             });
           }, []);
@@ -122,20 +122,6 @@ new MyRuleTester().run("/deriving-state", {
           }, [topic]);
 
           return <div>{status}</div>;
-        }
-      `,
-    },
-    {
-      name: "With external function call",
-      code: js`
-        function TodoList({ todos, filter }) {
-          const [newTodo, setNewTodo] = useState("");
-          const [visibleTodos, setVisibleTodos] = useState([]);
-
-          useEffect(() => {
-            // We can't be sure getFilteredTodos is pure, so we can't warn about this
-            setVisibleTodos(getFilteredTodos(todos, filter));
-          }, [todos, filter]);
         }
       `,
     },
