@@ -53,3 +53,34 @@ export const getUpstreamVariables = (context, node, visited = new Set()) => {
         .concat(variable),
     );
 };
+
+export const getDownstreamRefs = (context, node) =>
+  getDownstreamIdentifiers(context, node)
+    .map((identifier) => getRef(context, identifier))
+    .filter(Boolean);
+
+export const getRef = (context, identifier) =>
+  findVariable(
+    context.sourceCode.getScope(identifier),
+    identifier,
+  )?.references.find((ref) => ref.identifier === identifier);
+
+export const getCallExpr = (ref, current = ref.identifier.parent) => {
+  if (current.type === "CallExpression") {
+    // We've reached the top - confirm that the ref is the (eventual) callee, as opposed to an argument.
+    let node = ref.identifier;
+    while (node.parent.type === "MemberExpression") {
+      node = node.parent;
+    }
+
+    if (current.callee === node) {
+      return current;
+    }
+  }
+
+  if (current.type === "MemberExpression") {
+    return getCallExpr(ref, current.parent);
+  }
+
+  return undefined;
+};

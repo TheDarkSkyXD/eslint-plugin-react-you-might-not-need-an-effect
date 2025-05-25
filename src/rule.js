@@ -1,17 +1,14 @@
 import { messageIds, messages } from "./messages.js";
-import { getUpstreamVariables } from "./util/ast.js";
+import { getUpstreamVariables, getCallExpr } from "./util/ast.js";
 import {
   isFnRef,
   isPropRef,
   findPropUsedToResetAllState,
   isStateRef,
   isUseEffect,
-  getEffectFn,
-  getDependenciesArr,
   getUseStateNode,
-  getCallExpr,
-  getDownstreamRefs,
   getEffectFnRefs,
+  getDependenciesRefs,
 } from "./util/react.js";
 
 export const name = "you-might-not-need-an-effect";
@@ -32,13 +29,8 @@ export const rule = {
         return;
       }
 
-      const depsArr = getDependenciesArr(node);
-      if (!depsArr) {
-        return;
-      }
-
       const effectFnRefs = getEffectFnRefs(context, node);
-      const depsRefs = getDownstreamRefs(context, depsArr);
+      const depsRefs = getDependenciesRefs(context, node);
 
       if (!effectFnRefs || effectFnRefs.length === 0 || !depsRefs) {
         return;

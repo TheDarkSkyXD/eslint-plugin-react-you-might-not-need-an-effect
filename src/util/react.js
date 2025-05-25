@@ -1,8 +1,8 @@
-import { findVariable } from "eslint-utils";
 import {
   traverse,
-  getDownstreamIdentifiers,
   getUpstreamVariables,
+  getDownstreamRefs,
+  getCallExpr,
 } from "./ast.js";
 
 export const isReactFunctionalComponent = (node) =>
@@ -57,10 +57,6 @@ export const getEffectFn = (node) => {
 // `traverse` avoiding CallExpression arguments also affects using it here.
 // NOTE: When `MemberExpression` (even nested ones), a `Reference` is only the root object, not the function.
 export const getEffectFnRefs = (context, node) => {
-  if (!isUseEffect(node) || node.arguments.length < 1) {
-    return null;
-  }
-
   const effectFn = getEffectFn(node);
   if (!effectFn) {
     return null;
@@ -74,7 +70,7 @@ export const getEffectFnRefs = (context, node) => {
   return getRefs(context.sourceCode.getScope(effectFn));
 };
 
-export function getDependenciesArr(node) {
+export function getDependenciesRefs(context, node) {
   if (!isUseEffect(node) || node.arguments.length < 2) {
     return undefined;
   }
@@ -84,7 +80,7 @@ export function getDependenciesArr(node) {
     return undefined;
   }
 
-  return depsArr;
+  return getDownstreamRefs(context, depsArr);
 }
 
 export const isFnRef = (ref) => getCallExpr(ref) !== undefined;
@@ -109,37 +105,6 @@ export const isPropRef = (context, ref) =>
         ),
     ),
   );
-
-export const getRef = (context, identifier) =>
-  findVariable(
-    context.sourceCode.getScope(identifier),
-    identifier,
-  )?.references.find((ref) => ref.identifier === identifier);
-
-export const getDownstreamRefs = (context, node) =>
-  getDownstreamIdentifiers(context, node)
-    .map((identifier) => getRef(context, identifier))
-    .filter(Boolean);
-
-export const getCallExpr = (ref, current = ref.identifier.parent) => {
-  if (current.type === "CallExpression") {
-    // We've reached the top - confirm that the ref is the (eventual) callee, as opposed to an argument.
-    let node = ref.identifier;
-    while (node.parent.type === "MemberExpression") {
-      node = node.parent;
-    }
-
-    if (current.callee === node) {
-      return current;
-    }
-  }
-
-  if (current.type === "MemberExpression") {
-    return getCallExpr(ref, current.parent);
-  }
-
-  return undefined;
-};
 
 export const getUseStateNode = (context, ref) => {
   return getUpstreamVariables(context, ref.identifier)
