@@ -9,9 +9,6 @@ export const traverse = (context, node, visit, visited = new Set()) => {
   visit(node);
 
   (context.sourceCode.visitorKeys[node.type] || [])
-    // Don't traverse CallExpression arguments - the function may be unpure, thus its arguments are irrelevant.
-    // Ideally we'd move it out of this general-purpose function, but alternative checks haven't been successful.
-    .filter((key) => !(node.type === "CallExpression" && key === "arguments"))
     .map((key) => node[key])
     // Some `visitorKeys` are optional, e.g. `IfStatement.alternate`.
     .filter(Boolean)
@@ -24,7 +21,7 @@ export const traverse = (context, node, visit, visited = new Set()) => {
     .forEach((child) => traverse(context, child, visit, visited));
 };
 
-export const getDownstreamIdentifiers = (context, rootNode) => {
+const getDownstreamIdentifiers = (context, rootNode) => {
   const identifiers = [];
   traverse(context, rootNode, (node) => {
     if (node.type === "Identifier") {
@@ -34,31 +31,36 @@ export const getDownstreamIdentifiers = (context, rootNode) => {
   return identifiers;
 };
 
-export const getUpstreamVariables = (context, node, visited = new Set()) => {
+export const getUpstreamVariables = (
+  context,
+  node,
+  filter,
+  visited = new Set(),
+) => {
   if (visited.has(node)) {
     return [];
   }
 
   visited.add(node);
 
-  return (
-    getDownstreamIdentifiers(context, node)
-      .map((identifier) =>
-        findVariable(context.sourceCode.getScope(node), identifier),
-      )
-      // Implicit base case: Uses variable(s) declared outside this scope
-      // TODO: I think that affects tests with technically undefined functions...
-      // Even some global functions return `undefined`, like `fetch`
-      .filter(Boolean)
-      .flatMap((variable) =>
-        variable.defs
-          .filter((def) => !!def.node.init) // Happens when the variable is declared without an initializer, e.g. `let foo;`
-          .flatMap((def) =>
-            getUpstreamVariables(context, def.node.init, visited),
-          )
-          .concat(variable),
-      )
-  );
+  const variable = findVariable(context.sourceCode.getScope(node), node);
+  if (!variable) {
+    // I think this only happens when:
+    // 1. Import statement is missing, or
+    // 2. ESLint globals are misconfigured
+    return [];
+  }
+
+  const upstreamVariables = variable.defs
+    .filter((def) => !!def.node.init)
+    .filter((def) => filter(def.node))
+    .flatMap((def) => getDownstreamIdentifiers(context, def.node.init))
+    .flatMap((identifier) =>
+      getUpstreamVariables(context, identifier, filter, visited),
+    );
+
+  // Ultimately return only leaf variables
+  return upstreamVariables.length === 0 ? [variable] : upstreamVariables;
 };
 
 export const getDownstreamRefs = (context, node) =>
@@ -66,7 +68,7 @@ export const getDownstreamRefs = (context, node) =>
     .map((identifier) => getRef(context, identifier))
     .filter(Boolean);
 
-export const getRef = (context, identifier) =>
+const getRef = (context, identifier) =>
   findVariable(
     context.sourceCode.getScope(identifier),
     identifier,

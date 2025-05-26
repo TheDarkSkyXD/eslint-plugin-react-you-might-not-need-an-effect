@@ -1,14 +1,16 @@
 import { messageIds, messages } from "./messages.js";
-import { getUpstreamVariables, getCallExpr } from "./util/ast.js";
+import { getCallExpr } from "./util/ast.js";
 import {
   isFnRef,
-  isPropRef,
   findPropUsedToResetAllState,
-  isStateRef,
   isUseEffect,
   getUseStateNode,
   getEffectFnRefs,
   getDependenciesRefs,
+  isArgsInternal,
+  isStateSetter,
+  isPropCallback,
+  isInternal,
 } from "./util/react.js";
 
 export const name = "you-might-not-need-an-effect";
@@ -36,15 +38,15 @@ export const rule = {
         return;
       }
 
-      // FIX: Needs to confirm *every* variable on a ref chain is internal, not just *some* of them.
-      // TODO: Or just remove? It's never reported in isolation afaik.
+      // TODO: Just remove? This is never reported in isolation afaik.
+      // Could be different in crazy, large real-world effects though.
       // And presumably once the user fixes the more specific issue, they'll see the effect is empty and delete it.
       const isInternalEffect = effectFnRefs
         // Only functions because they actually have effects.
         // Notably this also filters out refs that are local parameters, like `items` in `list.filter((item) => ...)`.
         .filter((ref) => isFnRef(ref))
         .concat(depsRefs)
-        .every((ref) => isStateRef(context, ref) || isPropRef(context, ref));
+        .every((ref) => isInternal(context, ref));
 
       if (isInternalEffect) {
         context.report({
@@ -73,44 +75,31 @@ export const rule = {
       }
 
       effectFnRefs
-        // Analyze only state setters and prop callbacks
         .filter(
-          (ref) =>
-            isFnRef(ref) &&
-            (isStateRef(context, ref) || isPropRef(context, ref)),
+          (ref) => isStateSetter(context, ref) || isPropCallback(context, ref),
         )
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
-          const isDepInArgs = callExpr.arguments.some((arg) =>
-            getUpstreamVariables(context, arg).some((variable) =>
-              depsRefs.some(
-                (depRef) => depRef.identifier.name === variable.name,
-              ),
-            ),
-          );
 
-          // TODO: Instead of the entire effect, we can check that just the state setter's args are not external.
-          if (isInternalEffect) {
-            if (isStateRef(context, ref)) {
-              const useStateNode = getUseStateNode(context, ref);
-              const stateName = (
-                useStateNode.id.elements[0] ?? useStateNode.id.elements[1]
-              )?.name;
+          if (isStateSetter(context, ref)) {
+            const useStateNode = getUseStateNode(context, ref);
+            const stateName = (
+              useStateNode.id.elements[0] ?? useStateNode.id.elements[1]
+            )?.name;
 
-              // TODO: Can also warn if this is the only call to the setter...
+            if (isArgsInternal(context, callExpr.arguments)) {
+              // TODO: Can also warn if this is the only call to the setter,
+              // even if the arg is external (and not retrieved in the effect)...
               // Does it matter whether the args are in the deps array?
               // I guess so, to differentiate between derived and chain state updates?
-              if (isDepInArgs) {
-                context.report({
-                  node: callExpr,
-                  messageId: messageIds.avoidDerivedState,
-                  data: { state: stateName },
-                });
-              } else if (
-                depsRefs.some(
-                  (ref) => isStateRef(context, ref) || isPropRef(context, ref),
-                )
-              ) {
+              // What about internal vs in deps? Changes behavior, but meaningfully?
+              context.report({
+                node: callExpr,
+                messageId: messageIds.avoidDerivedState,
+                data: { state: stateName },
+              });
+            } else if (isInternalEffect) {
+              if (depsRefs.some((ref) => isInternal(context, ref))) {
                 context.report({
                   node: callExpr,
                   messageId: messageIds.avoidChainingState,
@@ -138,7 +127,7 @@ export const rule = {
           // But when it's a prop, it's internal.
           // I guess it could still be valid when the dep is external state? Or in that case,
           // the issue is the state should be lifted to the parent?
-          if (isPropRef(context, ref)) {
+          if (isPropCallback(context, ref)) {
             context.report({
               node: callExpr,
               messageId: messageIds.avoidParentChildCoupling,

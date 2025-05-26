@@ -1,6 +1,7 @@
 import assert from "node:assert";
 import { RuleTester } from "eslint";
 import { name as ruleName, rule as myRule } from "../src/rule.js";
+import globals from "globals";
 
 // For syntax highlighting inside code under test
 export const js = String.raw;
@@ -19,6 +20,11 @@ export class MyRuleTester extends RuleTester {
     super({
       ...options,
       languageOptions: {
+        globals: {
+          // We use these in tests frequently.
+          // TODO: Add note to README that good detection also relies on properly configuring this?
+          ...globals.browser,
+        },
         parserOptions: {
           ecmaFeatures: {
             jsx: true,

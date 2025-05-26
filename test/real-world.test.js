@@ -97,7 +97,7 @@ new MyRuleTester().run("/real-world", {
           const [page, setPage] = useState('home');
 
           useEffect(() => {
-            logPageView(page);
+            console.log("page viewed", page);
           }, [page]);
 
           return (

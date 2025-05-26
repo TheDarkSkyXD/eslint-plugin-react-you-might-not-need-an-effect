@@ -4,13 +4,11 @@ import { messageIds } from "../src/messages.js";
 new MyRuleTester().run("/parent-child-coupling", {
   invalid: [
     {
-      // Valid wrt this flag
+      // Valid wrt this flag.
+      // Verifies `setSelection` is not considered a prop because it's initialized with a prop.
       name: "Using prop in state initializer",
       code: js`
         function List({ items }) {
-          // Verify that 'setSelection' is not considered a prop ref
-          // just because 'items' is on its definition path.
-          // If it did, it'd flag 'avoidParentChildCoupling'.
           const [selection, setSelection] = useState(items[0]);
 
           useEffect(() => {

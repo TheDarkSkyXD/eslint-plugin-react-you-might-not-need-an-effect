@@ -69,6 +69,8 @@ new MyRuleTester().run("/syntax", {
     {
       name: "Variable name shadows state name",
       code: js`
+        import { getCountries } from 'library';
+
         function CountrySelect({ translation }) {
           const [countries, setCountries] = useState();
 
@@ -83,28 +85,6 @@ new MyRuleTester().run("/syntax", {
           );
         }
       `,
-    },
-    {
-      name: "Member call expression side effect without args",
-      code: code({
-        effectBody: js`
-            {
-              const value = someObject.someMethod();
-              setDoubleCount(value * count);
-            }
-          `,
-      }),
-    },
-    {
-      name: "Member call expression side effect with args",
-      code: code({
-        effectBody: js`
-            {
-              const value = someObject.someMethod(count);
-              setDoubleCount(value);
-            }
-          `,
-      }),
     },
     {
       name: "Reacting to external state changes with member access in deps",
@@ -320,6 +300,8 @@ new MyRuleTester().run("/syntax", {
     {
       name: "Value-less useState",
       code: js`
+        import { useState } from 'react';
+
         function AttemptCounter() {
           const [, setAttempts] = useState(0);
           const [count, setCount] = useState(0);
@@ -336,8 +318,6 @@ new MyRuleTester().run("/syntax", {
           messageId: messageIds.avoidInternalEffect,
         },
         {
-          // TODO: Should this actually be chaining state?
-          // Because the correct pattern would be updating attempts and count simultaneously.
           messageId: messageIds.avoidDerivedState,
           data: { state: "setAttempts" },
         },

@@ -84,7 +84,7 @@ new MyRuleTester().run("/deriving-state", {
           const [results, setResults] = useState();
 
           useEffect(() => {
-            fetchResults(query).then((data) => {
+            fetch('/search').then((data) => {
               setResults(data);
             });
           }, [query]);
@@ -110,6 +110,8 @@ new MyRuleTester().run("/deriving-state", {
     {
       name: "Subscribe to external state",
       code: js`
+        import { subscribeToStatus } from 'library';
+
         function Status({ topic }) {
           const [status, setStatus] = useState();
 
@@ -196,14 +198,12 @@ new MyRuleTester().run("/deriving-state", {
       `,
     },
     {
-      name: "Via unpure derived setter",
-      todo: true,
+      name: "From props via unpure derived setter",
       code: js`
         function DoubleCounter({ count }) {
           const [doubleCount, setDoubleCount] = useState(0);
 
           const derivedSetter = (count) => {
-            // FIX: Needs to consider this function as unpure/external because it calls an external function.
             const multipler = fetch('/multipler');
             setDoubleCount(count); 
           }
@@ -242,6 +242,9 @@ new MyRuleTester().run("/deriving-state", {
     {
       name: "From internal and external state",
       code: js`
+        import { getPrefixFor } from 'library';
+        import { useState } from 'react';
+
         function Component() {
           const [name, setName] = useState();
           const [prefixedName, setPrefixedName] = useState();
@@ -255,13 +258,14 @@ new MyRuleTester().run("/deriving-state", {
     },
     {
       name: "From derived internal and external state",
-      todo: true,
       code: js`
+        import { getPrefixFor } from 'library';
+        import { useState } from 'react';
+
         function Component() {
           const [name, setName] = useState();
           const [prefixedName, setPrefixedName] = useState();
           const prefix = getPrefixFor(name);
-          // FIX: I think it's because we use 'find/some', not 'every', when walking up derivation chain.
           const newValue = prefix + name;
 
           useEffect(() => {
@@ -506,8 +510,10 @@ new MyRuleTester().run("/deriving-state", {
       ],
     },
     {
-      name: "From internal state via callback setter",
+      name: "From props via callback setter",
       code: js`
+        import { useState, useEffect } from 'react';
+
         function CountAccumulator({ count }) {
           const [total, setTotal] = useState(count);
 
@@ -527,7 +533,7 @@ new MyRuleTester().run("/deriving-state", {
       ],
     },
     {
-      name: "From internal state via pure derived setter",
+      name: "From props via pure derived setter",
       code: js`
         function DoubleCounter({ count }) {
           const [doubleCount, setDoubleCount] = useState(0);
@@ -634,7 +640,6 @@ new MyRuleTester().run("/deriving-state", {
     },
     {
       name: "Derived state in larger, otherwise legit effect",
-      todo: true,
       code: js`
         function Form() {
           const [firstName, setFirstName] = useState('Taylor');
@@ -644,7 +649,7 @@ new MyRuleTester().run("/deriving-state", {
           useEffect(() => {
             console.log(name);
 
-            setFullName(firstName + ' ' + lastName;);
+            setFullName(firstName + ' ' + lastName);
           }, [firstName, lastName]);
         }
       `,

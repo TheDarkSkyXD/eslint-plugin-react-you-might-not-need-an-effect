@@ -63,12 +63,7 @@ export const getEffectFnRefs = (context, node) => {
     return null;
   }
 
-  const getRefs = (scope) =>
-    scope.references.concat(
-      scope.childScopes.flatMap((childScope) => getRefs(childScope)),
-    );
-
-  return getRefs(context.sourceCode.getScope(effectFn));
+  return getDownstreamRefs(context, effectFn);
 };
 
 export function getDependenciesRefs(context, node) {
@@ -85,35 +80,42 @@ export function getDependenciesRefs(context, node) {
 }
 
 export const isFnRef = (ref) => getCallExpr(ref) !== undefined;
+// TODO: Technically this includes state with call expressions, like countryCode.toUpperCase().
+// A true `isStateSetter` would check that the identifier name matches the useState's second element.
+export const isStateSetter = (context, ref) =>
+  isFnRef(ref) &&
+  getUpstreamReactVariables(context, ref.identifier).notEmptyEvery((variable) =>
+    isState(variable),
+  );
+export const isPropCallback = (context, ref) =>
+  isFnRef(ref) &&
+  getUpstreamReactVariables(context, ref.identifier).notEmptyEvery((variable) =>
+    isProp(variable),
+  );
 
-// FIX: Returns true for functions defined outside the effect that set state but also call external functions.
-// I think that's fine, because it does reference state eventually.
-// But separately we need to check whether a reference chain is pure.
-// Normally I think `isInternalEffect` protects against this, but it misses
-// when the effect references a function of the aforementioned nature.
-export const isStateRef = (context, ref) =>
-  getUseStateNode(context, ref) !== undefined;
+// NOTE: Literals are discarded (because they have no variable) and thus do not count against this
+export const isInternal = (context, ref) =>
+  getUpstreamReactVariables(context, ref.identifier).every(
+    (variable) => isState(variable) || isProp(variable),
+  );
 
-export const isPropRef = (context, ref) =>
-  getUpstreamVariables(context, ref.identifier).some((variable) =>
-    variable.defs.some(
-      (def) =>
-        def.type === "Parameter" &&
-        isReactFunctionalComponent(
-          def.node.type === "ArrowFunctionExpression"
-            ? def.node.parent
-            : def.node,
-        ),
-    ),
+// NOTE: Global variables (like `JSON` in `JSON.stringify()`) have an empty `defs`; fortunately `[].some() === false`.
+// Also, I'm not sure so far when `defs.length > 1`... haven't seen it with shadowed variables or even redeclared variables with `var`.
+const isState = (variable) => variable.defs.some((def) => isUseState(def.node));
+const isProp = (variable) =>
+  variable.defs.some(
+    (def) =>
+      def.type === "Parameter" &&
+      isReactFunctionalComponent(
+        def.node.type === "ArrowFunctionExpression"
+          ? def.node.parent
+          : def.node,
+      ),
   );
 
 export const getUseStateNode = (context, ref) => {
-  return getUpstreamVariables(context, ref.identifier)
-    .find((variable) =>
-      // NOTE: Global variables (like `JSON` in `JSON.stringify()`) have an empty `defs`; fortunately `[].some() === false`.
-      // Also, I'm not sure so far when `defs.length > 1`... haven't seen it with shadowed variables or even redeclared variables with `var`.
-      variable.defs.some((def) => isUseState(def.node)),
-    )
+  return getUpstreamReactVariables(context, ref.identifier)
+    .find((variable) => isState(variable))
     ?.defs.find((def) => isUseState(def.node))?.node;
 };
 
@@ -123,11 +125,9 @@ export const findPropUsedToResetAllState = (
   depsRefs,
   useEffectNode,
 ) => {
-  // TODO: Technically this includes state with call expressions, like countryCode.toUpperCase().
-  // A true `isStateSetter` would check that the identifier name matches the useState's second element.
-  const stateSetterRefs = effectFnRefs
-    .filter((ref) => isFnRef(ref))
-    .filter((ref) => isStateRef(context, ref));
+  const stateSetterRefs = effectFnRefs.filter((ref) =>
+    isStateSetter(context, ref),
+  );
 
   const isAllStateReset =
     stateSetterRefs.length > 0 &&
@@ -136,7 +136,7 @@ export const findPropUsedToResetAllState = (
       countUseStates(context, findContainingComponentNode(useEffectNode));
 
   return isAllStateReset
-    ? depsRefs.find((ref) => isPropRef(context, ref))
+    ? depsRefs.find((ref) => isProp(ref.resolved))
     : undefined;
 };
 
@@ -171,6 +171,22 @@ const isSetStateToInitialValue = (context, setterRef) => {
   );
 };
 
+export const isArgsInternal = (context, args) =>
+  args.notEmptyEvery((arg) =>
+    getDownstreamRefs(context, arg)
+      // TODO: Why do we need to filter this out prior?
+      // isInternal uses getUpstreamReactVariables which also does.
+      .filter(
+        (ref) =>
+          isProp(ref.resolved) ||
+          ref.resolved.defs.every(
+            // Discount non-prop parameters
+            (def) => def.type !== "Parameter",
+          ),
+      )
+      .notEmptyEvery((ref) => isInternal(context, ref)),
+  );
+
 const countUseStates = (context, componentNode) => {
   let count = 0;
 
@@ -191,4 +207,25 @@ const findContainingComponentNode = (node) => {
   }
 
   return findContainingComponentNode(node.parent);
+};
+
+const getUpstreamReactVariables = (context, ref) =>
+  getUpstreamVariables(
+    context,
+    ref,
+    // Stop at the *usage* of `useState` - don't go up to the `useState` variable.
+    // Not needed for props - they don't go "too far".
+    // We could remove this and check for the `useState` variable instead,
+    // but then all our tests need to import it so we can traverse up to it.
+    // TODO: Probably some better way to combine these filters.
+    (node) => !isUseState(node),
+  ).filter(
+    (variable) =>
+      // Discount non-prop parameters
+      isProp(variable) ||
+      variable.defs.every((def) => def.type !== "Parameter"),
+  );
+
+Array.prototype.notEmptyEvery = function (predicate) {
+  return this.length > 0 && this.every(predicate);
 };
