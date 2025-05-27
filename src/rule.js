@@ -71,6 +71,7 @@ export const rule = {
 
         // Don't flag anything else (particularly avoidChainingState will trigger).
         // Just confusing, and this should be fixed first.
+        // TODO: Hmm or maybe not. It depends.
         return;
       }
 

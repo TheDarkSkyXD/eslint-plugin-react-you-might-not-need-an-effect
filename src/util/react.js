@@ -8,7 +8,10 @@ import {
 export const isReactFunctionalComponent = (node) =>
   (node.type === "FunctionDeclaration" ||
     (node.type === "VariableDeclarator" &&
-      node.init.type === "ArrowFunctionExpression")) &&
+      (node.init.type === "ArrowFunctionExpression" ||
+        (node.init.type === "CallExpression" &&
+          node.init.callee.type === "Identifier" &&
+          node.init.callee.name === "memo")))) &&
   node.id.type === "Identifier" &&
   node.id.name[0].toUpperCase() === node.id.name[0];
 
@@ -107,8 +110,11 @@ const isProp = (variable) =>
     (def) =>
       def.type === "Parameter" &&
       isReactFunctionalComponent(
+        // TODO: Simplify this
         def.node.type === "ArrowFunctionExpression"
-          ? def.node.parent
+          ? def.node.parent.type === "CallExpression"
+            ? def.node.parent.parent
+            : def.node.parent
           : def.node,
       ),
   );

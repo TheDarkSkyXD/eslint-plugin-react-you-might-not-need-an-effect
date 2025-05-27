@@ -142,16 +142,23 @@ new MyRuleTester().run("/syntax", {
       errors: 2,
     },
     {
-      name: "Memoized component",
+      name: "Memoized component, with props",
       code: js`
-        const DoubleCounter = memo(() => {
-          const [count, setCount] = useState(0);
+        const DoubleCounter = memo(({ count }) => {
           const [doubleCount, setDoubleCount] = useState(0);
 
           useEffect(() => setDoubleCount(count), [count]);
         });
       `,
-      errors: 2,
+      errors: [
+        {
+          messageId: messageIds.avoidInternalEffect,
+        },
+        {
+          messageId: messageIds.avoidDerivedState,
+          data: { state: "doubleCount" },
+        },
+      ],
     },
     {
       name: "Effect one-liner body",
