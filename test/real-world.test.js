@@ -190,6 +190,45 @@ new MyRuleTester().run("/real-world", {
         }
       `,
     },
+    {
+      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/9#issuecomment-2913950378
+      // Valid because we don't analyze custom hooks right now
+      name: "Custom hook",
+      code: js`
+        import { useEffect, useState } from 'react';
+        import keyboardReducer from './reducers';
+
+        let globalKeyboardState = {
+          recentlyUsed: []
+        };
+
+        export const keyboardStateListeners = new Set();
+
+        const setKeyboardState = (action) => {
+          globalKeyboardState = keyboardReducer(globalKeyboardState, action);
+          keyboardStateListeners.forEach((listener) => listener(globalKeyboardState));
+        };
+
+        export const useKeyboardStore = () => {
+          const [keyboardState, setState] = useState(globalKeyboardState);
+
+          useEffect(() => {
+            // Once we do, I wonder if this should be valid...
+            // Maybe, because we pass the setter to a listener?
+            // Unsure if we'd flag that right now outside a custom hook.
+            const listener = () => setState(globalKeyboardState);
+            keyboardStateListeners.add(listener);
+            return () => {
+              keyboardStateListeners.delete(listener);
+            };
+          }, [keyboardState]);
+
+          return { keyboardState, setKeyboardState };
+        };
+
+        useKeyboardStore.setKeyboardState = setKeyboardState;
+      `,
+    },
   ],
   invalid: [
     {

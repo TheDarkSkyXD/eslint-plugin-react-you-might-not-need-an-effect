@@ -205,7 +205,7 @@ const countUseStates = (context, componentNode) => {
   return count;
 };
 
-const findContainingComponentNode = (node) => {
+export const findContainingComponentNode = (node) => {
   if (!node) {
     return undefined;
   } else if (isReactFunctionalComponent(node)) {
