@@ -142,6 +142,18 @@ new MyRuleTester().run("/syntax", {
       errors: 2,
     },
     {
+      name: "Memoized component",
+      code: js`
+        const DoubleCounter = memo(() => {
+          const [count, setCount] = useState(0);
+          const [doubleCount, setDoubleCount] = useState(0);
+
+          useEffect(() => setDoubleCount(count), [count]);
+        });
+      `,
+      errors: 2,
+    },
+    {
       name: "Effect one-liner body",
       code: code({
         componentDeclaration: js`const AvoidDuplicateTest = () =>`,
