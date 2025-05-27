@@ -11,7 +11,6 @@ import {
   isStateSetter,
   isPropCallback,
   isInternal,
-  findContainingComponentNode,
 } from "./util/react.js";
 
 export const name = "you-might-not-need-an-effect";
@@ -28,8 +27,7 @@ export const rule = {
   },
   create: (context) => ({
     CallExpression: (node) => {
-      if (!isUseEffect(node) || !findContainingComponentNode(node)) {
-        // TODO: I think we could analyze custom hooks too!
+      if (!isUseEffect(node)) {
         return;
       }
 

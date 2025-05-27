@@ -364,5 +364,61 @@ new MyRuleTester().run("/syntax", {
         },
       ],
     },
+    {
+      name: "Custom hook with state",
+      code: js`
+        function useCustomHook() {
+          const [count, setCount] = useState(0);
+          const [doubleCount, setDoubleCount] = useState(0);
+
+          useEffect(() => {
+            setDoubleCount(count * 2);
+          }, [count]);
+
+          return state;
+        }
+
+        function Component() {
+          const customState = useCustomHook();
+        }
+      `,
+      errors: [
+        {
+          messageId: messageIds.avoidInternalEffect,
+        },
+        {
+          messageId: messageIds.avoidDerivedState,
+          data: { state: "doubleCount" },
+        },
+      ],
+    },
+    {
+      name: "Custom hook with props",
+      todo: true, // TODO: `isProp` checks that the def is inside a React component, so ignores custom hooks
+      code: js`
+        function useCustomHook({ prop }) {
+          const [state, setState] = useState(0);
+
+          useEffect(() => {
+            setState(prop);
+          }, [prop]);
+
+          return state;
+        }
+
+        function Component() {
+          const customState = useCustomHook({ prop: 42 });
+        }
+      `,
+      errors: [
+        {
+          messageId: messageIds.avoidInternalEffect,
+        },
+        {
+          messageId: messageIds.avoidDerivedState,
+          data: { state: "state" },
+        },
+      ],
+    },
   ],
 });

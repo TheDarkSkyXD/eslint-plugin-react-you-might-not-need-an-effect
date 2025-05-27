@@ -139,7 +139,7 @@ export const findPropUsedToResetAllState = (
     stateSetterRefs.length > 0 &&
     stateSetterRefs.every((ref) => isSetStateToInitialValue(context, ref)) &&
     stateSetterRefs.length ===
-      countUseStates(context, findContainingComponentNode(useEffectNode));
+      countUseStates(context, findContainingNode(useEffectNode));
 
   return isAllStateReset
     ? depsRefs.find((ref) => isProp(ref.resolved))
@@ -205,14 +205,11 @@ const countUseStates = (context, componentNode) => {
   return count;
 };
 
-export const findContainingComponentNode = (node) => {
-  if (!node) {
-    return undefined;
-  } else if (isReactFunctionalComponent(node)) {
-    return node;
-  }
-
-  return findContainingComponentNode(node.parent);
+// Returns the component or custom hook that contains the `useEffect` node.
+// It assumes the useEffect is a direct child, which it always should be in valid React.
+// TODO: But I think this will crash if e.g. the useEffect is called conditionally.
+const findContainingNode = (useEffectNode) => {
+  return useEffectNode.parent.parent;
 };
 
 const getUpstreamReactVariables = (context, ref) =>
