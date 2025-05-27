@@ -21,8 +21,7 @@ export class MyRuleTester extends RuleTester {
       ...options,
       languageOptions: {
         globals: {
-          // We use these in tests frequently.
-          // TODO: Add note to README that good detection also relies on properly configuring this?
+          // We use these in tests frequently
           ...globals.browser,
         },
         parserOptions: {
