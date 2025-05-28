@@ -2,9 +2,11 @@
 
 ESLint plugin to catch [unnecessary React `useEffect`s](https://react.dev/learn/you-might-not-need-an-effect) to make your code easier to follow, faster to run, and less error-prone. Highly recommended for new React developers as you learn its mental model, and even experienced developers may be surprised.
 
-## 🚀 Installation
+## 🚀 Setup
 
 This plugin requires ESLint >= v7.0.0 and Node >= 14.
+
+### Installation
 
 **NPM**:
 
@@ -18,18 +20,11 @@ npm install --save-dev eslint-plugin-react-you-might-not-need-an-effect
 yarn add -D eslint-plugin-react-you-might-not-need-an-effect
 ```
 
-### Recommended setup
-
-The plugin will have more information to act upon when you:
-
-- Configure the appropriate [global variables](https://eslint.org/docs/latest/use/configure/language-options#predefined-global-variables) in your ESLint config
-- Use [`eslint-plugin-react-hooks`](https://www.npmjs.com/package/eslint-plugin-react-hooks)`/exhaustive-deps` so your effects receive the correct dependencies
-
-## 🔧 Usage
+### Configuration
 
 Add the plugin to your ESLint configuration file.
 
-### Legacy config (`.eslintrc`)
+#### Legacy config (`.eslintrc`)
 
 ```js
 {
@@ -40,7 +35,7 @@ Add the plugin to your ESLint configuration file.
 }
 ```
 
-### Flat config (`eslint.config.js`)
+#### Flat config (`eslint.config.js`)
 
 ```js
 import youMightNotNeedAnEffect from "eslint-plugin-react-you-might-not-need-an-effect";
@@ -57,6 +52,13 @@ export default [
   },
 ];
 ```
+
+### Recommended
+
+The plugin will have more information to act upon when you:
+
+- Configure the appropriate [global variables](https://eslint.org/docs/latest/use/configure/language-options#predefined-global-variables) in your ESLint config
+- Use [`eslint-plugin-react-hooks`](https://www.npmjs.com/package/eslint-plugin-react-hooks)`/exhaustive-deps` so your effects receive the correct dependencies
 
 ## 🔎 Rule: `you-might-not-need-an-effect`
 
