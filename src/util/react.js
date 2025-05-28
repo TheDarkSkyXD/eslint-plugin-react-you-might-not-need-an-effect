@@ -85,6 +85,7 @@ export function getDependenciesRefs(context, node) {
 export const isFnRef = (ref) => getCallExpr(ref) !== undefined;
 // TODO: Technically this includes state with call expressions, like countryCode.toUpperCase().
 // A true `isStateSetter` would check that the identifier name matches the useState's second element.
+// Maybe we sometimes prefer this behavior though, like when state is mutated (even though that is not recommended).
 export const isStateSetter = (context, ref) =>
   isFnRef(ref) &&
   getUpstreamReactVariables(context, ref.identifier).notEmptyEvery((variable) =>
