@@ -89,27 +89,31 @@ export const rule = {
             )?.name;
 
             if (isArgsInternal(context, callExpr.arguments)) {
-              // TODO: Can also warn if this is the only call to the setter,
-              // even if the arg is external (and not retrieved in the effect)...
-              // Does it matter whether the args are in the deps array?
-              // I guess so, to differentiate between derived and chain state updates?
-              // What about internal vs in deps? Changes behavior, but meaningfully?
-              context.report({
-                node: callExpr,
-                messageId: messageIds.avoidDerivedState,
-                data: { state: stateName },
-              });
-            } else if (isInternalEffect) {
-              if (depsRefs.some((ref) => isInternal(context, ref))) {
-                context.report({
-                  node: callExpr,
-                  messageId: messageIds.avoidChainingState,
-                });
-              } else if (depsRefs.length === 0) {
+              if (depsRefs.length === 0) {
+                // TODO: isArgsInternal needs to return true when args are all literals for this.
                 context.report({
                   node: callExpr,
                   messageId: messageIds.avoidInitializingState,
                   data: { state: stateName },
+                });
+              } else {
+                // TODO: Can also warn if this is the only call to the setter,
+                // even if the arg is external (and not retrieved in the effect)...
+                // Does it matter whether the args are in the deps array?
+                // I guess so, to differentiate between derived and chain state updates?
+                // What about internal vs in deps? Changes behavior, but meaningfully?
+                context.report({
+                  node: callExpr,
+                  messageId: messageIds.avoidDerivedState,
+                  data: { state: stateName },
+                });
+              }
+            } else if (isInternalEffect) {
+              // TODO: Possible to remove the need for `isInternalEffect` here too?
+              if (depsRefs.some((ref) => isInternal(context, ref))) {
+                context.report({
+                  node: callExpr,
+                  messageId: messageIds.avoidChainingState,
                 });
               }
             }
