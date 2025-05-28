@@ -420,5 +420,29 @@ new MyRuleTester().run("/syntax", {
         },
       ],
     },
+    {
+      // Verifies that we don't check for upstream state and props in isolation
+      name: "Derive from both state and props",
+      code: js`
+        function Component({ prop }) {
+          const [state, setState] = useState(0);
+          const [derived, setDerived] = useState(0);
+          const combined = state + prop;
+
+          useEffect(() => {
+            setDerived(combined);
+          }, [combined]);
+        }
+      `,
+      errors: [
+        {
+          messageId: messageIds.avoidInternalEffect,
+        },
+        {
+          messageId: messageIds.avoidDerivedState,
+          data: { state: "derived" },
+        },
+      ],
+    },
   ],
 });

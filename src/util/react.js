@@ -5,6 +5,10 @@ import {
   getCallExpr,
 } from "./ast.js";
 
+// NOTE: Returns false for HOC'd components aside from `memo`.
+// Which is good? Because the developer may not have control over that to e.g. lift state.
+// So we should treat it as external state.
+// TODO: Will not detect when they define the component normally and then export it wrapped in the HOC.
 export const isReactFunctionalComponent = (node) =>
   (node.type === "FunctionDeclaration" ||
     (node.type === "VariableDeclarator" &&
@@ -96,10 +100,27 @@ export const isPropCallback = (context, ref) =>
     isProp(variable),
   );
 
-// NOTE: Literals are discarded (because they have no variable) and thus do not count against this
+// NOTE: Literals are discarded (because they have no variable) and thus do not count against this.
+// TODO: Not entirely sure where in all these every or notEmptyEvery is best...
 export const isInternal = (context, ref) =>
-  getUpstreamReactVariables(context, ref.identifier).every(
+  getUpstreamReactVariables(context, ref.identifier).notEmptyEvery(
     (variable) => isState(variable) || isProp(variable),
+  );
+
+export const isArgsInternal = (context, args) =>
+  args.notEmptyEvery((arg) =>
+    getDownstreamRefs(context, arg)
+      // TODO: Why do we need to filter this out prior?
+      // isInternal uses getUpstreamReactVariables which also does.
+      .filter(
+        (ref) =>
+          isProp(ref.resolved) ||
+          ref.resolved.defs.every(
+            // Discount non-prop parameters
+            (def) => def.type !== "Parameter",
+          ),
+      )
+      .notEmptyEvery((ref) => isInternal(context, ref)),
   );
 
 // NOTE: Global variables (like `JSON` in `JSON.stringify()`) have an empty `defs`; fortunately `[].some() === false`.
@@ -176,22 +197,6 @@ const isSetStateToInitialValue = (context, setterRef) => {
     context.sourceCode.getText(stateInitialValue)
   );
 };
-
-export const isArgsInternal = (context, args) =>
-  args.notEmptyEvery((arg) =>
-    getDownstreamRefs(context, arg)
-      // TODO: Why do we need to filter this out prior?
-      // isInternal uses getUpstreamReactVariables which also does.
-      .filter(
-        (ref) =>
-          isProp(ref.resolved) ||
-          ref.resolved.defs.every(
-            // Discount non-prop parameters
-            (def) => def.type !== "Parameter",
-          ),
-      )
-      .notEmptyEvery((ref) => isInternal(context, ref)),
-  );
 
 const countUseStates = (context, componentNode) => {
   let count = 0;

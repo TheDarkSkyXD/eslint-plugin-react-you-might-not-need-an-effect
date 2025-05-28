@@ -2,6 +2,38 @@ import { MyRuleTester, js } from "./rule-tester.js";
 import { messageIds } from "../src/messages.js";
 
 new MyRuleTester().run("/parent-child-coupling", {
+  valid: [
+    {
+      name: "Prop from library HOC used internally",
+      code: js`
+        import { withRouter } from 'react-router-dom';
+
+        const MyComponent = withRouter(({ history }) => {
+          const [option, setOption] = useState();
+
+          useEffect(() => {
+            history.push('/options/' + option);
+          }, [option]);
+        });
+      `,
+    },
+    {
+      name: "Prop from library HOC used externally",
+      code: js`
+        import { withRouter } from 'react-router-dom';
+
+        const MyComponent = withRouter(({ history }) => {
+          const data = useSomeAPI();
+
+          useEffect(() => {
+            if (data.error) {
+              history.push('/error-page');
+            }
+          }, [data]);
+        });
+      `,
+    },
+  ],
   invalid: [
     {
       // Valid wrt this flag.
