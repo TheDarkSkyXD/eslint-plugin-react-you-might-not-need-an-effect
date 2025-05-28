@@ -22,8 +22,8 @@ yarn add -D eslint-plugin-react-you-might-not-need-an-effect
 
 The plugin will have more information to act upon when you:
 
-- Configure the appropriate [global variables](https://eslint.org/docs/latest/use/configure/language-options#predefined-global-variables) in your ESLint config.
-- Use [`eslint-plugin-react-hooks`](https://www.npmjs.com/package/eslint-plugin-react-hooks)`/exhaustive-deps` so your effects receive the correct dependencies.
+- Configure the appropriate [global variables](https://eslint.org/docs/latest/use/configure/language-options#predefined-global-variables) in your ESLint config
+- Use [`eslint-plugin-react-hooks`](https://www.npmjs.com/package/eslint-plugin-react-hooks)`/exhaustive-deps` so your effects receive the correct dependencies
 
 ## 🔧 Usage
 
