@@ -91,6 +91,20 @@ export const rule = {
             if (isArgsInternal(context, callExpr.arguments)) {
               if (depsRefs.length === 0) {
                 // TODO: isArgsInternal needs to return true when args are all literals for this.
+                // That breaks other uses though. Need to figure out best way to handle this.
+                // I think it's a matter of semantics. Internal vs external vs literal.
+                // Literals are not internal, but they are not external either.
+                // Should I return an enum, rather than cram it into a boolean that implicitly includes or ignores literals?
+                // That differentiation should help with derived vs chained state too.
+                // Way more readable as well. Better building blocks for the logic.
+                //
+                // TODO:
+                // - When empty deps and args are internal, literal, or external from outside effect (that seems rare; can ignore for now): Avoid initializing
+                // - When internal args (even with empty deps?): Derived state
+                // - When external args: Skip
+                // - When internal deps, and literal args: Chained state
+                //  - Often misused with callback setter. Fortunately we ignore the parameter variable, so we'll see just the literal.
+                // - I still feel I'm missing some detail between derived and chained based on args...
                 context.report({
                   node: callExpr,
                   messageId: messageIds.avoidInitializingState,
