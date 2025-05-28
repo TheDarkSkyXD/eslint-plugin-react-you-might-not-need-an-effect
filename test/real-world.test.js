@@ -191,6 +191,25 @@ new MyRuleTester().run("/real-world", {
       `,
     },
     {
+      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/10
+      name: "navigation.setOptions",
+      code: js`
+        import { useNavigation } from '@react-navigation/native';
+        import { useState, useLayoutEffect } from 'react';
+
+        function ProfileScreen({ route }) {
+          const navigation = useNavigation();
+          const [value, onChangeText] = React.useState(route.params.title);
+
+          React.useLayoutEffect(() => {
+            navigation.setOptions({
+              title: value === '' ? 'No title' : value,
+            });
+          }, [navigation, route]);
+        }
+      `,
+    },
+    {
       // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/9#issuecomment-2913950378
       // Valid because we don't analyze custom hooks right now
       name: "Custom hook",
