@@ -59,10 +59,6 @@ export const getEffectFn = (node) => {
   return effectFn;
 };
 
-// I tried to mimick the implementation for deps, but it seems to
-// not return things with no local variable... like my tests that use
-// undefined functions lol, or even `fetch`... But it finds `JSON`?
-// `traverse` avoiding CallExpression arguments also affects using it here.
 // NOTE: When `MemberExpression` (even nested ones), a `Reference` is only the root object, not the function.
 export const getEffectFnRefs = (context, node) => {
   const effectFn = getEffectFn(node);
