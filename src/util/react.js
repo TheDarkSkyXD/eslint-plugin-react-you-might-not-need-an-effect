@@ -98,26 +98,16 @@ export const isPropCallback = (context, ref) =>
   );
 
 // NOTE: Literals are discarded (because they have no variable) and thus do not count against this.
-// TODO: Not entirely sure where in all these every or notEmptyEvery is best...
 export const isInternal = (context, ref) =>
-  getUpstreamReactVariables(context, ref.identifier).notEmptyEvery(
+  getUpstreamReactVariables(context, ref.identifier).every(
     (variable) => isState(variable) || isProp(variable),
   );
 
 export const isArgsInternal = (context, args) =>
   args.notEmptyEvery((arg) =>
-    getDownstreamRefs(context, arg)
-      // TODO: Why do we need to filter this out prior?
-      // isInternal uses getUpstreamReactVariables which also does.
-      .filter(
-        (ref) =>
-          isProp(ref.resolved) ||
-          ref.resolved.defs.every(
-            // Discount non-prop parameters
-            (def) => def.type !== "Parameter",
-          ),
-      )
-      .notEmptyEvery((ref) => isInternal(context, ref)),
+    getDownstreamRefs(context, arg).notEmptyEvery((ref) =>
+      isInternal(context, ref),
+    ),
   );
 
 // NOTE: Global variables (like `JSON` in `JSON.stringify()`) have an empty `defs`; fortunately `[].some() === false`.

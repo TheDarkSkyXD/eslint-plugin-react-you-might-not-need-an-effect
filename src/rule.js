@@ -105,6 +105,9 @@ export const rule = {
                 // - When internal deps, and literal args: Chained state
                 //  - Often misused with callback setter. Fortunately we ignore the parameter variable, so we'll see just the literal.
                 // - I still feel I'm missing some detail between derived and chained based on args...
+                //
+                // Maybe it'd suffice to retrieve the variables and check isInternal here. Then I can vary checking whether they're empty.
+                // Need the figure out the isArgsInternal filter for that.
                 context.report({
                   node: callExpr,
                   messageId: messageIds.avoidInitializingState,
