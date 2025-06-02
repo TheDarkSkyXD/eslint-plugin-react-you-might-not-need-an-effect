@@ -11,6 +11,8 @@ import {
   isStateSetter,
   isPropCallback,
   isInternal,
+  getEffectFn,
+  isDirectCall,
 } from "./util/react.js";
 
 export const name = "you-might-not-need-an-effect";
@@ -45,6 +47,7 @@ export const rule = {
         // Only functions because they actually have effects.
         // Notably this also filters out refs that are local parameters, like `items` in `list.filter((item) => ...)`.
         .filter((ref) => isFnRef(ref))
+        .filter((ref) => isDirectCall(getEffectFn(node), ref))
         .concat(depsRefs)
         .every((ref) => isInternal(context, ref));
 
@@ -79,6 +82,9 @@ export const rule = {
         .filter(
           (ref) => isStateSetter(context, ref) || isPropCallback(context, ref),
         )
+        // It's likely called inside a callback -- usually valid.
+        // Note we'll still anazyle derived setters because isStateSetter considers that.
+        .filter((ref) => isDirectCall(getEffectFn(node), ref))
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
 
