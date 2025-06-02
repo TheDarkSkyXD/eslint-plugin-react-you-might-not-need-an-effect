@@ -274,7 +274,7 @@ new MyRuleTester().run("/deriving-state", {
         }
       `,
     },
-    // TODO: Above function tests but with `useCallback`. Might not work because we don't follow CallExpr.arguments (i.e. the actual function)
+    // TODO: Above function tests but with `useCallback`
   ],
   invalid: [
     {
