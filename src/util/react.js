@@ -133,6 +133,21 @@ export const getUseStateNode = (context, ref) => {
     ?.defs.find((def) => isUseState(def.node))?.node;
 };
 
+export const isDirectCall = (effectFn, ref) => {
+  let node = ref.identifier;
+
+  // Walk up the parent chain to find the enclosing function
+  while (
+    node &&
+    node.type !== "ArrowFunctionExpression" &&
+    node.type !== "FunctionExpression"
+  ) {
+    node = node.parent;
+  }
+
+  return node && node === effectFn;
+};
+
 export const findPropUsedToResetAllState = (
   context,
   effectFnRefs,
