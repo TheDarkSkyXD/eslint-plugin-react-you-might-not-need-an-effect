@@ -25,6 +25,28 @@ new MyRuleTester().run("/real-world", {
       `,
     },
     {
+      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/11
+      name: "Debouncing",
+      code: js`
+        function useDebouncedState(value, delay) {
+          const [state, setState] = useState(value);
+          const [debouncedState, setDebouncedState] = useState(value);
+
+          useEffect(() => {
+            const timeout = setTimeout(() => {
+              setDebouncedState(state);
+            }, delay);
+
+            return () => {
+              clearTimeout(timeout);
+            };
+          }, [delay, state]);
+
+          return [state, debouncedState, setState];
+        }
+      `,
+    },
+    {
       name: "Listening for window events",
       code: js`
         function WindowSize() {

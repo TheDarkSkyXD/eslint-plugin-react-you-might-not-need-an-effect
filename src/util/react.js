@@ -143,6 +143,22 @@ export const getUseStateNode = (context, ref) => {
     ?.defs.find((def) => isUseState(def.node))?.node;
 };
 
+// Heuristic inspired by https://eslint-react.xyz/docs/rules/hooks-extra-no-direct-set-state-in-use-effect
+export const isDirectCall = (effectFn, ref) => {
+  let node = ref.identifier;
+
+  // Walk up the parent chain to find the enclosing function
+  while (
+    node &&
+    node.type !== "ArrowFunctionExpression" &&
+    node.type !== "FunctionExpression"
+  ) {
+    node = node.parent;
+  }
+
+  return node && node === effectFn;
+};
+
 export const findPropUsedToResetAllState = (
   context,
   effectFnRefs,
