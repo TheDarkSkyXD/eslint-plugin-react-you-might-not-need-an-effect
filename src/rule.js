@@ -83,7 +83,7 @@ export const rule = {
           (ref) => isStateSetter(context, ref) || isPropCallback(context, ref),
         )
         // It's likely called inside a callback -- usually valid.
-        // Note we'll still anazyle derived setters because isStateSetter considers that.
+        // Note we'll still analyze derived setters because isStateSetter considers that.
         .filter((ref) => isDirectCall(getEffectFn(node), ref))
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
