@@ -4,7 +4,7 @@ import { messageIds } from "../src/messages.js";
 new MyRuleTester().run("/initializing-state", {
   valid: [
     {
-      name: "Initializing state to external data",
+      name: "To external data",
       code: js`
         function MyComponent() {
           const [state, setState] = useState();
@@ -20,7 +20,7 @@ new MyRuleTester().run("/initializing-state", {
   ],
   invalid: [
     {
-      name: "Initializing state to literal",
+      name: "To literal",
       code: js`
         function MyComponent() {
           const [state, setState] = useState();
@@ -43,7 +43,7 @@ new MyRuleTester().run("/initializing-state", {
       ],
     },
     {
-      name: "Initializing state to internal data",
+      name: "To internal data",
       code: js`
         function MyComponent() {
           const [state, setState] = useState();
@@ -59,14 +59,32 @@ new MyRuleTester().run("/initializing-state", {
           messageId: messageIds.avoidInternalEffect,
         },
         {
+          messageId: messageIds.avoidInitializingState,
+          data: { state: "state" },
+        },
+        {
           messageId: messageIds.avoidDerivedState,
         },
-        // TODO: Should also warn this?
-        // {
-        //   messageId: messageIds.avoidInitializingState,
-        //   data: { state: "state" },
-        // },
       ],
     },
+    {
+      name: "In an otherwise valid effect",
+      code: js`
+        function MyComponent() {
+          const [state, setState] = useState();
+
+          useEffect(() => {
+            console.log('Meow');
+            setState('Hello World');
+          }, []);
+        }
+      `,
+      errors: [
+        {
+          messageId: messageIds.avoidInitializingState,
+          data: { state: "state" },
+        },
+      ],
+    }
   ],
 });

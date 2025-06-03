@@ -82,8 +82,6 @@ export const rule = {
         .filter(
           (ref) => isStateSetter(context, ref) || isPropCallback(context, ref),
         )
-        // It's likely called inside a callback -- usually valid.
-        // Note we'll still analyze derived setters because isStateSetter considers that.
         .filter((ref) => isDirectCall(getEffectFn(node), ref))
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
@@ -93,6 +91,14 @@ export const rule = {
             const stateName = (
               useStateNode.id.elements[0] ?? useStateNode.id.elements[1]
             )?.name;
+
+            if (depsRefs.length === 0) {
+              context.report({
+                node: callExpr,
+                messageId: messageIds.avoidInitializingState,
+                data: { state: stateName },
+              });
+            }
 
             if (isArgsInternal(context, callExpr.arguments)) {
               // TODO: Can also warn if this is the only call to the setter,
@@ -110,12 +116,6 @@ export const rule = {
                 context.report({
                   node: callExpr,
                   messageId: messageIds.avoidChainingState,
-                });
-              } else if (depsRefs.length === 0) {
-                context.report({
-                  node: callExpr,
-                  messageId: messageIds.avoidInitializingState,
-                  data: { state: stateName },
                 });
               }
             }
