@@ -23,6 +23,7 @@
   },
   "scripts": {
     "build": "node build.js",
+    "lint": "eslint",
     "test": "mocha"
   },
   "keywords": [
