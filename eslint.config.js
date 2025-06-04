@@ -5,6 +5,6 @@ export default [
   eslintPlugin.configs["flat/recommended"],
   nodePlugin.configs["flat/recommended"],
   {
-    rules: {},
+    ignores: ["dist/**", "node_modules/**", ".yarn/**"],
   },
 ];

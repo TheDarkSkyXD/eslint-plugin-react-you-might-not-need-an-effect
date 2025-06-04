@@ -1,3 +1,4 @@
+// eslint-disable-next-line n/no-unsupported-features/node-builtins
 import assert from "node:assert";
 import { RuleTester } from "eslint";
 import { name as ruleName, rule as myRule } from "../src/rule.js";
