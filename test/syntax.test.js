@@ -125,6 +125,43 @@ new MyRuleTester().run("/syntax", {
         }
       `,
     },
+    {
+      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/16
+      name: "Async derived setter",
+      todo: true,
+      code: js`
+        import { useEffect, useState } from 'react';
+
+        export const App = () => {
+          const [response, setResponse] = useState(null);
+
+          const fetchYesNoApi = () => {
+            return (async () => {
+              try {
+                const response = await fetch('https://yesno.wtf/api');
+                if (!response.ok) {
+                  throw new Error('Network error');
+                }
+                const data = await response.json();
+                setResponse(data);
+              } catch (err) {
+                console.error(err);
+              }
+            })();
+          };
+
+          useEffect(() => { 
+            (async () => {
+              await fetchYesNoApi();
+            })();
+          }, []);
+
+          return (
+            <div>{response}</div>
+          );
+        };
+      `
+    }
   ],
   invalid: [
     {
