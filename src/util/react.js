@@ -28,6 +28,16 @@ export const isReactFunctionalHOC = (node) =>
   node.id.type === "Identifier" &&
   node.id.name[0].toUpperCase() === node.id.name[0];
 
+export const isCustomHook = (node) =>
+  (node.type === "FunctionDeclaration" ||
+    (node.type === "VariableDeclarator" &&
+      node.init &&
+      (node.init.type === "ArrowFunctionExpression" ||
+        node.init.type === "FunctionExpression"))) &&
+  node.id.type === "Identifier" &&
+  node.id.name.startsWith("use") &&
+  node.id.name[3] === node.id.name[3].toUpperCase();
+
 export const isUseState = (node) =>
   node.type === "VariableDeclarator" &&
   node.init &&
@@ -114,28 +124,21 @@ export const isProp = (variable) =>
   variable.defs.some(
     (def) =>
       def.type === "Parameter" &&
-      isReactFunctionalComponent(
-        // TODO: Simplify
-        def.node.type === "ArrowFunctionExpression"
-          ? def.node.parent.type === "CallExpression"
-            ? def.node.parent.parent
-            : def.node.parent
-          : def.node,
-      ),
+      (isReactFunctionalComponent(getDeclNode(def.node)) ||
+        isCustomHook(getDeclNode(def.node))),
   );
 export const isHOCProp = (variable) =>
   variable.defs.some(
     (def) =>
-      def.type === "Parameter" &&
-      isReactFunctionalHOC(
-        // TODO: Simplify
-        def.node.type === "ArrowFunctionExpression"
-          ? def.node.parent.type === "CallExpression"
-            ? def.node.parent.parent
-            : def.node.parent
-          : def.node,
-      ),
+      def.type === "Parameter" && isReactFunctionalHOC(getDeclNode(def.node)),
   );
+
+const getDeclNode = (node) =>
+  node.type === "ArrowFunctionExpression"
+    ? node.parent.type === "CallExpression"
+      ? node.parent.parent
+      : node.parent
+    : node;
 
 export const getUseStateNode = (context, ref) => {
   return getUpstreamReactVariables(context, ref.identifier)

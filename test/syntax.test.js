@@ -430,10 +430,9 @@ new MyRuleTester().run("/syntax", {
       ],
     },
     {
-      name: "Custom hook with props",
-      todo: true, // TODO: `isProp` checks that the def is inside a React component, so ignores custom hooks
+      name: "FunctionDeclaration custom hook with props",
       code: js`
-        function useCustomHook({ prop }) {
+        function useCustomHook(prop) {
           const [state, setState] = useState(0);
 
           useEffect(() => {
@@ -442,9 +441,28 @@ new MyRuleTester().run("/syntax", {
 
           return state;
         }
+      `,
+      errors: [
+        {
+          messageId: messageIds.avoidInternalEffect,
+        },
+        {
+          messageId: messageIds.avoidDerivedState,
+          data: { state: "state" },
+        },
+      ],
+    },
+    {
+      name: "VariableDeclarator custom hook with object props",
+      code: js`
+        const useCustomHook = ({ prop }) => {
+          const [state, setState] = useState(0);
 
-        function Component() {
-          const customState = useCustomHook({ prop: 42 });
+          useEffect(() => {
+            setState(prop);
+          }, [prop]);
+
+          return state;
         }
       `,
       errors: [
