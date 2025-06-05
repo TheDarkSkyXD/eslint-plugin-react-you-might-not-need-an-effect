@@ -5,17 +5,26 @@ import {
   getCallExpr,
 } from "./ast.js";
 
-// NOTE: Returns false for HOC'd components aside from `memo`.
-// Which is good? Because the developer may not have control over that to e.g. lift state.
-// So we should treat it as external state.
-// TODO: Will not detect when they define the component normally and then export it wrapped in the HOC.
 export const isReactFunctionalComponent = (node) =>
   (node.type === "FunctionDeclaration" ||
     (node.type === "VariableDeclarator" &&
       (node.init.type === "ArrowFunctionExpression" ||
-        (node.init.type === "CallExpression" &&
-          node.init.callee.type === "Identifier" &&
-          node.init.callee.name === "memo")))) &&
+        node.init.type === "CallExpression"))) &&
+  node.id.type === "Identifier" &&
+  node.id.name[0].toUpperCase() === node.id.name[0];
+
+// NOTE: Returns false for known pure HOCs -- `memo` and `forwardRef`.
+// TODO: Will not detect when they define the component normally and then export it wrapped in the HOC.
+// e.g. `const MyComponent = (props) => {...}; export default memo(MyComponent);`
+export const isReactFunctionalHOC = (node) =>
+  node.type === "VariableDeclarator" &&
+  node.init &&
+  node.init.type === "CallExpression" &&
+  node.init.callee.type === "Identifier" &&
+  !["memo", "forwardRef"].includes(node.init.callee.name) &&
+  node.init.arguments.length > 0 &&
+  (node.init.arguments[0].type === "ArrowFunctionExpression" ||
+    node.init.arguments[0].type === "FunctionExpression") &&
   node.id.type === "Identifier" &&
   node.id.name[0].toUpperCase() === node.id.name[0];
 
@@ -97,38 +106,29 @@ export const isPropCallback = (context, ref) =>
     isProp(variable),
   );
 
-// NOTE: Literals are discarded (because they have no variable) and thus do not count against this.
-// TODO: Not entirely sure where in all these every or notEmptyEvery is best...
-export const isInternal = (context, ref) =>
-  getUpstreamReactVariables(context, ref.identifier).notEmptyEvery(
-    (variable) => isState(variable) || isProp(variable),
-  );
-
-export const isArgsInternal = (context, args) =>
-  args.notEmptyEvery((arg) =>
-    getDownstreamRefs(context, arg)
-      // TODO: Why do we need to filter this out prior?
-      // isInternal uses getUpstreamReactVariables which also does.
-      .filter(
-        (ref) =>
-          isProp(ref.resolved) ||
-          ref.resolved.defs.every(
-            // Discount non-prop parameters
-            (def) => def.type !== "Parameter",
-          ),
-      )
-      .notEmptyEvery((ref) => isInternal(context, ref)),
-  );
-
 // NOTE: Global variables (like `JSON` in `JSON.stringify()`) have an empty `defs`; fortunately `[].some() === false`.
 // Also, I'm not sure so far when `defs.length > 1`... haven't seen it with shadowed variables or even redeclared variables with `var`.
-const isState = (variable) => variable.defs.some((def) => isUseState(def.node));
-const isProp = (variable) =>
+export const isState = (variable) =>
+  variable.defs.some((def) => isUseState(def.node));
+export const isProp = (variable) =>
   variable.defs.some(
     (def) =>
       def.type === "Parameter" &&
       isReactFunctionalComponent(
-        // TODO: Simplify this
+        // TODO: Simplify
+        def.node.type === "ArrowFunctionExpression"
+          ? def.node.parent.type === "CallExpression"
+            ? def.node.parent.parent
+            : def.node.parent
+          : def.node,
+      ),
+  );
+export const isHOCProp = (variable) =>
+  variable.defs.some(
+    (def) =>
+      def.type === "Parameter" &&
+      isReactFunctionalHOC(
+        // TODO: Simplify
         def.node.type === "ArrowFunctionExpression"
           ? def.node.parent.type === "CallExpression"
             ? def.node.parent.parent
@@ -232,19 +232,19 @@ const findContainingNode = (useEffectNode) => {
   return useEffectNode.parent.parent;
 };
 
-const getUpstreamReactVariables = (context, ref) =>
+export const getUpstreamReactVariables = (context, node) =>
   getUpstreamVariables(
     context,
-    ref,
+    node,
     // Stop at the *usage* of `useState` - don't go up to the `useState` variable.
     // Not needed for props - they don't go "too far".
     // We could remove this and check for the `useState` variable instead,
     // but then all our tests need to import it so we can traverse up to it.
-    // TODO: Probably some better way to combine these filters.
+    // And would need to change `getUseStateNode()` too?
+    // TODO: Could probably organize these filters better.
     (node) => !isUseState(node),
   ).filter(
     (variable) =>
-      // Discount non-prop parameters
       isProp(variable) ||
       variable.defs.every((def) => def.type !== "Parameter"),
   );

@@ -1,5 +1,5 @@
 import { messageIds, messages } from "./messages.js";
-import { getCallExpr } from "./util/ast.js";
+import { getCallExpr, getDownstreamRefs } from "./util/ast.js";
 import {
   isFnRef,
   findPropUsedToResetAllState,
@@ -7,12 +7,14 @@ import {
   getUseStateNode,
   getEffectFnRefs,
   getDependenciesRefs,
-  isArgsInternal,
   isStateSetter,
   isPropCallback,
-  isInternal,
   getEffectFn,
   isDirectCall,
+  getUpstreamReactVariables,
+  isState,
+  isProp,
+  isHOCProp,
 } from "./util/react.js";
 
 export const name = "you-might-not-need-an-effect";
@@ -49,7 +51,11 @@ export const rule = {
         .filter((ref) => isFnRef(ref))
         .filter((ref) => isDirectCall(getEffectFn(node), ref))
         .concat(depsRefs)
-        .every((ref) => isInternal(context, ref));
+        .flatMap((ref) => getUpstreamReactVariables(context, ref.identifier))
+        .notEmptyEvery(
+          (variable) =>
+            isState(variable) || (isProp(variable) && !isHOCProp(variable)),
+        );
 
       if (isInternalEffect) {
         context.report({
@@ -80,7 +86,11 @@ export const rule = {
 
       effectFnRefs
         .filter(
-          (ref) => isStateSetter(context, ref) || isPropCallback(context, ref),
+          (ref) =>
+            isStateSetter(context, ref) ||
+            (isPropCallback(context, ref) &&
+              // Don't analyze HOC prop callbacks -- we don't have control over them to lift state or logic
+              !isHOCProp(ref.resolved)),
         )
         .filter((ref) => isDirectCall(getEffectFn(node), ref))
         .forEach((ref) => {
@@ -100,7 +110,38 @@ export const rule = {
               });
             }
 
-            if (isArgsInternal(context, callExpr.arguments)) {
+            // TODO: Make more readable
+            const isArgsInternal = callExpr.arguments
+              .flatMap((arg) => getDownstreamRefs(context, arg))
+              .flatMap((ref) =>
+                getUpstreamReactVariables(context, ref.identifier),
+              )
+              .notEmptyEvery(
+                (variable) =>
+                  isState(variable) ||
+                  (isProp(variable) && !isHOCProp(variable)),
+              );
+            const isArgsExternal = callExpr.arguments
+              .flatMap((arg) => getDownstreamRefs(context, arg))
+              .flatMap((ref) =>
+                getUpstreamReactVariables(context, ref.identifier),
+              )
+              .some(
+                (variable) =>
+                  (!isState(variable) && !isProp(variable)) ||
+                  isHOCProp(variable),
+              );
+            const isDepsInternal = depsRefs
+              .flatMap((ref) =>
+                getUpstreamReactVariables(context, ref.identifier),
+              )
+              .notEmptyEvery(
+                (variable) =>
+                  isState(variable) ||
+                  (isProp(variable) && !isHOCProp(variable)),
+              );
+
+            if (isArgsInternal) {
               // TODO: Can also warn if this is the only call to the setter,
               // even if the arg is external (and not retrieved in the effect)...
               // Does it matter whether the args are in the deps array?
@@ -111,30 +152,28 @@ export const rule = {
                 messageId: messageIds.avoidDerivedState,
                 data: { state: stateName },
               });
-            } else if (isInternalEffect) {
-              if (depsRefs.some((ref) => isInternal(context, ref))) {
-                context.report({
-                  node: callExpr,
-                  messageId: messageIds.avoidChainingState,
-                });
-              }
             }
-          }
 
-          // I'm pretty sure we can flag this regardless of the arguments, including none...
-          //
-          // Because we are either:
-          // 1. Passing live state updates to the parent
-          // 2. Using state as an event handler to pass final state to the parent
-          //
-          // Both are bad. However I'm not yet sure how we could differentiate #2 to give a better warning.
-          //
-          // TODO: Can we thus safely assume that state is used as an event handler when the ref is a prop?
-          // Normally we can't warn about that because we don't know what the event handler does externally.
-          // But when it's a prop, it's internal.
-          // I guess it could still be valid when the dep is external state? Or in that case,
-          // the issue is the state should be lifted to the parent?
-          if (isPropCallback(context, ref)) {
+            if (!isArgsInternal && !isArgsExternal && isDepsInternal) {
+              context.report({
+                node: callExpr,
+                messageId: messageIds.avoidChainingState,
+              });
+            }
+          } else if (isPropCallback(context, ref)) {
+            // I'm pretty sure we can flag this regardless of the arguments, including none...
+            //
+            // Because we are either:
+            // 1. Passing live state updates to the parent
+            // 2. Using state as an event handler to pass final state to the parent
+            //
+            // Both are bad. However I'm not yet sure how we could differentiate #2 to give a better warning.
+            //
+            // TODO: Can we thus safely assume that state is used as an event handler when the ref is a prop?
+            // Normally we can't warn about that because we don't know what the event handler does externally.
+            // But when it's a prop, it's internal.
+            // I guess it could still be valid when the dep is external state? Or in that case,
+            // the issue is the state should be lifted to the parent?
             context.report({
               node: callExpr,
               messageId: messageIds.avoidParentChildCoupling,

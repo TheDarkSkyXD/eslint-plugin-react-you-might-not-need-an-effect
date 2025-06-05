@@ -477,6 +477,7 @@ new MyRuleTester().run("/deriving-state", {
             // thus they will always be in sync and it could be computed during render
             // Difficult bit is that a single state setter call is legit when the 
             // external state is initialized inside the effect (i.e. retrieved from external system)
+            // Hopefully 'isDirectCall' will mostly catch that now.
             setSelectedPost(posts[0]);
           }, [posts]);
         }
@@ -501,6 +502,27 @@ new MyRuleTester().run("/deriving-state", {
             setFullName(prefixedName) 
           }, [name]);
         }
+      `,
+      errors: [
+        {
+          messageId: messageIds.avoidDerivedState,
+          data: { state: "fullName" },
+        },
+      ],
+    },
+    {
+      name: "From HOC prop with single setter call",
+      todo: true,
+      code: js`
+        import { withRouter } from 'react-router-dom';
+
+        const MyComponent = withRouter(({ history }) => {
+          const [location, setLocation] = useState();
+
+          useEffect(() => {
+            setLocation(history.location);
+          }, [history.location]);
+        });
       `,
       errors: [
         {

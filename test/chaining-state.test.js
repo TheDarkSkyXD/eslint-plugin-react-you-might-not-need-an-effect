@@ -59,5 +59,25 @@ new MyRuleTester().run("/chaining-state", {
         },
       ],
     },
+    {
+      name: "In an otherwise valid effect",
+      code: js`
+        function MyComponent() {
+          const [state, setState] = useState();
+          const [otherState, setOtherState] = useState('Meow');
+
+          useEffect(() => {
+            console.log('Meow');
+            setState('Hello World');
+          }, [otherState]);
+        }
+      `,
+      errors: [
+        {
+          messageId: messageIds.avoidChainingState,
+          data: { state: "state" },
+        },
+      ],
+    }
   ],
 });
