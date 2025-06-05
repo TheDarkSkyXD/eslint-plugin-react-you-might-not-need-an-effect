@@ -38,10 +38,17 @@ export const rule = {
       const effectFnRefs = getEffectFnRefs(context, node);
       const depsRefs = getDependenciesRefs(context, node);
 
-      if (!effectFnRefs || effectFnRefs.length === 0 || !depsRefs) {
+      if (!effectFnRefs || !depsRefs) {
+        return;
+      } else if (effectFnRefs.length === 0) {
+        // Hopefully it's obvious the effect can be removed.
+        // More a follow-up for once they fix/remove other issues.
+        context.report({
+          node,
+          messageId: messageIds.avoidEmptyEffect,
+        });
         return;
       }
-
 
       const propUsedToResetAllState = findPropUsedToResetAllState(
         context,

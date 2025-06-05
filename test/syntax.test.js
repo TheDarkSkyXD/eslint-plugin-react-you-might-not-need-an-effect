@@ -28,14 +28,6 @@ const code = ({
 new MyRuleTester().run("/syntax", {
   valid: [
     {
-      name: "Empty effect",
-      code: js`
-        function Component() {
-          useEffect(() => {}, []);
-        }
-      `,
-    },
-    {
       name: "Two components with overlapping names",
       // Not a super realistic example
       code: js`
