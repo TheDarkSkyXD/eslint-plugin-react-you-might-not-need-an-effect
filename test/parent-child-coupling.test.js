@@ -50,9 +50,6 @@ new MyRuleTester().run("/parent-child-coupling", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidInternalEffect,
-        },
-        {
           messageId: messageIds.avoidChainingState,
         },
       ],
@@ -69,9 +66,6 @@ new MyRuleTester().run("/parent-child-coupling", {
         }
       `,
       errors: [
-        {
-          messageId: messageIds.avoidInternalEffect,
-        },
         {
           messageId: messageIds.avoidParentChildCoupling,
         },
@@ -91,9 +85,6 @@ new MyRuleTester().run("/parent-child-coupling", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidInternalEffect,
-        },
-        {
           messageId: messageIds.avoidParentChildCoupling,
         },
       ],
@@ -112,9 +103,6 @@ new MyRuleTester().run("/parent-child-coupling", {
         }
       `,
       errors: [
-        {
-          messageId: messageIds.avoidInternalEffect,
-        },
         {
           messageId: messageIds.avoidParentChildCoupling,
         },
@@ -137,9 +125,6 @@ new MyRuleTester().run("/parent-child-coupling", {
         }
       `,
       errors: [
-        {
-          messageId: messageIds.avoidInternalEffect,
-        },
         {
           messageId: messageIds.avoidParentChildCoupling,
         },
@@ -205,9 +190,6 @@ new MyRuleTester().run("/parent-child-coupling", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidInternalEffect,
-        },
-        {
           // TODO: Ideally we catch using state as an event handler,
           // but not sure how to differentiate that
           messageId: messageIds.avoidParentChildCoupling,
@@ -229,9 +211,6 @@ new MyRuleTester().run("/parent-child-coupling", {
         }
       `,
       errors: [
-        {
-          messageId: messageIds.avoidInternalEffect,
-        },
         {
           messageId: messageIds.avoidParentChildCoupling,
         },
@@ -262,9 +241,6 @@ new MyRuleTester().run("/parent-child-coupling", {
         }
       `,
       errors: [
-        {
-          messageId: messageIds.avoidInternalEffect,
-        },
         {
           messageId: messageIds.avoidDerivedState,
         },

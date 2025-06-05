@@ -330,9 +330,6 @@ new MyRuleTester().run("/real-world", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidInternalEffect,
-        },
-        {
           // TODO: Because the initial state is internal, derived state would be a better flag.
           messageId: messageIds.avoidResettingStateFromProps,
         },

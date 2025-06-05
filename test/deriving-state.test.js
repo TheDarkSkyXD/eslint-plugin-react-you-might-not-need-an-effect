@@ -290,9 +290,6 @@ new MyRuleTester().run("/deriving-state", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidInternalEffect,
-        },
-        {
           messageId: messageIds.avoidDerivedState,
           data: { state: "fullName" },
         },
@@ -313,9 +310,6 @@ new MyRuleTester().run("/deriving-state", {
         }
       `,
       errors: [
-        {
-          messageId: messageIds.avoidInternalEffect,
-        },
         {
           messageId: messageIds.avoidDerivedState,
           data: { state: "fullName" },
@@ -338,9 +332,6 @@ new MyRuleTester().run("/deriving-state", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidInternalEffect,
-        },
-        {
           messageId: messageIds.avoidDerivedState,
           data: { state: "fullName" },
         },
@@ -358,9 +349,6 @@ new MyRuleTester().run("/deriving-state", {
         }
       `,
       errors: [
-        {
-          messageId: messageIds.avoidInternalEffect,
-        },
         {
           messageId: messageIds.avoidDerivedState,
           data: { state: "fullName" },
@@ -381,9 +369,6 @@ new MyRuleTester().run("/deriving-state", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidInternalEffect,
-        },
-        {
           messageId: messageIds.avoidDerivedState,
           data: { state: "fullName" },
         },
@@ -401,9 +386,6 @@ new MyRuleTester().run("/deriving-state", {
         }
       `,
       errors: [
-        {
-          messageId: messageIds.avoidInternalEffect,
-        },
         {
           messageId: messageIds.avoidDerivedState,
           data: { state: "doubleList" },
@@ -428,9 +410,6 @@ new MyRuleTester().run("/deriving-state", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidInternalEffect,
-        },
-        {
           messageId: messageIds.avoidDerivedState,
           data: { state: "doubleList" },
         },
@@ -454,9 +433,6 @@ new MyRuleTester().run("/deriving-state", {
         }
       `,
       errors: [
-        {
-          messageId: messageIds.avoidInternalEffect,
-        },
         {
           // NOTE: We consider `doubleList.push` to essentially be a state setter call
           messageId: messageIds.avoidDerivedState,
@@ -546,9 +522,6 @@ new MyRuleTester().run("/deriving-state", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidInternalEffect,
-        },
-        {
           messageId: messageIds.avoidDerivedState,
           data: { state: "total" },
         },
@@ -568,9 +541,6 @@ new MyRuleTester().run("/deriving-state", {
         }
       `,
       errors: [
-        {
-          messageId: messageIds.avoidInternalEffect,
-        },
         {
           messageId: messageIds.avoidDerivedState,
           data: { state: "doubleCount" },
@@ -596,9 +566,6 @@ new MyRuleTester().run("/deriving-state", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidInternalEffect,
-        },
-        {
           messageId: messageIds.avoidDerivedState,
           data: { state: "formData" },
         },
@@ -622,9 +589,6 @@ new MyRuleTester().run("/deriving-state", {
         }
       `,
       errors: [
-        {
-          messageId: messageIds.avoidInternalEffect,
-        },
         {
           messageId: messageIds.avoidDerivedState,
           data: { state: "formData" },
@@ -651,9 +615,6 @@ new MyRuleTester().run("/deriving-state", {
         }
       `,
       errors: [
-        {
-          messageId: messageIds.avoidInternalEffect,
-        },
         {
           messageId: messageIds.avoidDerivedState,
           data: { state: "formData" },

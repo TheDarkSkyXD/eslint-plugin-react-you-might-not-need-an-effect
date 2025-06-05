@@ -1,5 +1,4 @@
 export const messageIds = {
-  avoidInternalEffect: "avoidInternalEffect",
   avoidDerivedState: "avoidDerivedState",
   avoidInitializingState: "avoidInitializingState",
   avoidChainingState: "avoidChainingState",
@@ -16,8 +15,6 @@ export const messageIds = {
 
 // TODO: Could include more info in messages, like the relevant node
 export const messages = {
-  [messageIds.avoidInternalEffect]:
-    "This effect operates entirely on internal React state, with no external dependencies. It is likely unnecessary.",
   [messageIds.avoidDerivedState]:
     'Avoid storing derived state. Compute "{{state}}" directly during render, optionally with `useMemo` if it\'s expensive.',
   [messageIds.avoidInitializingState]:

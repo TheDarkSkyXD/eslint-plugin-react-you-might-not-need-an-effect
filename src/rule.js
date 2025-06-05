@@ -42,27 +42,6 @@ export const rule = {
         return;
       }
 
-      // TODO: Just remove? This is never reported in isolation afaik.
-      // Could be different in crazy, large real-world effects though.
-      // And presumably once the user fixes the more specific issue, they'll see the effect is empty and delete it.
-      const isInternalEffect = effectFnRefs
-        // Only functions because they actually have effects.
-        // Notably this also filters out refs that are local parameters, like `items` in `list.filter((item) => ...)`.
-        .filter((ref) => isFnRef(ref))
-        .filter((ref) => isDirectCall(getEffectFn(node), ref))
-        .concat(depsRefs)
-        .flatMap((ref) => getUpstreamReactVariables(context, ref.identifier))
-        .notEmptyEvery(
-          (variable) =>
-            isState(variable) || (isProp(variable) && !isHOCProp(variable)),
-        );
-
-      if (isInternalEffect) {
-        context.report({
-          node,
-          messageId: messageIds.avoidInternalEffect,
-        });
-      }
 
       const propUsedToResetAllState = findPropUsedToResetAllState(
         context,

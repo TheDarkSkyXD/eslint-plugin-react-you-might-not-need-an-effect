@@ -29,9 +29,6 @@ new MyRuleTester().run("/chaining-state", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidInternalEffect,
-        },
-        {
           messageId: messageIds.avoidChainingState,
         },
       ],
@@ -51,9 +48,6 @@ new MyRuleTester().run("/chaining-state", {
         }
       `,
       errors: [
-        {
-          messageId: messageIds.avoidInternalEffect,
-        },
         {
           messageId: messageIds.avoidChainingState,
         },

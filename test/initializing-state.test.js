@@ -34,9 +34,6 @@ new MyRuleTester().run("/initializing-state", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidInternalEffect,
-        },
-        {
           messageId: messageIds.avoidInitializingState,
           data: { state: "state" },
         },
@@ -55,9 +52,6 @@ new MyRuleTester().run("/initializing-state", {
         }
       `,
       errors: [
-        {
-          messageId: messageIds.avoidInternalEffect,
-        },
         {
           messageId: messageIds.avoidInitializingState,
           data: { state: "state" },

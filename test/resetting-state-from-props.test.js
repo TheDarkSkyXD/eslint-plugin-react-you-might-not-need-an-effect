@@ -17,9 +17,6 @@ new MyRuleTester().run("/resetting-state-from-props", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidInternalEffect,
-        },
-        {
           messageId: messageIds.avoidDerivedState,
         },
       ],
@@ -40,9 +37,6 @@ new MyRuleTester().run("/resetting-state-from-props", {
         }
       `,
       errors: [
-        {
-          messageId: messageIds.avoidInternalEffect,
-        },
         {
           messageId: messageIds.avoidChainingState,
         },
@@ -66,9 +60,6 @@ new MyRuleTester().run("/resetting-state-from-props", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidInternalEffect,
-        },
-        {
           messageId: messageIds.avoidResettingStateFromProps,
           data: { prop: "userId" },
         },
@@ -90,9 +81,6 @@ new MyRuleTester().run("/resetting-state-from-props", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidInternalEffect,
-        },
-        {
           messageId: messageIds.avoidResettingStateFromProps,
           data: { prop: "userId" },
         },
@@ -110,9 +98,6 @@ new MyRuleTester().run("/resetting-state-from-props", {
         }
       `,
       errors: [
-        {
-          messageId: messageIds.avoidInternalEffect,
-        },
         {
           messageId: messageIds.avoidResettingStateFromProps,
           // TODO: Ideally would be "user.id"
@@ -133,9 +118,6 @@ new MyRuleTester().run("/resetting-state-from-props", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidInternalEffect,
-        },
-        {
           messageId: messageIds.avoidResettingStateFromProps,
           data: { prop: "userId" },
         },
@@ -155,9 +137,6 @@ new MyRuleTester().run("/resetting-state-from-props", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidInternalEffect,
-        },
-        {
           messageId: messageIds.avoidResettingStateFromProps,
         },
       ],
@@ -175,9 +154,6 @@ new MyRuleTester().run("/resetting-state-from-props", {
         }
       `,
       errors: [
-        {
-          messageId: messageIds.avoidInternalEffect,
-        },
         {
           messageId: messageIds.avoidChainingState,
         },

@@ -128,7 +128,6 @@ new MyRuleTester().run("/syntax", {
     {
       // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/16
       name: "Async derived setter",
-      todo: true,
       code: js`
         import { useEffect, useState } from 'react';
 
@@ -169,14 +168,14 @@ new MyRuleTester().run("/syntax", {
       code: code({
         componentDeclaration: js`function DoubleCounter()`,
       }),
-      errors: 2,
+      errors: 1,
     },
     {
       name: "Arrow function component",
       code: code({
         componentDeclaration: js`const DoubleCounter = () =>`,
       }),
-      errors: 2,
+      errors: 1,
     },
     {
       name: "Memoized component, with props",
@@ -189,9 +188,6 @@ new MyRuleTester().run("/syntax", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidInternalEffect,
-        },
-        {
           messageId: messageIds.avoidDerivedState,
           data: { state: "doubleCount" },
         },
@@ -203,21 +199,21 @@ new MyRuleTester().run("/syntax", {
         componentDeclaration: js`const AvoidDuplicateTest = () =>`,
         effectBody: js`setDoubleCount(count * 2)`,
       }),
-      errors: 2,
+      errors: 1,
     },
     {
       name: "Effect single-statement body",
       code: code({
         effectBody: js`{ setDoubleCount(count * 2); }`,
       }),
-      errors: 2,
+      errors: 1,
     },
     {
       name: "Effect multi-statement body",
       code: code({
         effectBody: js`{ setDoubleCount(count * 2); setDoubleCount(count * 2); }`,
       }),
-      errors: 3,
+      errors: 2,
     },
     {
       name: "React.useEffect",
@@ -231,7 +227,7 @@ new MyRuleTester().run("/syntax", {
             }, [count]);
           }
         `,
-      errors: 2,
+      errors: 1,
     },
     {
       name: "useLayoutEffect",
@@ -245,7 +241,7 @@ new MyRuleTester().run("/syntax", {
             }, [count]);
           }
         `,
-      errors: 2,
+      errors: 1,
     },
     {
       name: "Non-destructured props",
@@ -254,7 +250,7 @@ new MyRuleTester().run("/syntax", {
         effectBody: js`setDoubleCount(props.count * 2)`,
         effectDeps: js`[props.count]`,
       }),
-      errors: 2,
+      errors: 1,
     },
     {
       name: "Destructured props",
@@ -263,7 +259,7 @@ new MyRuleTester().run("/syntax", {
         effectBody: js`setDoubleCount(propCount * 2)`,
         effectDeps: js`[propCount]`,
       }),
-      errors: 2,
+      errors: 1,
     },
     {
       name: "Renamed destructured props",
@@ -272,7 +268,7 @@ new MyRuleTester().run("/syntax", {
         effectBody: js`setDoubleCount(countProp * 2)`,
         effectDeps: js`[countProp]`,
       }),
-      errors: 2,
+      errors: 1,
     },
     {
       name: "Doubly deep MemberExpression in effect",
@@ -281,7 +277,7 @@ new MyRuleTester().run("/syntax", {
         effectBody: js`setDoubleCount(props.nested.count * 2)`,
         effectDeps: js`[props.nested.count]`,
       }),
-      errors: 2,
+      errors: 1,
     },
     {
       name: "Objects stored in state",
@@ -295,7 +291,7 @@ new MyRuleTester().run("/syntax", {
             }, [count]);
           }
         `,
-      errors: 2,
+      errors: 1,
     },
     {
       name: "Optional chaining and nullish coalescing",
@@ -308,7 +304,7 @@ new MyRuleTester().run("/syntax", {
           }, [count?.value]);
         }
       `,
-      errors: 2,
+      errors: 1,
     },
     {
       // `exhaustive-deps` doesn't enforce member access in the deps
@@ -318,7 +314,7 @@ new MyRuleTester().run("/syntax", {
         effectBody: js`setDoubleCount(props.count * 2)`,
         effectDeps: js`[props]`,
       }),
-      errors: 2,
+      errors: 1,
     },
     {
       name: "Doubly nested scopes in effect body",
@@ -337,7 +333,7 @@ new MyRuleTester().run("/syntax", {
             }
           `,
       }),
-      errors: 4,
+      errors: 3,
     },
     {
       name: "Destructured array skips element in variable declaration",
@@ -351,7 +347,7 @@ new MyRuleTester().run("/syntax", {
           }, [posts]);
         }
       `,
-      errors: 2,
+      errors: 1,
     },
     {
       name: "Value-less useState",
@@ -371,9 +367,6 @@ new MyRuleTester().run("/syntax", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidInternalEffect,
-        },
-        {
           messageId: messageIds.avoidDerivedState,
           data: { state: "setAttempts" },
         },
@@ -392,9 +385,6 @@ new MyRuleTester().run("/syntax", {
         }
       `,
       errors: [
-        {
-          messageId: messageIds.avoidInternalEffect,
-        },
         {
           messageId: messageIds.avoidDerivedState,
           data: { state: "attempts" },
@@ -421,9 +411,6 @@ new MyRuleTester().run("/syntax", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidInternalEffect,
-        },
-        {
           messageId: messageIds.avoidDerivedState,
           data: { state: "doubleCount" },
         },
@@ -443,9 +430,6 @@ new MyRuleTester().run("/syntax", {
         }
       `,
       errors: [
-        {
-          messageId: messageIds.avoidInternalEffect,
-        },
         {
           messageId: messageIds.avoidDerivedState,
           data: { state: "state" },
@@ -467,9 +451,6 @@ new MyRuleTester().run("/syntax", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidInternalEffect,
-        },
-        {
           messageId: messageIds.avoidDerivedState,
           data: { state: "state" },
         },
@@ -490,9 +471,6 @@ new MyRuleTester().run("/syntax", {
         }
       `,
       errors: [
-        {
-          messageId: messageIds.avoidInternalEffect,
-        },
         {
           messageId: messageIds.avoidDerivedState,
           data: { state: "derived" },
