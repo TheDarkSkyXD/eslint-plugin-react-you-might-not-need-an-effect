@@ -57,8 +57,8 @@ export default [
 
 The plugin will have more information to act upon when you:
 
-- Configure the appropriate [global variables](https://eslint.org/docs/latest/use/configure/language-options#predefined-global-variables) in your ESLint config
-- Pass the correct dependencies to your effect — consider [`eslint-plugin-react-hooks`](https://www.npmjs.com/package/eslint-plugin-react-hooks)`/exhaustive-deps`
+- Configure your [ESLint global variables](https://eslint.org/docs/latest/use/configure/language-options#predefined-global-variables)
+- Pass the correct dependencies to your effect — [`react-hooks/exhaustive-deps`](https://www.npmjs.com/package/eslint-plugin-react-hooks)
 
 ## 🔎 Rule: `you-might-not-need-an-effect`
 
