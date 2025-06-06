@@ -75,7 +75,7 @@ export const rule = {
               // Don't analyze HOC prop callbacks -- we don't have control over them to lift state or logic
               !isHOCProp(ref.resolved)),
         )
-        .filter((ref) => isDirectCall(ref))
+        .filter((ref) => isDirectCall(ref.identifier))
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
 

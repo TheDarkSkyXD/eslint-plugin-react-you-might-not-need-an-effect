@@ -151,21 +151,20 @@ export const getUseStateNode = (context, ref) => {
 // When false, it's likely inside a callback, e.g. a listener, or Promise chain that retrieves external data.
 // Note we'll still analyze derived setters because isStateSetter considers that.
 // Heuristic inspired by https://eslint-react.xyz/docs/rules/hooks-extra-no-direct-set-state-in-use-effect
-// Also returns false for IIFEs, which technically could cause a false negative.
+// TODO: Also returns false for IIFEs, which could cause a false negative.
 // But IIFEs in effects are typically used to call async functions, implying it retrieves external state.
 // So, not a big deal.
-export const isDirectCall = (ref) => {
-  let node = ref.identifier;
-
-  while (
-    node &&
-    node.type !== "ArrowFunctionExpression" &&
-    node.type !== "FunctionExpression"
+export const isDirectCall = (node) => {
+  if (!node) {
+    return false;
+  } else if (
+    node.type === "ArrowFunctionExpression" ||
+    node.type === "FunctionExpression"
   ) {
-    node = node.parent;
+    return isUseEffect(node.parent);
+  } else {
+    return isDirectCall(node.parent);
   }
-
-  return node && isUseEffect(node.parent);
 };
 
 export const findPropUsedToResetAllState = (
