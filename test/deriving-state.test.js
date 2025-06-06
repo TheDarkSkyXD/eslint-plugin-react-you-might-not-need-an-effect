@@ -391,7 +391,7 @@ new MyRuleTester().run("/deriving-state", {
           data: { state: "doubleList" },
         },
         {
-          // NOTE: We consider `list.concat` to essentially be a prop callback
+          // We consider `list.concat` to essentially be a prop callback
           messageId: messageIds.avoidParentChildCoupling,
         },
       ],
@@ -414,7 +414,7 @@ new MyRuleTester().run("/deriving-state", {
           data: { state: "doubleList" },
         },
         {
-          // NOTE: We consider `list.concat` to essentially be a state setter call
+          // We consider `list.concat` to essentially be a state setter call
           messageId: messageIds.avoidDerivedState,
           data: { state: "list" },
         },
@@ -434,7 +434,7 @@ new MyRuleTester().run("/deriving-state", {
       `,
       errors: [
         {
-          // NOTE: We consider `doubleList.push` to essentially be a state setter call
+          // We consider `doubleList.push` to essentially be a state setter call
           messageId: messageIds.avoidDerivedState,
           data: { state: "doubleList" },
         },

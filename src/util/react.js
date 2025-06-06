@@ -102,9 +102,11 @@ export function getDependenciesRefs(context, node) {
 }
 
 export const isFnRef = (ref) => getCallExpr(ref) !== undefined;
-// TODO: Technically this includes state with call expressions, like countryCode.toUpperCase().
-// A true `isStateSetter` would check that the identifier name matches the useState's second element.
-// Maybe we sometimes prefer this behavior though, like when state is mutated (even though that is not recommended).
+
+// NOTE: These return true for state with CallExpressions, like `list.concat()`.
+// Arguably preferable, as mutating the state is functionally the same as calling the setter.
+// (Even though that is not recommended and should be prevented by a different rule).
+// And in the case of a prop, we can't differentiate state mutations from callbacks anyway.
 export const isStateSetter = (context, ref) =>
   isFnRef(ref) &&
   getUpstreamReactVariables(context, ref.identifier).notEmptyEvery((variable) =>
