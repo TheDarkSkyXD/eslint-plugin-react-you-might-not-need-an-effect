@@ -46,8 +46,9 @@ export const getUpstreamVariables = (
   const variable = findVariable(context.sourceCode.getScope(node), node);
   if (!variable) {
     // I think this only happens when:
-    // 1. Import statement is missing, or
-    // 2. ESLint globals are misconfigured
+    // 1. There's genuinely no variable, i.e. `node` is a literal
+    // 2. Import statement is missing
+    // 3. ESLint globals are misconfigured
     return [];
   }
 
