@@ -151,8 +151,8 @@ new MyRuleTester().run("/syntax", {
             <div>{response}</div>
           );
         };
-      `
-    }
+      `,
+    },
   ],
   invalid: [
     {
@@ -466,6 +466,27 @@ new MyRuleTester().run("/syntax", {
         {
           messageId: messageIds.avoidDerivedState,
           data: { state: "derived" },
+        },
+      ],
+    },
+    {
+      // Effects shouldn't be called conditionally, but good to be prepared
+      name: "Conditional useEffect",
+      code: js`
+        function ConditionalEffect({ key }) {
+          const [state, setState] = useState(0);
+
+          if (condition) {
+            useEffect(() => {
+              setState(0);
+            }, [key]);
+          }
+        }
+      `,
+      errors: [
+        {
+          messageId: messageIds.avoidResettingStateFromProps,
+          data: { prop: "key" },
         },
       ],
     },

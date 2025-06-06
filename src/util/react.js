@@ -229,10 +229,18 @@ const countUseStates = (context, componentNode) => {
 };
 
 // Returns the component or custom hook that contains the `useEffect` node.
-// It assumes the useEffect is a direct child, which it always should be in valid React.
-// TODO: But I think this will crash if e.g. the useEffect is called conditionally.
-const findContainingNode = (useEffectNode) => {
-  return useEffectNode.parent.parent;
+const findContainingNode = (node) => {
+  if (!node) {
+    return undefined;
+  } else if (
+    isReactFunctionalComponent(node) ||
+    isReactFunctionalHOC(node) ||
+    isCustomHook(node)
+  ) {
+    return node;
+  } else {
+    return findContainingNode(node.parent);
+  }
 };
 
 export const getUpstreamReactVariables = (context, node) =>
