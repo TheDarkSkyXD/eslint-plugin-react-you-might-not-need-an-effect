@@ -119,7 +119,7 @@ new MyRuleTester().run("/syntax", {
     },
     {
       // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/16
-      name: "Async derived setter",
+      name: "External IIFE",
       code: js`
         import { useEffect, useState } from 'react';
 
@@ -487,6 +487,35 @@ new MyRuleTester().run("/syntax", {
         {
           messageId: messageIds.avoidResettingStateFromProps,
           data: { prop: "key" },
+        },
+      ],
+    },
+    {
+      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/16
+      name: "Internal IIFE",
+      todo: true, // TODO: `isDirectCall` returns false for IIFEs, so we don't follow `iife`. Otherwise it works.
+      code: js`
+        import { useEffect, useState } from 'react';
+
+        export const App = () => {
+          const [data, setData] = useState(null);
+
+          const iife = () => {
+            return (async () => {
+              setData('Meow');
+            })();
+          };
+
+          useEffect(() => { 
+            (async () => {
+              await iife();
+            })();
+          }, []);
+        };
+      `,
+      errors: [
+        {
+          messageId: messageIds.avoidChainingState,
         },
       ],
     },
