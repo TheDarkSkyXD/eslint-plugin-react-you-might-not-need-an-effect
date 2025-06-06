@@ -64,8 +64,8 @@ The plugin will have more information to act upon when you:
 
 Determines when an effect is likely unnecessary, such as when it:
 
-- Only uses internal state or props
-- Derives or chains state updates
+- Stores derived state
+- Chains state updates
 - Initializes state
 - Resets all state when props change
 - Couples parent and child state or behavior
