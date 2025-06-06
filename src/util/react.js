@@ -53,14 +53,14 @@ export const isUseState = (node) =>
   });
 
 export const isUseEffect = (node) =>
-  (node.type === "CallExpression" &&
-    node.callee.type === "Identifier" &&
+  node.type === "CallExpression" &&
+  ((node.callee.type === "Identifier" &&
     (node.callee.name === "useEffect" ||
       node.callee.name === "useLayoutEffect")) ||
-  (node.callee.type === "MemberExpression" &&
-    node.callee.object.name === "React" &&
-    (node.callee.property.name === "useEffect" ||
-      node.callee.property.name === "useLayoutEffect"));
+    (node.callee.type === "MemberExpression" &&
+      node.callee.object.name === "React" &&
+      (node.callee.property.name === "useEffect" ||
+        node.callee.property.name === "useLayoutEffect")));
 
 export const getEffectFn = (node) => {
   if (!isUseEffect(node) || node.arguments.length < 1) {
@@ -151,10 +151,9 @@ export const getUseStateNode = (context, ref) => {
 // When false, it's likely inside a callback, e.g. a listener, or Promise chain that retrieves external data.
 // Note we'll still analyze derived setters because isStateSetter considers that.
 // Heuristic inspired by https://eslint-react.xyz/docs/rules/hooks-extra-no-direct-set-state-in-use-effect
-export const isDirectCall = (effectFn, ref) => {
+export const isDirectCall = (ref) => {
   let node = ref.identifier;
 
-  // Walk up the parent chain to find the enclosing function
   while (
     node &&
     node.type !== "ArrowFunctionExpression" &&
@@ -163,7 +162,7 @@ export const isDirectCall = (effectFn, ref) => {
     node = node.parent;
   }
 
-  return node && node === effectFn;
+  return node && isUseEffect(node.parent);
 };
 
 export const findPropUsedToResetAllState = (
