@@ -63,10 +63,7 @@ export const rule = {
           messageId: messageIds.avoidResettingStateFromProps,
           data: { prop: propName },
         });
-
-        // Don't flag anything else (particularly avoidChainingState will trigger).
-        // Just confusing, and this should be fixed first.
-        // TODO: Hmm or maybe not. It depends.
+        // Don't flag anything else -- confusing, and this should be fixed first.
         return;
       }
 
