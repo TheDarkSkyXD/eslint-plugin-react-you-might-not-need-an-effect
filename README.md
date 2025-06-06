@@ -22,16 +22,15 @@ yarn add -D eslint-plugin-react-you-might-not-need-an-effect
 
 ### Configuration
 
-Add the plugin to your ESLint configuration file.
+Add the plugin's recommended config to your ESLint configuration file.
 
 #### Legacy config (`.eslintrc`)
 
 ```js
 {
-  "plugins": ["react-you-might-not-need-an-effect"],
-  "rules": {
-    "react-you-might-not-need-an-effect/you-might-not-need-an-effect": "warn"
-  }
+  "extends": [
+    "plugin:react-you-might-not-need-an-effect/recommended"
+  ],
 }
 ```
 
@@ -41,24 +40,13 @@ Add the plugin to your ESLint configuration file.
 import youMightNotNeedAnEffect from "eslint-plugin-react-you-might-not-need-an-effect";
 
 export default [
-  {
-    files: ["**/*.{js,jsx}"],
-    plugins: {
-      "react-you-might-not-need-an-effect": youMightNotNeedAnEffect,
-    },
-    rules: {
-      "react-you-might-not-need-an-effect/you-might-not-need-an-effect": "warn",
-    },
-  },
+  youMightNotNeedAnEffect.configs.recommended
 ];
 ```
 
 ### Recommended
 
-The plugin will have more information to act upon when you:
-
-- Configure your [ESLint global variables](https://eslint.org/docs/latest/use/configure/language-options#predefined-global-variables)
-- Pass the correct dependencies to your effect — [`react-hooks/exhaustive-deps`](https://www.npmjs.com/package/eslint-plugin-react-hooks)
+The plugin will have more information to act upon when you pass the correct dependencies to your effect — [`react-hooks/exhaustive-deps`](https://www.npmjs.com/package/eslint-plugin-react-hooks).
 
 ## 🔎 Rule: `you-might-not-need-an-effect`
 
