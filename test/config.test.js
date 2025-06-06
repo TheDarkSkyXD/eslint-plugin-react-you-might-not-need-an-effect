@@ -18,33 +18,17 @@ describe("Recommended config", () => {
     };
   `;
 
-  const runLintTest = async (eslintInstance, code) => {
-    const results = await eslintInstance.lintText(code);
-
-    assert.strictEqual(results.length, 1);
-    assert.ok(results[0].messages);
-    assert.ok(
-      results[0].messages.some(
-        (message) =>
-          message.ruleId ===
-          "react-you-might-not-need-an-effect/you-might-not-need-an-effect",
-      ),
-    );
-  };
-
-  it("Flat", async () => {
-    await runLintTest(
-      new ESLint({
+  const testCases = [
+    {
+      name: "Flat",
+      eslint: new ESLint({
         // Use `overrideConfig` so it ignores the project's config
         overrideConfig: [plugin.configs.recommended],
       }),
-      code,
-    );
-  });
-
-  it("Legacy", async () => {
-    await runLintTest(
-      new LegacyESLint({
+    },
+    {
+      name: "Legacy",
+      eslint: new LegacyESLint({
         overrideConfig: {
           extends: [
             "plugin:react-you-might-not-need-an-effect/legacy-recommended",
@@ -56,7 +40,22 @@ describe("Recommended config", () => {
           },
         },
       }),
-      code,
-    );
+    },
+  ];
+
+  testCases.forEach(({ name, eslint }) => {
+    it(name, async () => {
+      const results = await eslint.lintText(code);
+
+      assert.strictEqual(results.length, 1);
+      assert.ok(results[0].messages);
+      assert.ok(
+        results[0].messages.some(
+          (message) =>
+            message.ruleId ===
+            "react-you-might-not-need-an-effect/you-might-not-need-an-effect",
+        ),
+      );
+    });
   });
 });
