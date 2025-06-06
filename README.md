@@ -29,7 +29,7 @@ Add the plugin's recommended config to your ESLint configuration file.
 ```js
 {
   "extends": [
-    "plugin:react-you-might-not-need-an-effect/recommended"
+    "plugin:react-you-might-not-need-an-effect/legacy-recommended"
   ],
 }
 ```

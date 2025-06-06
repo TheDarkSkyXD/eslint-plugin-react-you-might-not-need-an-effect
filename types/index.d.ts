@@ -1,8 +1,9 @@
-import type { ESLint } from "eslint";
+import type { ESLint, Linter } from "eslint";
 
 declare const plugin: ESLint.Plugin & {
   configs: {
-    recommended: ESLint.ConfigData;
+    recommended: Linter.Config;
+    "legacy-recommended": Linter.LegacyConfig;
   };
 };
 export default plugin;

@@ -1,36 +1,15 @@
-// eslint-disable-next-line n/no-unsupported-features/node-builtins
-import assert from "node:assert";
+import assert from "assert";
 import { RuleTester } from "eslint";
-import { name as ruleName, rule as myRule } from "../src/rule.js";
-import globals from "globals";
+import plugin from "../src/index.js";
 
 // For syntax highlighting inside code under test
 export const js = String.raw;
 
-// Generic name I know, but it does a couple things, and inheritance is annoying.
-//
-// Normalizes whitespaces between the expected and actual `output` for tests with fixes.
-// Because formatting seriously complicates the fixer implementation and most people have a formatter anyway.
-// Not sure how hacky this is.
-// Seems like it might be standard practice for ESLint plugins?
-// Even the TS ESLint plugin mentions that it does not concern itself with formatting.
-//
-// Supports labelling tests as `todo` (and there's always more to do).
 export class MyRuleTester extends RuleTester {
   constructor(options) {
     super({
       ...options,
-      languageOptions: {
-        globals: {
-          // We use these in tests frequently
-          ...globals.browser,
-        },
-        parserOptions: {
-          ecmaFeatures: {
-            jsx: true,
-          },
-        },
-      },
+      languageOptions: plugin.configs.recommended.languageOptions,
     });
   }
 
@@ -61,7 +40,11 @@ export class MyRuleTester extends RuleTester {
         invalid: invalid.filter((test) => !test.todo),
       };
 
-      super.run(ruleName + variation, myRule, filteredTests);
+      super.run(
+        plugin.meta.name + variation,
+        plugin.rules["you-might-not-need-an-effect"],
+        filteredTests,
+      );
     } finally {
       // Restore the original strictEqual function to avoid unintended effects
       assert.strictEqual = originalStrictEqual;
