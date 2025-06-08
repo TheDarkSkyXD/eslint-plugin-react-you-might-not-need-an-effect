@@ -73,6 +73,10 @@ export const rule = {
               // Don't analyze HOC prop callbacks -- we don't have control over them to lift state or logic
               !isHOCProp(ref.resolved)),
         )
+        // Non-direct calls are likely inside a callback passed to an external system like `window.addEventListener`,
+        // or a Promise chain that (probably) retrieves external data.
+        // Note we'll still analyze derived setters because isStateSetter considers that.
+        // Heuristic inspired by https://eslint-react.xyz/docs/rules/hooks-extra-no-direct-set-state-in-use-effect
         .filter((ref) => isDirectCall(ref.identifier))
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);

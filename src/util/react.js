@@ -149,16 +149,14 @@ export const getUseStateNode = (context, ref) => {
     ?.defs.find((def) => isUseState(def.node))?.node;
 };
 
-// When false, it's likely inside a callback, e.g. a listener, or Promise chain that retrieves external data.
-// Note we'll still analyze derived setters because isStateSetter considers that.
-// Heuristic inspired by https://eslint-react.xyz/docs/rules/hooks-extra-no-direct-set-state-in-use-effect
+// Returns true if the node is called directly inside a `useEffect`.
+// Note IIFEs do not break the "direct" chain because they're invoked immediately, as opposed to being a callback.
 export const isDirectCall = (node) => {
   if (!node) {
     return false;
   } else if (
     (node.type === "ArrowFunctionExpression" ||
       node.type === "FunctionExpression") &&
-    // Keep walking up IIFEs -- we consider them direct calls because they're invoked immediately, as opposed to being a callback
     !isIIFE(node.parent)
   ) {
     return isUseEffect(node.parent);
