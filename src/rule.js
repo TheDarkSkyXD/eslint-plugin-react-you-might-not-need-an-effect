@@ -1,7 +1,6 @@
 import { messageIds, messages } from "./messages.js";
-import { getCallExpr, getDownstreamRefs } from "./util/ast.js";
+import { getCallExpr, getDownstreamRefs, findIIFE } from "./util/ast.js";
 import {
-  isFnRef,
   findPropUsedToResetAllState,
   isUseEffect,
   getUseStateNode,
@@ -9,7 +8,6 @@ import {
   getDependenciesRefs,
   isStateSetter,
   isPropCallback,
-  getEffectFn,
   isDirectCall,
   getUpstreamReactVariables,
   isState,
@@ -75,7 +73,11 @@ export const rule = {
               // Don't analyze HOC prop callbacks -- we don't have control over them to lift state or logic
               !isHOCProp(ref.resolved)),
         )
-        .filter((ref) => isDirectCall(ref.identifier))
+        .filter(
+          (ref) =>
+            isDirectCall(ref.identifier) ||
+            isDirectCall(findIIFE(ref.identifier)),
+        )
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
 

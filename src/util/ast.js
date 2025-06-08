@@ -94,3 +94,18 @@ export const getCallExpr = (ref, current = ref.identifier.parent) => {
 
   return undefined;
 };
+
+export const findIIFE = (node) => {
+  if (!node) {
+    return undefined;
+  } else if (
+    node.type === "CallExpression" &&
+    (node.callee.type === "ArrowFunctionExpression" ||
+      node.callee.type === "FunctionExpression")
+  ) {
+    return node;
+  } else {
+    return findIIFE(node.parent);
+  }
+};
+

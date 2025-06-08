@@ -153,6 +153,24 @@ new MyRuleTester().run("/syntax", {
         };
       `,
     },
+    {
+      name: "Internal IIFE inside callback",
+      code: js`
+        import { useEffect, useState } from 'react';
+
+        export const MyComponent = () => {
+          const [state, setState] = useState();
+
+          useEffect(() => {
+            window.addEventListener('load', () => {
+              (async () => {
+                setState('Loaded');
+              })();
+            });
+          }, []);
+        };
+      `,
+    },
   ],
   invalid: [
     {
@@ -493,7 +511,6 @@ new MyRuleTester().run("/syntax", {
     {
       // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/16
       name: "Internal IIFE",
-      todo: true, // TODO: `isDirectCall` returns false for IIFEs, so we don't follow `iife`. Otherwise it works.
       code: js`
         import { useEffect, useState } from 'react';
 
@@ -515,7 +532,7 @@ new MyRuleTester().run("/syntax", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidChainingState,
+          messageId: messageIds.avoidInitializingState,
         },
       ],
     },
