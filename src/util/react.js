@@ -3,6 +3,7 @@ import {
   getUpstreamVariables,
   getDownstreamRefs,
   getCallExpr,
+  isIIFE,
 } from "./ast.js";
 
 export const isReactFunctionalComponent = (node) =>
@@ -151,15 +152,14 @@ export const getUseStateNode = (context, ref) => {
 // When false, it's likely inside a callback, e.g. a listener, or Promise chain that retrieves external data.
 // Note we'll still analyze derived setters because isStateSetter considers that.
 // Heuristic inspired by https://eslint-react.xyz/docs/rules/hooks-extra-no-direct-set-state-in-use-effect
-// TODO: Also returns false for IIFEs, which could cause a false negative.
-// But IIFEs in effects are typically used to call async functions, implying it retrieves external state.
-// So, not a big deal.
 export const isDirectCall = (node) => {
   if (!node) {
     return false;
   } else if (
-    node.type === "ArrowFunctionExpression" ||
-    node.type === "FunctionExpression"
+    (node.type === "ArrowFunctionExpression" ||
+      node.type === "FunctionExpression") &&
+    // Keep walking up IIFEs -- we consider them direct calls because they're invoked immediately, as opposed to being a callback
+    !isIIFE(node.parent)
   ) {
     return isUseEffect(node.parent);
   } else {
