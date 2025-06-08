@@ -274,7 +274,27 @@ new MyRuleTester().run("/deriving-state", {
         }
       `,
     },
-    // TODO: Above function tests but with `useCallback`
+    {
+      name: "From external state via useCallback derived setter",
+      code: js`
+        import { getPrefixFor } from 'library';
+        import { useState } from 'react';
+
+        function Component() {
+          const [name, setName] = useState();
+          const [prefixedName, setPrefixedName] = useState();
+          const prefix = getPrefixFor(name);
+
+          const derivedSetter = useCallback((name) => {
+            setPrefixedName(prefix + name);
+          }, [prefix]);
+
+          useEffect(() => {
+            derivedSetter(name);
+          }, [name, derivedSetter])
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -544,6 +564,34 @@ new MyRuleTester().run("/deriving-state", {
         {
           messageId: messageIds.avoidDerivedState,
           data: { state: "doubleCount" },
+        },
+      ],
+    },
+    {
+      name: "From internal state via useCallback derived setter",
+      todo: true,
+      code: js`
+        import { getPrefixFor } from 'library';
+        import { useState } from 'react';
+
+        function Component() {
+          const [name, setName] = useState();
+          const [prefixedName, setPrefixedName] = useState();
+          const prefix = 'Dr. ';
+
+          const derivedSetter = useCallback((name) => {
+            setPrefixedName(prefix + name);
+          }, [prefix]);
+
+          useEffect(() => {
+            derivedSetter(name);
+          }, [name, derivedSetter]);
+        }
+      `,
+      errors: [
+        {
+          messageId: messageIds.avoidDerivedState,
+          data: { state: "prefixedName" },
         },
       ],
     },
