@@ -37,10 +37,10 @@ Add the plugin's recommended config to your ESLint configuration file.
 #### Flat config (`eslint.config.js`)
 
 ```js
-import youMightNotNeedAnEffect from "eslint-plugin-react-you-might-not-need-an-effect";
+import reactYouMightNotNeedAnEffect from "eslint-plugin-react-you-might-not-need-an-effect";
 
 export default [
-  youMightNotNeedAnEffect.configs.recommended
+  reactYouMightNotNeedAnEffect.configs.recommended
 ];
 ```
 
