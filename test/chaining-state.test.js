@@ -72,6 +72,6 @@ new MyRuleTester().run("/chaining-state", {
           data: { state: "state" },
         },
       ],
-    }
+    },
   ],
 });

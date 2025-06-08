@@ -79,6 +79,6 @@ new MyRuleTester().run("/initializing-state", {
           data: { state: "state" },
         },
       ],
-    }
+    },
   ],
 });

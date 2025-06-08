@@ -12,7 +12,7 @@ new MyRuleTester().run("/empty-effect", {
           }, []);
         }
       `,
-    }
+    },
   ],
   invalid: [
     {

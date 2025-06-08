@@ -108,4 +108,3 @@ export const findIIFE = (node) => {
     return findIIFE(node.parent);
   }
 };
-
